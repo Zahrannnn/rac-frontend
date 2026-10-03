@@ -17,7 +17,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "rac-frontend/**"
+      - "**"
       - ".github/workflows/frontend-deploy.yml"
 
 concurrency:
@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 12
     defaults:
       run:
-        working-directory: rac-frontend
+        working-directory: .
 
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: rac-frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -61,7 +61,7 @@ jobs:
     timeout-minutes: 25
     defaults:
       run:
-        working-directory: rac-frontend
+        working-directory: .
 
     steps:
       - uses: actions/checkout@v4
@@ -70,7 +70,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: rac-frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -118,7 +118,7 @@ jobs:
           APP_DIR: ${{ secrets.HOSTINGER_APP_DIR }}
         run: |
           pip install paramiko -q
-          python ../.github/workflows/upload_frontend.py
+          python .github/workflows/upload_frontend.py
 
       - name: Post-deploy smoke
         env:
