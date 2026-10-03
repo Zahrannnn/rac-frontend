@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 /** The manifest is a committed static asset (public/); test its contract. */
 function loadManifest(): Record<string, unknown> {
-  const file = path.resolve(process.cwd(), "public", "manifest.webmanifest");
+  const file = path.resolve(process.cwd(), "public", "manifest.json");
   return JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
 }
 

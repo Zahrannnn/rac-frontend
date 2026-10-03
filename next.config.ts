@@ -21,6 +21,26 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactCompiler: true,
   typedRoutes: true,
+  // The site sits behind Hostinger's hcdn, which honors origin Cache-Control
+  // literally. Next's default for prerendered HTML (s-maxage=31536000) poisons
+  // the edge with stale documents after every deploy — HTML must revalidate;
+  // content-hashed static assets stay immutable.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+        ],
+      },
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
