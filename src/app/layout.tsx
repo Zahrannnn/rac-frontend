@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { Providers } from "./providers";
 import { env } from "@/shared/config/env";
+import { PwaRegistration } from "@/shared/components/pwa-registration";
 
 // Cairo covers Arabic + Latin so RTL/LTR switching never changes the type system (DESIGN.md).
 const cairo = Cairo({
@@ -36,11 +37,28 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: env.NEXT_PUBLIC_APP_NAME,
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
+// Navy shell from DESIGN.md — tints the browser UI / PWA chrome on both platforms.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#004E77",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -57,6 +75,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-full" suppressHydrationWarning>
         <Script src="/runtime-env.js" strategy="beforeInteractive" />
         <Providers>{children}</Providers>
+        <PwaRegistration />
       </body>
     </html>
   );
