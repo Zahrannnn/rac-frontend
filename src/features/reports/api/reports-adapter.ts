@@ -6,11 +6,18 @@ import type {
   ReportFilters,
   ReportRun,
   ReportRunFilters,
+  ReportTrainerOption,
 } from "../types";
 import { REPORTS_PAGE_SIZE } from "../types";
 
 export async function fetchCatalog(): Promise<ReportDefinition[]> {
   const { data } = await racApi.get<ReportDefinition[]>("/reports/catalog");
+  return data;
+}
+
+/** Distinct trainers of the caller's sessions — options for the trainer filter select. */
+export async function fetchTrainers(): Promise<ReportTrainerOption[]> {
+  const { data } = await racApi.get<ReportTrainerOption[]>("/trainings/trainers");
   return data;
 }
 

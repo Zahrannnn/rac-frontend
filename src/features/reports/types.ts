@@ -26,6 +26,12 @@ export type ReportFilters = {
   type?: string;
 };
 
+/** One distinct trainer identity — mirrors TrainerOptionResponse.cs. */
+export type ReportTrainerOption = {
+  name: string;
+  key: string | null;
+};
+
 export type ReportRun = {
   id: string;
   reportKey: string;

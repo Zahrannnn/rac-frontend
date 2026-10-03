@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { ExecutiveDashboardSummary } from "@/features/dashboard";
@@ -7,17 +7,26 @@ import { I18nProvider } from "@/shared/i18n";
 import type { PagedResult } from "@/features/workshops/types";
 import type { ReportDefinition, ReportRun } from "../types";
 
+// Radix Select relies on pointer-capture APIs jsdom does not implement.
+beforeAll(() => {
+  HTMLElement.prototype.hasPointerCapture = () => false;
+  HTMLElement.prototype.scrollIntoView = () => {};
+  Element.prototype.releasePointerCapture = () => {};
+});
+
 const {
   fetchDashboardSummaryMock,
   useAuthMock,
   useReportCatalogMock,
   useReportRunsMock,
+  useTrainersMock,
   generateMutateMock,
 } = vi.hoisted(() => ({
   fetchDashboardSummaryMock: vi.fn(),
   useAuthMock: vi.fn(),
   useReportCatalogMock: vi.fn(),
   useReportRunsMock: vi.fn(),
+  useTrainersMock: vi.fn(),
   generateMutateMock: vi.fn(),
 }));
 
@@ -34,6 +43,7 @@ vi.mock("@/features/dashboard/api/dashboard-adapter", () => ({
 vi.mock("../hooks/use-reports", () => ({
   useReportCatalog: useReportCatalogMock,
   useReportRuns: useReportRunsMock,
+  useTrainers: useTrainersMock,
   useGenerateReport: () => ({ mutate: generateMutateMock, isPending: false }),
 }));
 
@@ -45,6 +55,15 @@ const definition: ReportDefinition = {
   name: "Workshop status summary",
   nameAr: "ملخص حالات الورش",
   description: "All workshops by status",
+  defaultFrequency: "OnDemand",
+};
+
+const trainingDefinition: ReportDefinition = {
+  id: "d2",
+  key: "training_records",
+  name: "Training records",
+  nameAr: "سجلات التدريب",
+  description: "Training sessions with attendees and pre/post scores",
   defaultFrequency: "OnDemand",
 };
 
@@ -62,12 +81,21 @@ const executiveSummary: ExecutiveDashboardSummary = {
   pulse: { scoredCount: 6, recommendedTarget: 150 },
 };
 
-function renderPage(runs: PagedResult<ReportRun> = emptyRuns) {
+function renderPage(runs: PagedResult<ReportRun> = emptyRuns, catalog = definition) {
   fetchDashboardSummaryMock.mockResolvedValue(executiveSummary);
   generateMutateMock.mockClear();
   useAuthMock.mockReturnValue({ user: { permissions: ["reports:generate", "reports:manage"] } });
   useReportCatalogMock.mockReturnValue({
-    data: [definition],
+    data: [catalog],
+    isPending: false,
+    isError: false,
+    refetch: vi.fn(),
+  });
+  useTrainersMock.mockReturnValue({
+    data: [
+      { name: "أ. محمد عبد الله", key: "TRN-1" },
+      { name: "Eng. Samir Hassan", key: null },
+    ],
     isPending: false,
     isError: false,
     refetch: vi.fn(),
@@ -117,6 +145,34 @@ describe("ReportsPage", () => {
     expect(generateMutateMock.mock.calls[0][0]).toEqual({
       key: "workshop_status_summary",
       filters: {},
+    });
+  });
+
+  it("training records dialog selects the trainer from existing trainers", async () => {
+    renderPage(emptyRuns, trainingDefinition);
+
+    expect(await screen.findByText("كتالوج التقارير")).toBeInTheDocument();
+    const card = screen.getByText("سجلات التدريب").closest("article");
+    if (!card) throw new Error("training records card not found");
+    fireEvent.click(within(card as HTMLElement).getByRole("button", { name: "توليد" }));
+
+    const dialog = await screen.findByRole("dialog");
+    // The trainer filter is a select over existing trainers — the old free-text
+    // input is gone.
+    expect(within(dialog).queryByRole("textbox", { name: "المدرب" })).not.toBeInTheDocument();
+    const trainerCombo = within(dialog).getByRole("combobox", { name: "المدرب" });
+
+    // Open the select and pick one of the existing trainers (same pattern as
+    // district-select.test: stubbed pointer APIs let the Radix portal render).
+    fireEvent.click(trainerCombo);
+    await waitFor(() => expect(screen.getByRole("listbox")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("option", { name: "Eng. Samir Hassan" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "تنزيل" }));
+
+    expect(generateMutateMock).toHaveBeenCalledTimes(1);
+    expect(generateMutateMock.mock.calls[0][0]).toEqual({
+      key: "training_records",
+      filters: { trainer: "Eng. Samir Hassan" },
     });
   });
 });

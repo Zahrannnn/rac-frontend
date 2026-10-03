@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { GOVERNORATES } from "@/shared/constants/egypt";
 import { useT } from "@/shared/i18n";
+import { useTrainers } from "../hooks/use-reports";
 import type { ReportFilters } from "../types";
 
 const WORKSHOP_STATUSES = ["Draft", "Submitted", "Complete", "Incomplete", "Scored"] as const;
@@ -25,11 +26,13 @@ const WORKSHOP_TYPES = [
 
 /** Single-select filter with the leading "all" sentinel option. */
 function FilterSelectField({
+  id,
   label,
   value,
   options,
   onChange,
 }: {
+  id?: string;
   label: string;
   value: string | undefined;
   options: { value: string; label: string }[];
@@ -39,9 +42,9 @@ function FilterSelectField({
 
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
-      <Label>{label}</Label>
+      <Label htmlFor={id}>{label}</Label>
       <Select value={value ?? "all"} onValueChange={onChange}>
-        <SelectTrigger>
+        <SelectTrigger id={id}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -73,6 +76,7 @@ export function ReportFilterFields({
   onFilterChange: (key: keyof ReportFilters, value: string) => void;
 }) {
   const t = useT();
+  const trainers = useTrainers();
 
   return (
     <fieldset className="flex flex-col gap-3 rounded-lg border bg-muted/40 p-3">
@@ -135,14 +139,16 @@ export function ReportFilterFields({
         ) : null}
 
         {supported.includes("trainer") ? (
-          <div className="flex min-w-0 flex-col gap-1.5 md:col-span-2">
-            <Label htmlFor="report-trainer">{t("reports.filterTrainer")}</Label>
-            <Input
-              id="report-trainer"
-              value={filters.trainer ?? ""}
-              onChange={(event) => onFilterChange("trainer", event.target.value)}
-            />
-          </div>
+          <FilterSelectField
+            id="report-trainer"
+            label={t("reports.filterTrainer")}
+            value={filters.trainer}
+            onChange={(value) => onFilterChange("trainer", value === "all" ? "" : value)}
+            options={(trainers.data ?? []).map((trainer) => ({
+              value: trainer.name,
+              label: trainer.name,
+            }))}
+          />
         ) : null}
 
         {supported.includes("workshopId") ? (
