@@ -3,7 +3,6 @@ import { env } from "@/shared/config/env";
 import { normalizeApiError } from "./http-client";
 
 const sessionCacheKey = "rac.session";
-const loginPath = "/auth/login";
 
 export const racApi: AxiosInstance = axios.create({
   baseURL: env.NEXT_PUBLIC_RAC_API_BASE_URL || undefined,
@@ -29,29 +28,36 @@ racApi.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+/**
+ * The auth feature (session-adapter) owns the refresh-token flow and
+ * installs the 401 single-flight refresh-and-retry handler through this
+ * slot; rac-api stays free of feature imports. The slot is wired when the
+ * session-adapter module loads, which the app-level AuthProvider always
+ * triggers.
+ */
+export type UnauthorizedHandler = (error: AxiosError) => Promise<unknown>;
+
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+export function registerUnauthorizedHandler(handler: UnauthorizedHandler | null) {
+  unauthorizedHandler = handler;
+}
+
+// Registered BEFORE the error normalizer below, so the refresh handler sees
+// the raw AxiosError — normalization strips the request config the retry
+// needs, and the raw error still flows into the normalizer afterwards.
 racApi.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    const status = error.response?.status;
-
-    // A session the backend rejects (expired/invalid token) is dropped from
-    // local storage so the app returns to the login flow — but NEVER while
-    // already on the login page: there a 401 is either the stale-session
-    // probe or the post-login verification, and hard-navigating to the page
-    // we are already on is the "force refresh" users saw. Login failures
-    // themselves are handled by the login form.
-    if (status === 401 && !error.config?.url?.includes(loginPath)) {
-      if (typeof window !== "undefined" && window.location.pathname === "/auth/login") {
-        return Promise.reject(normalizeApiError(error));
-      }
-
-      window.localStorage.removeItem(sessionCacheKey);
-      const next = encodeURIComponent(
-        window.location.pathname + window.location.search
-      );
-      window.location.assign(`/auth/login?next=${next}`);
+    // Only a 401 can be recovered by rotating the refresh token.
+    if (unauthorizedHandler && error.response?.status === 401 && error.config) {
+      return unauthorizedHandler(error);
     }
-
-    return Promise.reject(normalizeApiError(error));
+    return Promise.reject(error);
   }
+);
+
+racApi.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => Promise.reject(normalizeApiError(error))
 );

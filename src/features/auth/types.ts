@@ -18,11 +18,13 @@ export type AuthUser = {
 
 /**
  * The browser session: the JWT (sent as the Authorization header on every
- * API call) plus the cached profile and expiry.
+ * API call), the refresh token used to rotate the pair, plus the cached
+ * profile and access-token expiry.
  */
 export type Session = {
   token: string;
   expiresAtUtc: string;
+  refreshToken: string;
   user: AuthUser;
 };
 

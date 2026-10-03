@@ -2,9 +2,9 @@
 
 import { createContext, useCallback, useContext, useMemo, useSyncExternalStore, type ReactNode } from "react";
 import {
-  clearSession,
   getSessionSnapshot,
   loginWithSession,
+  logoutSession,
   subscribeToSession,
 } from "../api/session-adapter";
 import type { AuthUser, LoginInput, Session } from "../types";
@@ -35,10 +35,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await loginWithSession(input);
   }, []);
 
-  // The JWT lives only in this browser — clearing the local cache is the
-  // whole logout.
+  // The JWT lives only in this browser — revoking the refresh token
+  // server-side (best-effort, never blocking) plus clearing the local cache
+  // is the whole logout.
   const logout = useCallback(async () => {
-    clearSession();
+    logoutSession();
   }, []);
 
   const value = useMemo<AuthContextValue>(

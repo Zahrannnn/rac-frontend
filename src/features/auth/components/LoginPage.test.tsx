@@ -12,6 +12,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("../api/session-adapter", () => ({
   loginWithSession: (...args: unknown[]) => loginWithSession(...args),
+  logoutSession: () => undefined,
   readSession: () => null,
   clearSession: () => undefined,
   refreshSession: () => Promise.resolve(null),
@@ -43,6 +44,7 @@ describe("LoginPage submit path", () => {
     loginWithSession.mockResolvedValue({
       accessToken: "token",
       expiresAtUtc: new Date(Date.now() + 3600_000).toISOString(),
+      refreshToken: "refresh-token",
       user: { id: "1", username: "admin", email: "a@b.c", fullName: "Admin", role: "SuperAdmin", isActive: true, permissions: ["*"] },
     });
 
