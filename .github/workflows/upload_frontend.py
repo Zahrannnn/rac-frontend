@@ -88,6 +88,10 @@ def main():
     check, rc = run(ssh, f"test -f '{APP_DIR}/current/nodejs/server.js' && echo OK")
     if check != 'OK':
         raise RuntimeError('activation failed: current/nodejs/server.js missing after flip')
+    # kill stale next-server processes — old deployments keep holding the port and
+    # serving their build; the supervisor respawns from `current` immediately
+    out, rc = run(ssh, "pkill -9 -f next-server || true", check=False)
+    print('stale next-server processes killed')
     print('verified: current/nodejs/server.js resolves')
     print('done:', VERSION_ID)
     ssh.close()
