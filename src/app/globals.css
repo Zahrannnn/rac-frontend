@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * RAC-DAMP design tokens — source of truth: DESIGN.md / tokens.json at the workspace root.
+ * UNIDO palette: UN blue #009EDB (brand accent) · deep UNIDO blue #0072A8 = primary interaction color
+ * Deep blue #004E77 (--navy) = institutional shell · Orange #F58220 = secondary accent
+ * Purple #7C4DBF = AI surfaces only · Status colors carry text labels, never color alone.
+ */
+:root {
+  --background: #f4f7f9;
+  --foreground: #22303e;
+  --card: #ffffff;
+  --card-foreground: #22303e;
+  --popover: #ffffff;
+  --popover-foreground: #22303e;
+  --primary: #0072a8;
+  --primary-foreground: #ffffff;
+  --secondary: #f58220;
+  --secondary-foreground: #ffffff;
+  --muted: #eef3f7;
+  --muted-foreground: #5b6b7c;
+  --accent: #e1f3fb;
+  --accent-foreground: #00587f;
+  --destructive: #c0534a;
+  --destructive-foreground: #ffffff;
+  --border: #dfe7ee;
+  --input: #dfe7ee;
+  --ring: #0072a8;
+  --radius: 0.5rem;
+
+  /* RAC-DAMP extensions */
+  --navy: #004e77;
+  --navy-foreground: #ffffff;
+  --navy-hover: #003d5f;
+  --navy-shell: #004e77;
+  --brand-blue: #009edb;
+  --success: #2f9e6b;
+  --warning: #e8a13d;
+  --ai-accent: #7c4dbf;
+  --row-selected: #e1f3fb;
+
+  /* Soft light sidebar — calmer than deep shell; brand blue for active */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #22303e;
+  --sidebar-primary: #0072a8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e1f3fb;
+  --sidebar-accent-foreground: #004e77;
+  --sidebar-border: #d0dbe6;
+  --sidebar-ring: #0072a8;
+}
+
+.dark {
+  --background: #0b1824;
+  --foreground: #e8eef4;
+  --card: #132536;
+  --card-foreground: #e8eef4;
+  --popover: #132536;
+  --popover-foreground: #e8eef4;
+  --primary: #3aa3d0;
+  --primary-foreground: #041018;
+  --secondary: #f5892f;
+  --secondary-foreground: #1a0f04;
+  --muted: #1a2f40;
+  --muted-foreground: #9aafc0;
+  --accent: #1a3a50;
+  --accent-foreground: #b6e0f3;
+  --destructive: #e07068;
+  --destructive-foreground: #ffffff;
+  --border: #2a4156;
+  --input: #2a4156;
+  --ring: #3aa3d0;
+
+  /* Readable brand ink for headings/KPIs; filled chrome uses --navy-shell */
+  --navy: #5eb8e0;
+  --navy-foreground: #041018;
+  --navy-hover: #3aa3d0;
+  --navy-shell: #004e77;
+  --brand-blue: #22a7e3;
+  --success: #45c08a;
+  --warning: #ecb35c;
+  --ai-accent: #9a6fd6;
+  --row-selected: #1a3a50;
+
+  /* Soft elevated sidebar — friendlier than solid navy shell */
+  --sidebar: #152a3c;
+  --sidebar-foreground: #e8eef4;
+  --sidebar-primary: #3aa3d0;
+  --sidebar-primary-foreground: #041018;
+  --sidebar-accent: #1e3a50;
+  --sidebar-accent-foreground: #e8eef4;
+  --sidebar-border: #2a4156;
+  --sidebar-ring: #3aa3d0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-navy: var(--navy);
+  --color-navy-foreground: var(--navy-foreground);
+  --color-navy-hover: var(--navy-hover);
+  --color-navy-shell: var(--navy-shell);
+  --color-brand-blue: var(--brand-blue);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-ai-accent: var(--ai-accent);
+  --color-row-selected: var(--row-selected);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: var(--font-cairo);
+  --font-mono: var(--font-geist-mono);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  outline-color: var(--ring);
+}

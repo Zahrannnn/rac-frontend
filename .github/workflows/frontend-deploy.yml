@@ -1,0 +1,143 @@
+name: Frontend Build & Deploy (prebuilt to Hostinger)
+
+# Hostinger's on-host `next build` breaks (Turbopack worker fork dies / hangs on their
+# shared sandbox). This workflow builds on a GitHub runner (16GB) and ships the
+# standalone output to the Hostinger Web App layout, mirroring what hPanel's
+# deploy does: versions/<id>/nodejs + `current` symlink flip.
+#
+# Guarantees:
+#  - Lint + typecheck + unit tests gate the build
+#  - The payload is scanned for dev-only hosts (localhost) before upload — a
+#    build made with a dev .env can never reach production
+#  - After activation, server.js must resolve through `current` or the deploy fails
+#  - Post-deploy smoke probe hits the live site before declaring success
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "rac-frontend/**"
+      - ".github/workflows/frontend-deploy.yml"
+
+concurrency:
+  group: frontend-deploy
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint · Typecheck · Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: rac-frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: rac-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test:run
+
+  build-and-deploy:
+    name: Build · Ship · Activate
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: rac-frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: rac-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (standalone)
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Guard — no dev-only hosts baked into the bundle
+        run: |
+          # A build made with a dev .env.local inlines NEXT_PUBLIC_RAC_API_BASE_URL = localhost:5161,
+          # which bricks the deployed app (browsers call their own machine).
+          # Scan every shipped JS/HTML asset; fail before anything is uploaded.
+          if grep -rl "localhost:5161" .next/static .next/standalone/.next/server/app 2>/dev/null | grep -q .; then
+            echo "::error::Dev API URL (localhost:5161) baked into the production bundle:"
+            grep -rl "localhost:5161" .next/static .next/standalone/.next/server/app 2>/dev/null || true
+            exit 1
+          fi
+          echo "bundle clean — no dev hosts baked in"
+
+      - name: Assemble deploy payload
+        run: |
+          # Hostinger's runtime layout: <app>/nodejs with server.js at root.
+          # Next standalone output + static assets + public, matching the
+          # existing current/nodejs structure (package.json, node_modules runtime
+          # subset, .next, public, server.js).
+          rm -rf payload && mkdir -p payload
+          cp -r .next/standalone/. payload/
+          # standalone/.next lacks static + cache pieces; layer them in
+          rm -rf payload/.next/static
+          cp -r .next/static payload/.next/static
+          rm -rf payload/public
+          cp -r public payload/public
+          # marker so we can verify from outside
+          echo "${GITHUB_SHA}" > payload/BUILD_SHA
+          du -sh payload
+
+      - name: Upload & activate on Hostinger (SFTP)
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          SSH_PASS: ${{ secrets.HOSTINGER_SSH_PASS }}
+          APP_DIR: ${{ secrets.HOSTINGER_APP_DIR }}
+        run: |
+          pip install paramiko -q
+          python ../.github/workflows/upload_frontend.py
+
+      - name: Post-deploy smoke
+        env:
+          SITE_URL: https://rac-egypt.mzahran.tech
+        run: |
+          # The supervisor needs a moment to restart the process from `current`.
+          sleep 20
+          ok=0
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$SITE_URL/workshops" || echo 000)
+            if [ "$code" = "200" ]; then
+              echo "smoke OK on attempt $i (/workshops → 200)"
+              ok=1
+              break
+            fi
+            echo "attempt $i: HTTP $code — retrying"
+            sleep 15
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::Post-deploy smoke failed — /workshops never returned 200"
+            exit 1
+          fi
