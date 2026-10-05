@@ -1,5 +1,5 @@
 import { racApi } from "@/shared/api/rac-api";
-import type { PagedResult } from "@/features/workshops/types";
+import type { PagedResult } from "@/shared/api/paged-result";
 import { ADMIN_PAGE_SIZE, AUDIT_PAGE_SIZE } from "../types";
 import type {
   AdminUser,
