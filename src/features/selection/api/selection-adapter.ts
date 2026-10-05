@@ -1,6 +1,6 @@
 import { racApi } from "@/shared/api/rac-api";
 import { downloadBlob } from "@/shared/api/file-transfer";
-import type { PagedResult } from "@/features/workshops/types";
+import type { PagedResult } from "@/shared/api/paged-result";
 import type {
   CriterionWeight,
   RankedWorkshop,
