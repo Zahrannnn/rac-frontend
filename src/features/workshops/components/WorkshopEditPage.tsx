@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/shared/components/layout/page-header";
+import { PageBreadcrumbs } from "@/shared/components/layout/page-breadcrumbs";
 import { useT } from "@/shared/i18n";
-import { workshopProfile } from "@/shared/constants/routes";
+import { routes, workshopProfile } from "@/shared/constants/routes";
 import { useWorkshop } from "../hooks/use-workshops";
+import { workshopDisplayName } from "../utils/format";
 import { WorkshopEditForm } from "./WorkshopEditForm";
 import { WorkshopDetailSkeleton, WorkshopNotFoundState } from "./WorkshopLoadStates";
 
@@ -34,6 +36,13 @@ export function WorkshopEditPage({ workshopId }: { workshopId: string }) {
 
   return (
     <div className="flex flex-col gap-5">
+      <PageBreadcrumbs
+        items={[
+          { label: t("workshops.title"), href: routes.workshops },
+          { label: workshopDisplayName(workshop), href: profileHref },
+          { label: t("workshops.editBreadcrumb") },
+        ]}
+      />
       <PageHeader title={t("profile.editTitle")} description={t("profile.editHint")}>
         <Button asChild variant="outline">
           <Link href={profileHref}>

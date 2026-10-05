@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/shared/components/layout/page-header";
+import { PageBreadcrumbs } from "@/shared/components/layout/page-breadcrumbs";
 import { FormField } from "@/shared/components/form/form-field";
 import { LocationMapLazy } from "@/shared/components/map";
 import { useGeolocationCapture } from "@/shared/hooks/use-geolocation";
@@ -56,6 +57,12 @@ export function RegisterWorkshopPage() {
 
   return (
     <div className="flex flex-col gap-5">
+      <PageBreadcrumbs
+        items={[
+          { label: t("workshops.title"), href: "/workshops" },
+          { label: t("workshops.register") },
+        ]}
+      />
       <PageHeader title={t("wizard.title")} description={t("wizard.subtitle")}>
         <Button asChild variant="outline">
           <Link href="/workshops">

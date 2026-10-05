@@ -12,6 +12,7 @@ import { useGeolocationCapture } from "@/shared/hooks/use-geolocation";
 import { useAuth, can } from "@/features/auth";
 import { useWorkshop } from "@/features/workshops";
 import { useT, type TranslationKey } from "@/shared/i18n";
+import { PageBreadcrumbs } from "@/shared/components/layout/page-breadcrumbs";
 import {
   isOutsideEgypt,
   WORLD_LATITUDE_MAX,
@@ -429,16 +430,30 @@ export function SurveyWizardPage({
       </Button>
     );
 
+  // Breadcrumb: Workshops → {workshop} → survey. The middle crumb appears once
+  // the workshop (or at least its code) is known; loading/error states skip it.
+  const profileHref = `${routes.workshops}/${workshopId}` as Route;
+  const workshopCrumbLabel = workshopContext?.name ?? workshopContext?.code ?? null;
+  const crumbs = [
+    { label: t("workshops.title"), href: routes.workshops },
+    ...(workshopCrumbLabel
+      ? [{ label: workshopCrumbLabel, href: profileHref }]
+      : []),
+    { label: t("workshops.surveyBreadcrumb") },
+  ];
+
   return (
-    <InterviewShell
-      workshopCode={survey.workshopCode}
-      status={survey.status}
-      title={shellTitle}
-      progressLabel={progressLabel}
-      progressPercent={progressPercent}
-      footerStart={footerStart}
-      footerEnd={footerEnd}
-    >
+    <>
+      <PageBreadcrumbs items={crumbs} />
+      <InterviewShell
+        workshopCode={survey.workshopCode}
+        status={survey.status}
+        title={shellTitle}
+        progressLabel={progressLabel}
+        progressPercent={progressPercent}
+        footerStart={footerStart}
+        footerEnd={footerEnd}
+      >
       {/* Complete banner (post-submit success) */}
       {submitResult?.status === "Complete" ? (
         <section
@@ -522,6 +537,7 @@ export function SurveyWizardPage({
           onJumpToStep={jumpToStep}
         />
       ) : null}
-    </InterviewShell>
+      </InterviewShell>
+    </>
   );
 }

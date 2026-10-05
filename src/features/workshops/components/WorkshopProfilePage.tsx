@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { useI18n, useT } from "@/shared/i18n";
-import { workshopEdit } from "@/shared/constants/routes";
+import { workshopEdit, routes } from "@/shared/constants/routes";
+import { PageBreadcrumbs } from "@/shared/components/layout/page-breadcrumbs";
 import { cn } from "@/shared/utils/cn";
 import { useAuth, can } from "@/features/auth";
 import { useMounted } from "@/shared/hooks/use-mounted";
@@ -113,6 +114,12 @@ export function WorkshopProfilePage({ workshopId }: { workshopId: string }) {
 
   return (
     <>
+      <PageBreadcrumbs
+        items={[
+          { label: t("workshops.title"), href: routes.workshops },
+          { label: workshopDisplayName(workshop) },
+        ]}
+      />
       <PageHeader
         title={workshopDisplayName(workshop)}
         description={workshop.nameAr ? workshop.nameEn : undefined}
