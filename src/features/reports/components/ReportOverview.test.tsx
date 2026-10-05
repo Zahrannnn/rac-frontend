@@ -9,7 +9,7 @@ import {
   type FullDashboardSummary,
 } from "@/features/dashboard";
 import { I18nProvider } from "@/shared/i18n";
-import type { PagedResult } from "@/features/workshops/types";
+import type { PagedResult } from "@/shared/api/paged-result";
 import type { ReportRun } from "../types";
 
 const { fetchDashboardSummaryMock, fetchRunsMock } = vi.hoisted(() => ({

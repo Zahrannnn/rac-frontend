@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { ExecutiveDashboardSummary } from "@/features/dashboard";
 import { I18nProvider } from "@/shared/i18n";
-import type { PagedResult } from "@/features/workshops/types";
+import type { PagedResult } from "@/shared/api/paged-result";
 import type { ReportDefinition, ReportRun } from "../types";
 
 // Radix Select relies on pointer-capture APIs jsdom does not implement.

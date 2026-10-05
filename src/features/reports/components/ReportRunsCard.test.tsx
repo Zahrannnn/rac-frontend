@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { I18nProvider } from "@/shared/i18n";
-import type { PagedResult } from "@/features/workshops/types";
+import type { PagedResult } from "@/shared/api/paged-result";
 import type { ReportDefinition, ReportRun } from "../types";
 
 const { useReportRunsMock } = vi.hoisted(() => ({ useReportRunsMock: vi.fn() }));
