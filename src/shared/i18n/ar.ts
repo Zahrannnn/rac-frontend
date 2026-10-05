@@ -1154,6 +1154,7 @@ export const ar = {
   "workshops.allDistricts": "كل المراكز والأحياء",
   "workshops.districtHint": "اكتب اسم المركز أو الحي",
   "workshops.editBreadcrumb": "تعديل الورشة",
+  "workshops.surveyBreadcrumb": "استبيان الورشة",
   "workshops.editNotFound": "الورشة غير موجودة",
   "common.back": "رجوع",
   "dashboard.trainingStats": "إحصائيات التدريب",

@@ -1163,6 +1163,7 @@ export const en: Dictionary = {
   "workshops.allDistricts": "All districts & neighborhoods",
   "workshops.districtHint": "Type a district or neighborhood",
   "workshops.editBreadcrumb": "Edit workshop",
+  "workshops.surveyBreadcrumb": "Workshop survey",
   "workshops.editNotFound": "Workshop not found",
   "common.back": "Back",
   "dashboard.trainingStats": "Training statistics",
