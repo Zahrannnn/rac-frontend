@@ -14,17 +14,18 @@ import {
   updateWeights,
 } from "../api/selection-adapter";
 import type { CriterionWeight } from "../types";
+import { selectionKeys } from "../utils/query-keys";
 
 export function useRanking() {
   return useQuery({
-    queryKey: ["selection", "ranking"],
+    queryKey: selectionKeys.ranking(),
     queryFn: fetchRanking,
   });
 }
 
 export function useWeights() {
   return useQuery({
-    queryKey: ["selection", "weights"],
+    queryKey: selectionKeys.weights(),
     queryFn: fetchWeights,
   });
 }
@@ -35,16 +36,16 @@ export function useUpdateWeights() {
   return useMutation({
     mutationFn: (weights: CriterionWeight[]) => updateWeights(weights),
     onSuccess: (response) => {
-      queryClient.setQueryData(["selection", "weights"], response);
+      queryClient.setQueryData(selectionKeys.weights(), response);
       // Re-weighted totals change every weighted score server-side.
-      void queryClient.invalidateQueries({ queryKey: ["selection", "ranking"] });
+      void queryClient.invalidateQueries({ queryKey: selectionKeys.ranking() });
     },
   });
 }
 
 export function useWorkshopScore(workshopId: string, enabled: boolean) {
   return useQuery({
-    queryKey: ["selection", "score", workshopId],
+    queryKey: selectionKeys.score(workshopId),
     queryFn: () => fetchWorkshopScore(workshopId),
     enabled,
     retry: false,
@@ -58,31 +59,31 @@ export function useSaveWorkshopScore(workshopId: string) {
     mutationFn: (scores: Parameters<typeof saveWorkshopScore>[1]) =>
       saveWorkshopScore(workshopId, scores),
     onSuccess: (score) => {
-      queryClient.setQueryData(["selection", "score", workshopId], score);
+      queryClient.setQueryData(selectionKeys.score(workshopId), score);
       // A new score row changes the ranking pool and the awaiting-scoring list.
-      void queryClient.invalidateQueries({ queryKey: ["selection", "ranking"] });
-      void queryClient.invalidateQueries({ queryKey: ["selection", "awaiting-scoring"] });
+      void queryClient.invalidateQueries({ queryKey: selectionKeys.ranking() });
+      void queryClient.invalidateQueries({ queryKey: selectionKeys.awaitingScoring() });
     },
   });
 }
 
 export function useRecommendedCompanies() {
   return useQuery({
-    queryKey: ["selection", "recommended-companies"],
+    queryKey: selectionKeys.recommendedCompanies(),
     queryFn: fetchRecommendedCompanies,
   });
 }
 
 export function useSelectionRuns(page = 1) {
   return useQuery({
-    queryKey: ["selection", "runs", page],
+    queryKey: selectionKeys.runs.page(page),
     queryFn: () => fetchSelectionRuns(page, 10),
   });
 }
 
 export function useSelectionRun(runId: string | null) {
   return useQuery({
-    queryKey: ["selection", "runs", "detail", runId],
+    queryKey: selectionKeys.runs.detail(runId),
     queryFn: () => fetchSelectionRun(runId!),
     enabled: Boolean(runId),
   });
@@ -94,9 +95,9 @@ export function useCreateSelectionRun() {
   return useMutation({
     mutationFn: (notes?: string) => createSelectionRun(notes),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["selection", "runs"] });
-      void queryClient.invalidateQueries({ queryKey: ["selection", "ranking"] });
-      void queryClient.invalidateQueries({ queryKey: ["selection", "recommended-companies"] });
+      void queryClient.invalidateQueries({ queryKey: selectionKeys.runs.all() });
+      void queryClient.invalidateQueries({ queryKey: selectionKeys.ranking() });
+      void queryClient.invalidateQueries({ queryKey: selectionKeys.recommendedCompanies() });
     },
   });
 }

@@ -8,6 +8,7 @@ import { useT } from "@/shared/i18n";
 import { fetchWorkshops } from "@/features/workshops";
 import { useAuth, can } from "@/features/auth";
 import { useRanking } from "../hooks/use-selection";
+import { selectionKeys } from "../utils/query-keys";
 
 /**
  * Workshops whose survey passed validation (status Complete) but which have no validator
@@ -25,7 +26,7 @@ export function AwaitingScoringCard({
   const canScore = Boolean(user && can(user.permissions, "selection:score"));
 
   const complete = useQuery({
-    queryKey: ["selection", "awaiting-scoring"],
+    queryKey: selectionKeys.awaitingScoring(),
     queryFn: () => fetchWorkshops({ status: "Complete", page: 1 }),
   });
   const ranking = useRanking();
