@@ -18,6 +18,7 @@ import {
   updateTraining,
   uploadTrainingPhoto,
 } from "../api/trainings-adapter";
+import { trainingKeys } from "../utils/query-keys";
 import type {
   AddAttendeePayload,
   CreateTrainingPayload,
@@ -27,12 +28,12 @@ import type {
 
 /** Any trainings write invalidates the whole feature cache (list, details, photos). */
 function invalidateTrainings(queryClient: QueryClient) {
-  void queryClient.invalidateQueries({ queryKey: ["trainings"] });
+  void queryClient.invalidateQueries({ queryKey: trainingKeys.all() });
 }
 
 export function useTrainings(filters: TrainingListFilters) {
   return useQuery({
-    queryKey: ["trainings", "list", filters],
+    queryKey: trainingKeys.list.page(filters),
     queryFn: () => fetchTrainings(filters),
     placeholderData: (previous) => previous,
   });
@@ -40,7 +41,7 @@ export function useTrainings(filters: TrainingListFilters) {
 
 export function useTraining(id: string | null) {
   return useQuery({
-    queryKey: ["trainings", "detail", id],
+    queryKey: trainingKeys.detail(id),
     queryFn: () => fetchTraining(id!),
     enabled: Boolean(id),
   });
@@ -48,7 +49,7 @@ export function useTraining(id: string | null) {
 
 export function useTrainingPhotos(trainingId: string | null) {
   return useQuery({
-    queryKey: ["trainings", "photos", trainingId],
+    queryKey: trainingKeys.photos(trainingId),
     queryFn: () => fetchTrainingPhotos(trainingId!),
     enabled: Boolean(trainingId),
   });
@@ -81,8 +82,8 @@ export function useDeleteTraining() {
 export function useAttendeeMutations(trainingId: string) {
   const queryClient = useQueryClient();
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["trainings", "detail", trainingId] });
-    void queryClient.invalidateQueries({ queryKey: ["trainings", "list"] });
+    void queryClient.invalidateQueries({ queryKey: trainingKeys.detail(trainingId) });
+    void queryClient.invalidateQueries({ queryKey: trainingKeys.list.all() });
   };
 
   return {
@@ -100,9 +101,9 @@ export function useAttendeeMutations(trainingId: string) {
 export function useTrainingPhotoMutations(trainingId: string) {
   const queryClient = useQueryClient();
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ["trainings", "photos", trainingId] });
-    void queryClient.invalidateQueries({ queryKey: ["trainings", "detail", trainingId] });
-    void queryClient.invalidateQueries({ queryKey: ["trainings", "list"] });
+    void queryClient.invalidateQueries({ queryKey: trainingKeys.photos(trainingId) });
+    void queryClient.invalidateQueries({ queryKey: trainingKeys.detail(trainingId) });
+    void queryClient.invalidateQueries({ queryKey: trainingKeys.list.all() });
   };
 
   return {
