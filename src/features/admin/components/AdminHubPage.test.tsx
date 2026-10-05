@@ -40,6 +40,15 @@ function renderHub() {
   );
 }
 
+// Breadcrumb crumbs also use role="link" (the current page carries no href),
+// so the hub's own links are the ones with an href attribute.
+function linkedHrefs() {
+  return screen
+    .getAllByRole("link")
+    .map((link) => link.getAttribute("href"))
+    .filter((href) => href !== null);
+}
+
 beforeEach(() => {
   authState.permissions = ["*"];
 });
@@ -55,8 +64,7 @@ describe("AdminHubPage", () => {
     expect(screen.getByText("160")).toBeInTheDocument();
 
     // All four surface cards are linked.
-    const hrefs = screen.getAllByRole("link").map((link) => link.getAttribute("href"));
-    expect(hrefs).toEqual(["/admin/users", "/admin/permissions", "/admin/audit"]);
+    expect(linkedHrefs()).toEqual(["/admin/users", "/admin/permissions", "/admin/audit"]);
   });
 
   it("renders only the audit card and audit figure for an audit-only permission", () => {
@@ -67,8 +75,7 @@ describe("AdminHubPage", () => {
     expect(screen.getByText("160")).toBeInTheDocument();
     expect(screen.queryByText("مستخدمون")).not.toBeInTheDocument();
 
-    const hrefs = screen.getAllByRole("link").map((link) => link.getAttribute("href"));
-    expect(hrefs).toEqual(["/admin/audit"]);
+    expect(linkedHrefs()).toEqual(["/admin/audit"]);
   });
 
   it("renders the forbidden state without any admin permission", () => {
@@ -78,7 +85,7 @@ describe("AdminHubPage", () => {
     expect(
       screen.getByText("لا تملك الصلاحية اللازمة لعرض هذه الصفحة.")
     ).toBeInTheDocument();
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(linkedHrefs()).toEqual([]);
     expect(screen.queryByText("حركة تدقيق")).not.toBeInTheDocument();
   });
 });

@@ -7,6 +7,7 @@ import { canAny, useAuth } from "@/features/auth";
 import { useAuditLogs, usePermissionMatrix, useUsers } from "../hooks/use-admin";
 import { visibleSurfaces, type AdminSurfaceDef } from "../utils/admin-surfaces";
 import { matrixColumns } from "../utils/matrix";
+import { PageBreadcrumbs } from "@/shared/components/layout/page-breadcrumbs";
 import { AdminHubHero } from "./AdminHubHero";
 
 /** Live count chip for a card — reads the cache the hero populated; gated so a
@@ -107,6 +108,7 @@ export function AdminHubPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <PageBreadcrumbs items={[{ label: t("admin.title") }]} />
       <AdminHubHero />
 
       {surfaces.length > 0 ? (
