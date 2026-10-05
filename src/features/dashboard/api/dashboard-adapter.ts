@@ -1,6 +1,7 @@
 import { totalPagesOf } from "@/shared/utils/pagination";
 import { racApi } from "@/shared/api/rac-api";
-import type { PagedResult, Workshop } from "@/features/workshops/types";
+import type { PagedResult } from "@/shared/api/paged-result";
+import type { Workshop } from "@/features/workshops/types";
 import type { DashboardFilterState } from "../utils/dashboard-filters";
 import { DEFAULT_FILTERS } from "../utils/dashboard-filters";
 import { dashboardFiltersToApiParams } from "../utils/dashboard-url-filters";
