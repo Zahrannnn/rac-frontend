@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { racApi } from "@/shared/api/rac-api";
 import { useT } from "@/shared/i18n";
+import { adminKeys } from "@/features/admin";
 import { useAssignmentMutations, useAssignments } from "../hooks/use-workshops";
 import { formatDateUtc } from "../utils/format";
 import type { Assignment } from "../types";
@@ -35,7 +36,7 @@ type AdminUser = {
 /** FieldTeams picker — the users endpoint is admin:users-gated; 403 degrades gracefully. */
 function useFieldTeamsUsers(enabled: boolean) {
   return useQuery({
-    queryKey: ["admin", "users", "fieldteams"],
+    queryKey: adminKeys.users.fieldTeams(),
     queryFn: async () => {
       const { data } = await racApi.get<{ items: AdminUser[] }>("/admin/users", {
         params: { page: 1, pageSize: 100 },

@@ -8,8 +8,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useT } from "@/shared/i18n";
 import { racApi } from "@/shared/api/rac-api";
 import { useMutation } from "@tanstack/react-query";
-import { SurveyStatusBadge } from "@/features/surveys/components/SurveyStatusBadge";
+import { SurveyStatusBadge } from "@/features/surveys";
 import { useWorkshopSurvey } from "../hooks/use-workshops";
+import { workshopsKeys } from "../utils/query-keys";
 import { formatDateUtc } from "../utils/format";
 
 /**
@@ -35,7 +36,7 @@ export function SurveySummaryCard({
     },
     onSuccess: () => {
       toast.success(t("survey.started"));
-      void queryClient.invalidateQueries({ queryKey: ["workshops", "survey", workshopId] });
+      void queryClient.invalidateQueries({ queryKey: workshopsKeys.survey(workshopId) });
     },
     onError: (error) => {
       if ((error as { status?: number }).status !== 403) {

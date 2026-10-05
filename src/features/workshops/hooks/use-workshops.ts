@@ -15,11 +15,12 @@ import {
   type DuplicateProbe,
   type UpdateWorkshopPayload,
 } from "../api/workshops-adapter";
+import { workshopsKeys } from "../utils/query-keys";
 import type { WorkshopListFilters } from "../types";
 
 export function useWorkshops(filters: WorkshopListFilters) {
   return useQuery({
-    queryKey: ["workshops", "list", filters],
+    queryKey: workshopsKeys.list.page(filters),
     queryFn: () => fetchWorkshops(filters),
     placeholderData: (previous) => previous,
   });
@@ -27,7 +28,7 @@ export function useWorkshops(filters: WorkshopListFilters) {
 
 export function useWorkshop(id: string) {
   return useQuery({
-    queryKey: ["workshops", "detail", id],
+    queryKey: workshopsKeys.detail(id),
     queryFn: () => fetchWorkshop(id),
     retry: false,
   });
@@ -49,20 +50,20 @@ export function useUpdateWorkshop(id: string) {
   return useMutation({
     mutationFn: (payload: UpdateWorkshopPayload) => updateWorkshop(id, payload),
     onSuccess: (workshop) => {
-      queryClient.setQueryData(["workshops", "detail", id], workshop);
-      void queryClient.invalidateQueries({ queryKey: ["workshops", "list"] });
+      queryClient.setQueryData(workshopsKeys.detail(id), workshop);
+      void queryClient.invalidateQueries({ queryKey: workshopsKeys.list.all() });
     },
     // 409 = someone changed the workshop concurrently — re-sync from the
     // server so the UI shows the real current state before the user retries.
     onError: () => {
-      void queryClient.invalidateQueries({ queryKey: ["workshops", "detail", id] });
+      void queryClient.invalidateQueries({ queryKey: workshopsKeys.detail(id) });
     },
   });
 }
 
 export function useAssignments(workshopId: string, enabled: boolean) {
   return useQuery({
-    queryKey: ["workshops", "assignments", workshopId],
+    queryKey: workshopsKeys.assignments(workshopId),
     queryFn: () => fetchAssignments(workshopId),
     enabled,
   });
@@ -72,7 +73,7 @@ export function useAssignmentMutations(workshopId: string) {
   const queryClient = useQueryClient();
 
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["workshops", "assignments", workshopId] });
+    queryClient.invalidateQueries({ queryKey: workshopsKeys.assignments(workshopId) });
 
   const assign = useMutation({
     mutationFn: (userId: string) => assignUser(workshopId, userId),
@@ -89,7 +90,7 @@ export function useAssignmentMutations(workshopId: string) {
 
 export function useWorkshopSurvey(workshopId: string) {
   return useQuery({
-    queryKey: ["workshops", "survey", workshopId],
+    queryKey: workshopsKeys.survey(workshopId),
     queryFn: () => fetchWorkshopSurvey(workshopId),
     retry: false,
   });
