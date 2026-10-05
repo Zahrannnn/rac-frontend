@@ -5,7 +5,8 @@ import type { RolePermissionsRow } from "../types";
 
 const authState: { permissions: string[] } = { permissions: [] };
 
-vi.mock("@/features/auth", () => ({
+vi.mock("@/features/auth", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
   useAuth: () => ({ user: { permissions: authState.permissions } }),
 }));
 

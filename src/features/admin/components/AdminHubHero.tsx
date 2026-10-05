@@ -1,8 +1,7 @@
 "use client";
 
 import { useI18n, useT, type TranslationKey } from "@/shared/i18n";
-import { useAuth } from "@/features/auth";
-import { canAny } from "@/features/auth/utils/permissions";
+import { canAny, useAuth } from "@/features/auth";
 import { useAuditLogs, usePermissionMatrix, useUsers } from "../hooks/use-admin";
 
 /** One live headline figure in the navy band — skeleton while pending, omitted on error. */

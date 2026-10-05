@@ -1,6 +1,6 @@
 import { KeyRound, ScrollText, Users, type LucideIcon } from "lucide-react";
 import type { Route } from "next";
-import { canAny } from "@/features/auth/utils/permissions";
+import { canAny } from "@/features/auth";
 
 export type AdminSurfaceKey = "users" | "permissions" | "audit";
 

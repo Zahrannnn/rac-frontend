@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useT } from "@/shared/i18n";
-import { useAuth } from "@/features/auth";
-import { canAny } from "@/features/auth/utils/permissions";
+import { canAny, useAuth } from "@/features/auth";
 import { useAuditLogs, usePermissionMatrix, useUsers } from "../hooks/use-admin";
 import { visibleSurfaces, type AdminSurfaceDef } from "../utils/admin-surfaces";
 import { matrixColumns } from "../utils/matrix";
