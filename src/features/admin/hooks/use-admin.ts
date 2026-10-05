@@ -22,13 +22,14 @@ import type {
   UpdateUserPayload,
   UserListFilters,
 } from "../types";
+import { adminKeys } from "../utils/query-keys";
 
 /** Shared opt-in flags for the read hooks — the hub gates queries by permission. */
 export type ListQueryOptions = { enabled?: boolean };
 
 export function useUsers(filters: UserListFilters, options?: ListQueryOptions) {
   return useQuery({
-    queryKey: ["admin", "users", filters],
+    queryKey: adminKeys.users.list(filters),
     queryFn: () => fetchUsers(filters),
     placeholderData: (previous) => previous,
     enabled: options?.enabled,
@@ -37,7 +38,7 @@ export function useUsers(filters: UserListFilters, options?: ListQueryOptions) {
 
 export function useUser(id: string | null) {
   return useQuery({
-    queryKey: ["admin", "users", "detail", id],
+    queryKey: adminKeys.users.detail(id),
     queryFn: () => fetchUser(id!),
     enabled: Boolean(id),
   });
@@ -49,7 +50,7 @@ export function useCreateUser() {
   return useMutation({
     mutationFn: (payload: CreateUserPayload) => createUser(payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      void queryClient.invalidateQueries({ queryKey: adminKeys.users.all() });
     },
   });
 }
@@ -60,7 +61,7 @@ export function useUpdateUser(id: string) {
   return useMutation({
     mutationFn: (payload: UpdateUserPayload) => updateUser(id, payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      void queryClient.invalidateQueries({ queryKey: adminKeys.users.all() });
     },
   });
 }
@@ -71,7 +72,7 @@ export function useChangeUserRole(id: string) {
   return useMutation({
     mutationFn: (payload: ChangeUserRolePayload) => changeUserRole(id, payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      void queryClient.invalidateQueries({ queryKey: adminKeys.users.all() });
     },
   });
 }
@@ -82,7 +83,7 @@ export function usePatchUserStatus(id: string) {
   return useMutation({
     mutationFn: (payload: PatchUserStatusPayload) => patchUserStatus(id, payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      void queryClient.invalidateQueries({ queryKey: adminKeys.users.all() });
     },
   });
 }
@@ -93,14 +94,14 @@ export function useResetUserPassword(id: string) {
   return useMutation({
     mutationFn: (payload: ResetPasswordPayload) => resetUserPassword(id, payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["admin", "users", "detail", id] });
+      void queryClient.invalidateQueries({ queryKey: adminKeys.users.detail(id) });
     },
   });
 }
 
 export function usePermissionMatrix(options?: ListQueryOptions) {
   return useQuery({
-    queryKey: ["admin", "permissions"],
+    queryKey: adminKeys.permissions(),
     queryFn: fetchPermissionMatrix,
     enabled: options?.enabled,
   });
@@ -114,7 +115,7 @@ export function useSaveRolePermissions() {
     mutationFn: ({ role, permissions }: { role: string; permissions: string[] }) =>
       updateRolePermissions(role, permissions),
     onSuccess: (row) => {
-      queryClient.setQueryData<{ role: string; permissions: string[] }[]>(["admin", "permissions"], (old) =>
+      queryClient.setQueryData<{ role: string; permissions: string[] }[]>(adminKeys.permissions(), (old) =>
         old ? old.map((existing) => (existing.role === row.role ? row : existing)) : old
       );
     },
@@ -123,7 +124,7 @@ export function useSaveRolePermissions() {
 
 export function useAuditLogs(filters: AuditFilters, options?: ListQueryOptions) {
   return useQuery({
-    queryKey: ["admin", "audit", filters],
+    queryKey: adminKeys.audit(filters),
     queryFn: () => fetchAuditLogs(filters),
     placeholderData: (previous) => previous,
     enabled: options?.enabled,
