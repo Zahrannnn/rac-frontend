@@ -11,7 +11,7 @@ import { useI18n, useT } from "@/shared/i18n";
 import { workshopEdit } from "@/shared/constants/routes";
 import { cn } from "@/shared/utils/cn";
 import { useAuth, can } from "@/features/auth";
-import { useMounted } from "@/hooks/use-mounted";
+import { useMounted } from "@/shared/hooks/use-mounted";
 import { useWorkshop } from "../hooks/use-workshops";
 import { formatDateUtc, governorateLabel, workshopDisplayName } from "../utils/format";
 import type { Workshop } from "../types";

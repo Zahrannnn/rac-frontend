@@ -14,7 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/shared/i18n";
 import { useAuth, can } from "@/features/auth";
-import { useMounted } from "@/hooks/use-mounted";
+import { useMounted } from "@/shared/hooks/use-mounted";
 import {
   TechnicianDialog,
   TechnicianStatusBadge,

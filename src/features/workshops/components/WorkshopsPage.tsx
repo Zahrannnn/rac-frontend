@@ -8,7 +8,7 @@ import { ChevronRight, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useMounted } from "@/hooks/use-mounted";
+import { useMounted } from "@/shared/hooks/use-mounted";
 import {
   Select,
   SelectContent,
