@@ -3,10 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchCatalog, fetchRuns, fetchTrainers, generateReport } from "../api/reports-adapter";
 import type { ReportFilters, ReportRunFilters } from "../types";
+import { reportKeys } from "../utils/query-keys";
+import { trainingKeys } from "@/features/trainings";
 
 export function useReportCatalog() {
   return useQuery({
-    queryKey: ["reports", "catalog"],
+    queryKey: reportKeys.catalog(),
     queryFn: fetchCatalog,
   });
 }
@@ -14,7 +16,7 @@ export function useReportCatalog() {
 /** Options for the training-records report's trainer select. */
 export function useTrainers() {
   return useQuery({
-    queryKey: ["trainings", "trainers"],
+    queryKey: trainingKeys.trainers(),
     queryFn: fetchTrainers,
     staleTime: 5 * 60 * 1000,
   });
@@ -22,7 +24,7 @@ export function useTrainers() {
 
 export function useReportRuns(filters: ReportRunFilters, enabled = true) {
   return useQuery({
-    queryKey: ["reports", "runs", filters],
+    queryKey: reportKeys.runs.list(filters),
     queryFn: () => fetchRuns(filters),
     placeholderData: (previous) => previous,
     enabled,
@@ -41,7 +43,7 @@ export function useGenerateReport() {
       filters?: ReportFilters;
     }) => generateReport(key, filters),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["reports", "runs"] });
+      void queryClient.invalidateQueries({ queryKey: reportKeys.runs.all() });
     },
   });
 }
