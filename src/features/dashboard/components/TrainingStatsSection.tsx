@@ -6,8 +6,9 @@ import { GraduationCap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { governorateLabel } from "@/shared/constants/egypt";
 import { useI18n, useT } from "@/shared/i18n";
-import { fetchTrainings } from "@/features/trainings/api/trainings-adapter";
+import { fetchTrainings } from "@/features/trainings";
 import { computeTrainingStats } from "../utils/training-stats";
+import { dashboardKeys } from "../utils/query-keys";
 
 /** Dedicated training-statistics panel — computed from the trainings list
  * API (first 100 records; the backend exposes no aggregate endpoint). */
@@ -15,7 +16,7 @@ export function TrainingStatsSection() {
   const t = useT();
   const { locale } = useI18n();
   const { data, isPending, isError } = useQuery({
-    queryKey: ["dashboard", "training-stats"],
+    queryKey: dashboardKeys.trainingStats(),
     queryFn: () => fetchTrainings({ page: 1 }),
   });
 
