@@ -1,8 +1,7 @@
 "use client";
 
 import { useQueries } from "@tanstack/react-query";
-import { fetchWorkshopSurvey } from "@/features/workshops/api/workshops-adapter";
-import type { WorkshopSurvey } from "@/features/workshops/types";
+import { fetchWorkshopSurvey, workshopsKeys, type WorkshopSurvey } from "@/features/workshops";
 
 /** One workshop row's survey status in the registry (null = none started). */
 export type SurveyStatusEntry = {
@@ -14,7 +13,7 @@ export type SurveyStatusEntry = {
 export function useWorkshopSurveys(workshopIds: string[]) {
   return useQueries({
     queries: workshopIds.map((workshopId) => ({
-      queryKey: ["workshops", "survey", workshopId] as const,
+      queryKey: workshopsKeys.survey(workshopId),
       queryFn: () => fetchWorkshopSurvey(workshopId),
       retry: false,
       staleTime: 30_000,

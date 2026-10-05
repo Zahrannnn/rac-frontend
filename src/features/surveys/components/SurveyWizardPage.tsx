@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGeolocationCapture } from "@/shared/hooks/use-geolocation";
 import { useAuth, can } from "@/features/auth";
-import { useWorkshop } from "@/features/workshops/hooks/use-workshops";
+import { useWorkshop } from "@/features/workshops";
 import { useT, type TranslationKey } from "@/shared/i18n";
 import {
   isOutsideEgypt,

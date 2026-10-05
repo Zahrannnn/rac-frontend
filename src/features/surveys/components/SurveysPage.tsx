@@ -20,7 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { useT } from "@/shared/i18n";
 import { cn } from "@/shared/utils/cn";
-import { useWorkshops } from "@/features/workshops/hooks/use-workshops";
+import { useWorkshops } from "@/features/workshops";
 import { surveyByWorkshopId, useWorkshopSurveys } from "../hooks/use-workshop-surveys";
 import type { SurveyStatus } from "../types";
 import { SurveyQueue } from "./SurveyQueue";
