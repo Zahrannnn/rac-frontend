@@ -9,11 +9,12 @@ import {
   type CreateTechnicianPayload,
   type UpdateTechnicianPayload,
 } from "../api/technicians-adapter";
+import { technicianKeys } from "../utils/query-keys";
 import type { TechnicianListFilters } from "../types";
 
 export function useTechnicians(filters: TechnicianListFilters) {
   return useQuery({
-    queryKey: ["technicians", "list", filters],
+    queryKey: technicianKeys.list.page(filters),
     queryFn: () => fetchTechnicians(filters),
     placeholderData: (previous) => previous,
   });
@@ -21,7 +22,7 @@ export function useTechnicians(filters: TechnicianListFilters) {
 
 export function useTechnician(id: string) {
   return useQuery({
-    queryKey: ["technicians", "detail", id],
+    queryKey: technicianKeys.detail(id),
     queryFn: () => fetchTechnician(id),
     retry: false,
   });
@@ -33,7 +34,7 @@ export function useCreateTechnician() {
   return useMutation({
     mutationFn: (payload: CreateTechnicianPayload) => createTechnician(payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["technicians", "list"] });
+      void queryClient.invalidateQueries({ queryKey: technicianKeys.list.all() });
     },
   });
 }
@@ -44,8 +45,8 @@ export function useUpdateTechnician(id: string) {
   return useMutation({
     mutationFn: (payload: UpdateTechnicianPayload) => updateTechnician(id, payload),
     onSuccess: (technician) => {
-      queryClient.setQueryData(["technicians", "detail", id], technician);
-      void queryClient.invalidateQueries({ queryKey: ["technicians", "list"] });
+      queryClient.setQueryData(technicianKeys.detail(id), technician);
+      void queryClient.invalidateQueries({ queryKey: technicianKeys.list.all() });
     },
   });
 }

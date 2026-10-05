@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { useT } from "@/shared/i18n";
+import { formatDateUtc } from "@/shared/utils/datetime";
 import { useAuth, can } from "@/features/auth";
 import { useTechnician } from "../hooks/use-technicians";
 import { TechnicianDialog } from "./TechnicianDialog";
 import { TechnicianStatusBadge } from "./TechnicianStatusBadge";
-import { formatDateUtc } from "@/features/workshops/utils/format";
 
 export function TechnicianProfilePage({ technicianId }: { technicianId: string }) {
   const t = useT();
