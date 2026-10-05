@@ -1,5 +1,5 @@
 import { racApi } from "@/shared/api/rac-api";
-import type { PagedResult } from "@/features/workshops";
+import type { PagedResult } from "@/shared/api/paged-result";
 import type { Technician, TechnicianListFilters, TechnicianStatus } from "../types";
 
 export async function fetchTechnicians(
