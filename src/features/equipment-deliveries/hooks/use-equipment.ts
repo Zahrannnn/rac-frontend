@@ -11,11 +11,12 @@ import {
   updateDelivery,
   uploadDeliveryPhoto,
 } from "../api/equipment-adapter";
+import { equipmentDeliveryKeys } from "../utils/query-keys";
 import type { CreateDeliveryPayload, DeliveryListFilters, UpdateDeliveryPayload } from "../types";
 
 export function useDeliveries(filters: DeliveryListFilters) {
   return useQuery({
-    queryKey: ["equipment-deliveries", "list", filters],
+    queryKey: equipmentDeliveryKeys.list(filters),
     queryFn: () => fetchDeliveries(filters),
     placeholderData: (previous) => previous,
   });
@@ -23,7 +24,7 @@ export function useDeliveries(filters: DeliveryListFilters) {
 
 export function useDelivery(id: string | null) {
   return useQuery({
-    queryKey: ["equipment-deliveries", "detail", id],
+    queryKey: equipmentDeliveryKeys.detail(id),
     queryFn: () => fetchDelivery(id!),
     enabled: Boolean(id),
   });
@@ -31,7 +32,7 @@ export function useDelivery(id: string | null) {
 
 export function useDeliveryPhotos(deliveryId: string | null) {
   return useQuery({
-    queryKey: ["equipment-deliveries", "photos", deliveryId],
+    queryKey: equipmentDeliveryKeys.photos(deliveryId),
     queryFn: () => fetchDeliveryPhotos(deliveryId!),
     enabled: Boolean(deliveryId),
   });
@@ -42,7 +43,7 @@ export function useCreateDelivery() {
   return useMutation({
     mutationFn: (payload: CreateDeliveryPayload) => createDelivery(payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["equipment-deliveries"] });
+      void queryClient.invalidateQueries({ queryKey: equipmentDeliveryKeys.all() });
     },
   });
 }
@@ -52,7 +53,7 @@ export function useUpdateDelivery(id: string) {
   return useMutation({
     mutationFn: (payload: UpdateDeliveryPayload) => updateDelivery(id, payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["equipment-deliveries"] });
+      void queryClient.invalidateQueries({ queryKey: equipmentDeliveryKeys.all() });
     },
   });
 }
@@ -62,7 +63,7 @@ export function useDeleteDelivery() {
   return useMutation({
     mutationFn: (id: string) => deleteDelivery(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["equipment-deliveries"] });
+      void queryClient.invalidateQueries({ queryKey: equipmentDeliveryKeys.all() });
     },
   });
 }
@@ -71,9 +72,9 @@ export function useDeliveryPhotoMutations(deliveryId: string) {
   const queryClient = useQueryClient();
   const invalidate = () => {
     void queryClient.invalidateQueries({
-      queryKey: ["equipment-deliveries", "photos", deliveryId],
+      queryKey: equipmentDeliveryKeys.photos(deliveryId),
     });
-    void queryClient.invalidateQueries({ queryKey: ["equipment-deliveries"] });
+    void queryClient.invalidateQueries({ queryKey: equipmentDeliveryKeys.all() });
   };
 
   return {

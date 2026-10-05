@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/shared/components/form/form-field";
 import { useT, type TranslationKey } from "@/shared/i18n";
-import { useRecommendedCompanies } from "@/features/selection/hooks/use-selection";
+import { useRecommendedCompanies } from "@/features/selection";
 import { useCreateDelivery, useUpdateDelivery } from "../hooks/use-equipment";
 import type { CreateDeliveryPayload, EquipmentDelivery } from "../types";
 import {
