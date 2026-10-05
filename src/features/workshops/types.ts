@@ -55,13 +55,6 @@ export type Workshop = {
   updatedAtUtc: string | null;
 };
 
-export type PagedResult<T> = {
-  items: T[];
-  page: number;
-  pageSize: number;
-  totalCount: number;
-};
-
 export type DuplicateMatch = {
   workshopId: string;
   code: string;

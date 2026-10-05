@@ -1,10 +1,10 @@
 import { racApi } from "@/shared/api/rac-api";
+import type { PagedResult } from "@/shared/api/paged-result";
 import { WORKSHOPS_PAGE_SIZE } from "../utils/filter-state";
 import type {
   Assignment,
   CreateWorkshopResponse,
   DuplicateCheckResponse,
-  PagedResult,
   Workshop,
   WorkshopListFilters,
   WorkshopSurvey,
