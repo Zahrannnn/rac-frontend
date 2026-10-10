@@ -34,7 +34,7 @@ import {
   useSubmitSurvey,
   useSurvey,
 } from "../hooks/use-survey";
-import { WIZARD_STEPS, type SectionSpec } from "../schema";
+import { WIZARD_STEPS } from "../schema";
 import {
   buildSectionPayload,
   consentAnswer,
@@ -44,6 +44,7 @@ import {
   type SectionAnswers,
 } from "../utils/answers";
 import { clearLastSectionKey, readLastSectionKey, writeLastSectionKey } from "../utils/resume";
+import { createTelemetryTracker, type TelemetryTracker } from "../utils/telemetry";
 import type { SurveyRecord, SurveyStatus, ValidationEntry } from "../types";
 
 const REVIEW_STEP = WIZARD_STEPS.length; // index 13 — after the 13 questionnaire steps
@@ -131,6 +132,10 @@ export function SurveyWizardPage({
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const performSaveRef = useRef<() => Promise<boolean>>(async () => true);
 
+  // ---- field telemetry (client-only; see utils/telemetry.ts) ----
+  const trackerRef = useRef<TelemetryTracker | null>(null);
+  const surveyId = survey?.id ?? null;
+
   // Hydration key includes workshop fields so late-arriving workshop detail can seed answers.
   const hydrateKey = survey
     ? `${survey.id}:${workshopContext?.name ?? ""}:${workshopContext?.ownerName ?? ""}:${workshopContext?.code ?? ""}`
@@ -140,11 +145,16 @@ export function SurveyWizardPage({
     setHydratedFromKey(hydrateKey);
     const parsed = parseStoredSections(survey.sections);
     parsed.basicInfo = withWorkshopContext(parsed.basicInfo, workshopContext);
-    answersRef.current = parsed;
     setAnswers(parsed);
     setTouchedBySection({});
     setStep(initialStep(survey, stepHint));
   }
+
+  // Mirror answers into a ref for event-driven saves (hydration path syncs here;
+  // setAnswer keeps it fresh synchronously in event handlers).
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
 
   const saveSection = useSaveSection(survey?.id ?? "", workshopId);
   const recordGps = useRecordGps(survey?.id ?? "", workshopId);
@@ -155,18 +165,26 @@ export function SurveyWizardPage({
   const consent = consentAnswer(answers);
   const currentSection = step < WIZARD_STEPS.length ? WIZARD_STEPS[step] : null;
 
-  // Resume: remember the section being visited so reopening lands there.
+  // Telemetry tracker per survey (created before the section-enter effect below).
   useEffect(() => {
-    if (!survey || step >= WIZARD_STEPS.length) {
+    if (!surveyId) {
       return;
     }
-    writeLastSectionKey(survey.id, WIZARD_STEPS[step].key);
-  }, [survey, step]);
+    trackerRef.current = createTelemetryTracker(
+      surveyId,
+      () => WIZARD_STEPS,
+      (sectionKey) => answersRef.current[sectionKey] ?? {}
+    );
+  }, [surveyId]);
 
-  // Latest performSave for timer/event callbacks (registered once).
+  // Section visits: resume persistence + section_open telemetry.
   useEffect(() => {
-    performSaveRef.current = performSave;
-  });
+    if (!surveyId || step >= WIZARD_STEPS.length) {
+      return;
+    }
+    writeLastSectionKey(surveyId, WIZARD_STEPS[step].key);
+    trackerRef.current?.enterSection(WIZARD_STEPS[step].key);
+  }, [surveyId, step]);
 
   // Flush pending changes when the tab is hidden or the page is being unloaded.
   useEffect(() => {
@@ -219,6 +237,10 @@ export function SurveyWizardPage({
   }
 
   function setAnswer(sectionKey: string, key: string, value: unknown) {
+    const previous = answersRef.current[sectionKey]?.[key];
+    if (isFieldAnswered(previous) && previous !== value) {
+      trackerRef.current?.fieldRevisited(key);
+    }
     const next = {
       ...answersRef.current,
       [sectionKey]: { ...(answersRef.current[sectionKey] ?? {}), [key]: value },
@@ -249,6 +271,21 @@ export function SurveyWizardPage({
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = null;
+    }
+  }
+
+  // 409 = survey went terminal elsewhere (redirect out); 403 already toasts upstream.
+  function handleSaveError(error: unknown) {
+    const status = (error as { status?: number }).status;
+    if (status === 409) {
+      toast.warning(t("survey.terminalConflict"));
+      router.push(`${routes.workshops}/${workshopId}`);
+    } else if (status !== 403) {
+      // keep the section dirty — the visible indicator offers a retry
+      setSaveState("error");
+      toast.error(`${t("common.error")} — ${t("common.retry")}`);
+    } else {
+      setSaveState("error");
     }
   }
 
@@ -292,20 +329,10 @@ export function SurveyWizardPage({
     }
   }
 
-  // 409 = survey went terminal elsewhere (redirect out); 403 already toasts upstream.
-  function handleSaveError(error: unknown) {
-    const status = (error as { status?: number }).status;
-    if (status === 409) {
-      toast.warning(t("survey.terminalConflict"));
-      router.push(`${routes.workshops}/${workshopId}`);
-    } else if (status !== 403) {
-      // keep the section dirty — the visible indicator offers a retry
-      setSaveState("error");
-      toast.error(`${t("common.error")} — ${t("common.retry")}`);
-    } else {
-      setSaveState("error");
-    }
-  }
+  // Latest performSave for timer/event callbacks (re-registered each render).
+  useEffect(() => {
+    performSaveRef.current = performSave;
+  });
 
   // 409 = survey went terminal elsewhere (redirect out); 403 already toasts upstream.
   function handleStepError(error: unknown, conflictToastKey: TranslationKey) {
@@ -319,10 +346,15 @@ export function SurveyWizardPage({
   }
 
   /** Free navigation — answers live in local state, nothing is discarded. */
-  function goToSection(target: number) {
+  function goToSection(target: number, viaToc = false) {
     const clamped = Math.max(0, Math.min(target, REVIEW_STEP));
+    const fromKey = step < WIZARD_STEPS.length ? WIZARD_STEPS[step].key : null;
+    const toKey = clamped < WIZARD_STEPS.length ? WIZARD_STEPS[clamped].key : null;
     setSubmitResult(null);
     setStep(clamped);
+    if (fromKey && fromKey !== toKey) {
+      trackerRef.current?.leaveSection(toKey, viaToc);
+    }
     // leaving a section (or the wizard via review) flushes its pending answers
     void performSaveRef.current();
   }
@@ -509,7 +541,7 @@ export function SurveyWizardPage({
         progressLabel={progressLabel}
         progressPercent={progressPercent}
         sections={tocSections}
-        onNavigateToSection={goToSection}
+        onNavigateToSection={(index) => goToSection(index, true)}
         onTocOpenChange={handleTocOpenChange}
         saveIndicator={<SaveIndicator state={saveState} onRetry={retrySave} />}
         footerStart={footerStart}
