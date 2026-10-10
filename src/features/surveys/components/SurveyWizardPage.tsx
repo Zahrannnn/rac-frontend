@@ -22,8 +22,7 @@ import {
 } from "@/shared/validation/constants";
 import { routes } from "@/shared/constants/routes";
 import { ClosingEvidence } from "./ClosingEvidence";
-import { InterviewShell } from "./InterviewShell";
-import { QuestionStage } from "./QuestionStage";
+import { InterviewShell, type TocSection, type TocSectionState } from "./InterviewShell";
 import { ReviewStep } from "./ReviewStep";
 import { SectionStage } from "./SectionStage";
 import { ValidationPanel } from "./ValidationPanel";
@@ -36,21 +35,14 @@ import {
 } from "../hooks/use-survey";
 import { WIZARD_STEPS, type SectionSpec } from "../schema";
 import {
-  backTarget,
-  firstInvalidWalkableIndex,
-  isSectionMode,
-  walkableFields,
-} from "../utils/interview-nav";
-import {
   buildSectionPayload,
   consentAnswer,
-  firstIncompleteStep,
-  isFieldValid,
+  isFieldAnswered,
   isSectionComplete,
   parseStoredSections,
   type SectionAnswers,
 } from "../utils/answers";
-import type { SurveyStatus, ValidationEntry } from "../types";
+import type { SurveyRecord, SurveyStatus, ValidationEntry } from "../types";
 
 const REVIEW_STEP = WIZARD_STEPS.length; // index 13 — after the 13 questionnaire steps
 
@@ -74,6 +66,14 @@ function withWorkshopContext(
     next.ownerOrManagerName = workshop.ownerName;
   }
   return next;
+}
+
+/** Landing step on hydration — terminal statuses view-only on review. */
+function initialStep(survey: SurveyRecord, stepHint?: string): number {
+  if (stepHint === "review" || survey.status === "Submitted" || survey.status === "Complete") {
+    return REVIEW_STEP;
+  }
+  return 0; // first open lands on consent
 }
 
 export function SurveyWizardPage({
@@ -103,8 +103,7 @@ export function SurveyWizardPage({
   // ---- wizard state ----
   const [answers, setAnswers] = useState<Record<string, SectionAnswers>>({});
   const [step, setStep] = useState(0);
-  const [fieldIndex, setFieldIndex] = useState(0);
-  const [stepErrors, setStepErrors] = useState<string[]>([]);
+  const [touchedBySection, setTouchedBySection] = useState<Record<string, string[]>>({});
   const [submitResult, setSubmitResult] = useState<{
     status: SurveyStatus;
     validation: ValidationEntry[];
@@ -120,12 +119,8 @@ export function SurveyWizardPage({
     const parsed = parseStoredSections(survey.sections);
     parsed.basicInfo = withWorkshopContext(parsed.basicInfo, workshopContext);
     setAnswers(parsed);
-    setFieldIndex(0);
-    setStep(
-      stepHint === "review" || survey.status !== "Draft"
-        ? REVIEW_STEP
-        : Math.max(0, firstIncompleteStep(parsed))
-    );
+    setTouchedBySection({});
+    setStep(initialStep(survey, stepHint));
   }
 
   const saveSection = useSaveSection(survey?.id ?? "", workshopId);
@@ -136,14 +131,6 @@ export function SurveyWizardPage({
 
   const consent = consentAnswer(answers);
   const currentSection = step < WIZARD_STEPS.length ? WIZARD_STEPS[step] : null;
-  const walkables = currentSection && !isSectionMode(currentSection)
-    ? walkableFields(currentSection)
-    : [];
-  const currentField = walkables[fieldIndex] ?? null;
-  const onLastClosingField =
-    currentSection?.key === "closing" &&
-    walkables.length > 0 &&
-    fieldIndex === walkables.length - 1;
 
   // GPS: capture + editable map confirmation, saved to the survey record immediately.
   // Backend contract mirrored: world-impossible coordinates are rejected (400);
@@ -176,24 +163,15 @@ export function SurveyWizardPage({
     });
   }
 
-  function setAnswer(key: string, value: unknown) {
-    const sectionKey = currentSection?.key;
-    if (!sectionKey) {
-      return;
-    }
+  function setAnswer(sectionKey: string, key: string, value: unknown) {
     setAnswers((prev) => ({
       ...prev,
       [sectionKey]: { ...(prev[sectionKey] ?? {}), [key]: value },
     }));
-  }
-
-  function validateSection(section: SectionSpec): boolean {
-    const sectionAnswers = answers[section.key] ?? {};
-    const failing = section.fields
-      .filter((field) => field.required && !isFieldValid(field, sectionAnswers[field.key]))
-      .map((field) => field.key);
-    setStepErrors(failing);
-    return failing.length === 0;
+    setTouchedBySection((prev) => {
+      const touched = prev[sectionKey] ?? [];
+      return touched.includes(key) ? prev : { ...prev, [sectionKey]: [...touched, key] };
+    });
   }
 
   // 409 = survey went terminal elsewhere (redirect out); 403 already toasts upstream.
@@ -207,7 +185,8 @@ export function SurveyWizardPage({
     }
   }
 
-  function putSectionAndAdvance(section: SectionSpec) {
+  /** PUT the section's DataJson (save-on-continue until autosave lands). */
+  function putSection(section: SectionSpec) {
     let sectionAnswers = answers[section.key] ?? {};
     if (section.key === "basicInfo") {
       sectionAnswers = withWorkshopContext(sectionAnswers, workshopContext);
@@ -221,67 +200,31 @@ export function SurveyWizardPage({
           if (section.key === "basicInfo") {
             setAnswers((prev) => ({ ...prev, basicInfo: sectionAnswers }));
           }
-          setFieldIndex(0);
-          setStep((s) => Math.min(s + 1, REVIEW_STEP));
         },
         onError: (error) => handleStepError(error, "survey.terminalConflict"),
       }
     );
   }
 
+  /** Free navigation — answers live in local state, nothing is discarded. */
+  function goToSection(target: number) {
+    const clamped = Math.max(0, Math.min(target, REVIEW_STEP));
+    setSubmitResult(null);
+    setStep(clamped);
+  }
+
+  /** Continue = flush the section (legacy save-on-exit), then move forward. */
   function goNext() {
-    if (step === REVIEW_STEP) return;
+    if (step >= REVIEW_STEP) return;
     const section = WIZARD_STEPS[step];
     if (!section) return;
-
-    if (isSectionMode(section)) {
-      advanceSectionMode(section);
-      return;
-    }
-    advanceWalkMode(section);
-  }
-
-  /** Section-mode Next: validate the whole section, then PUT and advance. */
-  function advanceSectionMode(section: SectionSpec) {
-    if (!validateSection(section)) {
-      toast.warning(t("survey.stepIncomplete"));
-      return;
-    }
-    putSectionAndAdvance(section);
-  }
-
-  /** Field-walk Next: gate the current question, then advance within or out of the section. */
-  function advanceWalkMode(section: SectionSpec) {
-    const fields = walkableFields(section);
-    const field = fields[fieldIndex];
-    if (!field) return;
-
-    // photo: no client isFieldValid gate (existing); still allow advance
-    if (
-      field.type !== "photo" &&
-      field.required &&
-      !isFieldValid(field, answers[section.key]?.[field.key])
-    ) {
-      setStepErrors([field.key]);
-      toast.warning(t("survey.stepIncomplete"));
-      return;
-    }
-    setStepErrors([]);
-
-    if (fieldIndex < fields.length - 1) {
-      setFieldIndex((i) => i + 1);
-      return;
-    }
-    putSectionAndAdvance(section);
+    putSection(section);
+    goToSection(step + 1);
   }
 
   function goBack() {
-    setStepErrors([]);
-    const target = backTarget(step, fieldIndex);
-    if (target) {
-      setStep(target.step);
-      setFieldIndex(target.fieldIndex);
-    }
+    if (step === 0) return;
+    goToSection(step - 1);
   }
 
   function handleSubmit() {
@@ -300,20 +243,6 @@ export function SurveyWizardPage({
       },
       onError: (error) => handleStepError(error, "survey.alreadySubmitted"),
     });
-  }
-
-  function jumpToStep(target: number) {
-    setSubmitResult(null);
-    setStepErrors([]);
-    setStep(target);
-    const section = WIZARD_STEPS[target];
-    if (!section) {
-      setFieldIndex(0);
-      return;
-    }
-    setFieldIndex(
-      firstInvalidWalkableIndex(section, answers[section.key] ?? {}, isFieldValid)
-    );
   }
 
   // ---- loading / not-started / error states ----
@@ -372,16 +301,26 @@ export function SurveyWizardPage({
   ).length;
   const progressPercent = Math.round((doneCount / WIZARD_STEPS.length) * 100);
 
-  const sectionMode = currentSection ? isSectionMode(currentSection) : false;
+  const tocSections: TocSection[] = WIZARD_STEPS.map((section, index) => {
+    const sectionAnswers = answers[section.key] ?? {};
+    const countable = section.fields.filter((field) => field.type !== "photo");
+    const answered = countable.filter((field) => isFieldAnswered(sectionAnswers[field.key])).length;
+    const complete = isSectionComplete(section, sectionAnswers);
+    const state: TocSectionState = complete ? "complete" : answered === 0 ? "empty" : "partial";
+    return {
+      key: section.key,
+      label: t(`survey.section.${section.key}` as never),
+      state,
+      answered,
+      total: countable.length,
+      current: index === step,
+    };
+  });
+
   const progressLabel =
     step === REVIEW_STEP
       ? t("survey.stepReview")
-      : sectionMode
-        ? t("survey.stepOf", { current: step + 1, total: WIZARD_STEPS.length })
-        : t("survey.interview.questionOf", {
-            current: fieldIndex + 1,
-            total: Math.max(1, walkables.length),
-          });
+      : t("survey.stepOf", { current: step + 1, total: WIZARD_STEPS.length });
 
   const shellTitle =
     step === REVIEW_STEP
@@ -395,36 +334,25 @@ export function SurveyWizardPage({
       ? t("survey.interview.howToFillChecklist")
       : t("survey.interview.howToFill");
 
+  const consentDeclined = currentSection?.key === "consent" && consent === "no";
+
   const footerStart =
-    step < REVIEW_STEP ? (
-      <Button
-        type="button"
-        variant="outline"
-        disabled={(step === 0 && fieldIndex === 0) || saveSection.isPending}
-        onClick={goBack}
-      >
+    step > 0 ? (
+      <Button type="button" variant="outline" onClick={goBack}>
         {t("wizard.back")}
       </Button>
-    ) : (
-      <Button type="button" variant="outline" disabled={saveSection.isPending} onClick={goBack}>
-        {t("wizard.back")}
-      </Button>
-    );
+    ) : null;
 
   const footerEnd =
     step === REVIEW_STEP ? (
-      <Button
-        type="button"
-        disabled={submit.isPending || saveSection.isPending}
-        onClick={handleSubmit}
-      >
+      <Button type="button" disabled={submit.isPending} onClick={handleSubmit}>
         {submit.isPending ? t("survey.submitting") : t("survey.submit")}
       </Button>
-    ) : currentSection?.key === "consent" && consent === "no" ? null : (
+    ) : consentDeclined ? null : (
       <Button
         type="button"
         onClick={goNext}
-        disabled={saveSection.isPending || (currentSection?.key === "consent" && consent === null)}
+        disabled={currentSection?.key === "consent" && consent === null}
       >
         {t("wizard.next")}
       </Button>
@@ -451,6 +379,8 @@ export function SurveyWizardPage({
         title={shellTitle}
         progressLabel={progressLabel}
         progressPercent={progressPercent}
+        sections={tocSections}
+        onNavigateToSection={goToSection}
         footerStart={footerStart}
         footerEnd={footerEnd}
       >
@@ -467,12 +397,12 @@ export function SurveyWizardPage({
 
       {incompleteValidation ? (
         <div className="mb-4">
-          <ValidationPanel validation={incompleteValidation} onJumpToStep={jumpToStep} />
+          <ValidationPanel validation={incompleteValidation} onJumpToStep={goToSection} />
         </div>
       ) : null}
 
       {/* ---- consent decline shortcut ---- */}
-      {currentSection?.key === "consent" && consent === "no" ? (
+      {consentDeclined ? (
         <div className="mb-4 rounded-lg border bg-muted p-4 text-sm">
           <p className="font-medium">{t("survey.consentDeclinedTitle")}</p>
           <p className="mt-1 text-muted-foreground">{t("survey.consentDeclinedBody")}</p>
@@ -481,61 +411,40 @@ export function SurveyWizardPage({
             variant="outline"
             size="sm"
             className="mt-3"
-            onClick={() => {
-              setFieldIndex(0);
-              setStep(REVIEW_STEP);
-            }}
+            onClick={() => goToSection(REVIEW_STEP)}
           >
             {t("survey.goToReview")}
           </Button>
         </div>
       ) : null}
 
-      {/* ---- field-walk stage ---- */}
-      {currentSection && !sectionMode && currentField ? (
-        <div className="flex flex-col gap-6">
-          <QuestionStage
-            section={currentSection}
-            field={currentField}
-            answers={answers[currentSection.key] ?? {}}
-            onChange={setAnswer}
-            error={
-              stepErrors.includes(currentField.key) ? t("survey.fieldRequired") : undefined
-            }
-            surveyId={survey.id}
-          />
-
-          {/* Closing GPS + docs photos on the last walkable field (before leave PUT) */}
-          {onLastClosingField ? (
-            <ClosingEvidence
-              survey={survey}
-              onSaveGps={saveGps}
-              onCaptureGps={captureGps}
-              isCapturing={recordGps.isPending}
-            />
-          ) : null}
-        </div>
-      ) : null}
-
-      {/* ---- section-mode stage ---- */}
-      {currentSection && sectionMode ? (
+      {/* ---- section page: all fields on one scrollable page ---- */}
+      {currentSection ? (
         <SectionStage
+          key={currentSection.key}
           section={currentSection}
           answers={answers[currentSection.key] ?? {}}
-          onChange={setAnswer}
-          stepErrors={stepErrors}
+          onChange={(key, value) => setAnswer(currentSection.key, key, value)}
+          touchedFields={touchedBySection[currentSection.key] ?? []}
           howToFill={howToFill}
-        />
+          surveyId={survey.id}
+        >
+          {currentSection.key === "closing" ? (
+            <div className="mt-2 flex flex-col gap-4 rounded-lg border bg-card p-4">
+              <ClosingEvidence
+                survey={survey}
+                onSaveGps={saveGps}
+                onCaptureGps={captureGps}
+                isCapturing={recordGps.isPending}
+              />
+            </div>
+          ) : null}
+        </SectionStage>
       ) : null}
 
       {/* ---- review ---- */}
       {step === REVIEW_STEP ? (
-        <ReviewStep
-          answers={answers}
-          gpsRecorded={gpsRecorded}
-          consent={consent}
-          onJumpToStep={jumpToStep}
-        />
+        <ReviewStep answers={answers} gpsRecorded={gpsRecorded} consent={consent} onJumpToStep={goToSection} />
       ) : null}
       </InterviewShell>
     </>

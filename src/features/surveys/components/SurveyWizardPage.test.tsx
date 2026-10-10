@@ -51,10 +51,12 @@ vi.mock("../hooks/use-survey", () => ({
   }),
   useStartSurvey: () => ({ mutate: vi.fn(), isPending: false }),
   useSaveSection: () => ({
-    // invoke onSuccess so the wizard advances exactly like the real mutation
-    mutate: (input: { key: string; data: unknown }, options?: { onSuccess?: () => void }) => {
+    mutate: (input: { key: string; data: unknown }) => {
       saveSection(input);
-      options?.onSuccess?.();
+    },
+    mutateAsync: async (input: { key: string; data: unknown }) => {
+      saveSection(input);
+      return input;
     },
     isPending: false,
   }),
@@ -78,64 +80,75 @@ function renderWizard() {
   );
 }
 
-describe("SurveyWizardPage step navigation + partial saves", () => {
+describe("SurveyWizardPage section-page navigation", () => {
   beforeEach(() => {
     saveSection.mockReset();
     push.mockReset();
+    window.localStorage.clear();
   });
 
-  it("starts on the consent step and requires an answer before advancing", () => {
+  it("starts on the consent section and gates Next until it is answered", () => {
     renderWizard();
-    // Consent is field-walk (1 question)
-    expect(screen.getByText("السؤال 1 من 1")).toBeInTheDocument();
-    // Next is disabled until consent is answered
+    expect(screen.getByRole("heading", { name: "الموافقة على المشاركة" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "التالي" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("radio", { name: "نعم" }));
+    expect(screen.getByRole("button", { name: "التالي" })).toBeEnabled();
   });
 
-  it("saves the consent section via PUT when advancing", async () => {
+  it("saves the consent section via PUT when advancing to basicInfo", async () => {
     renderWizard();
 
     fireEvent.click(screen.getByRole("radio", { name: "نعم" }));
     fireEvent.click(screen.getByRole("button", { name: "التالي" }));
 
-    await waitFor(() => expect(saveSection).toHaveBeenCalledOnce());
-    expect(saveSection).toHaveBeenCalledWith({
+    await waitFor(() => expect(saveSection).toHaveBeenCalledWith({
       key: "consent",
       data: { "consent.participate": "yes" },
-    });
+    }));
 
-    // advanced to basicInfo — code/name/owner skipped; governorate is question 1 of 11
-    expect(await screen.findByText("السؤال 1 من 11")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 3, name: "المحافظة" })).toBeInTheDocument();
+    // the whole basicInfo page renders at once — label + control on one page
+    expect(
+      await screen.findByRole("heading", { name: "البيانات الأساسية للورشة" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("المحافظة")).toBeInTheDocument();
+    expect(screen.getByText("المركز/الحي")).toBeInTheDocument();
   });
 
-  it("blocks advancing when a required simple field is empty", async () => {
+  it("keeps entered answers when jumping between sections from the TOC", async () => {
     renderWizard();
+
     fireEvent.click(screen.getByRole("radio", { name: "نعم" }));
     fireEvent.click(screen.getByRole("button", { name: "التالي" }));
-    expect(await screen.findByText("السؤال 1 من 11")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 3, name: "المحافظة" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "البيانات الأساسية للورشة" })).toBeInTheDocument();
 
-    const savesBefore = saveSection.mock.calls.length;
-    fireEvent.click(screen.getByRole("button", { name: "التالي" }));
-    await waitFor(() =>
-      expect(screen.getAllByText("هذا الحقل مطلوب").length).toBeGreaterThan(0)
+    fireEvent.change(screen.getByLabelText("المركز/الحي"), { target: { value: "المعادي" } });
+
+    // jump to workforce via the TOC drawer
+    fireEvent.click(screen.getByRole("button", { name: "قائمة الأقسام" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "حجم النشاط والقوى العاملة — لم يبدأ" })
     );
-    expect(saveSection.mock.calls.length).toBe(savesBefore);
+    expect(await screen.findByRole("heading", { name: "حجم النشاط والقوى العاملة" })).toBeInTheDocument();
+
+    // jump back — the district answer survives
+    fireEvent.click(screen.getByRole("button", { name: "قائمة الأقسام" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /^البيانات الأساسية للورشة —/ })
+    );
+    expect(await screen.findByLabelText("المركز/الحي")).toHaveValue("المعادي");
   });
 
-  it("does not PUT basicInfo until the last field is advanced", async () => {
+  it("keeps the consent decline gate: only way forward is review", async () => {
     renderWizard();
-    fireEvent.click(screen.getByRole("radio", { name: "نعم" }));
-    fireEvent.click(screen.getByRole("button", { name: "التالي" }));
-    await screen.findByText("السؤال 1 من 11");
 
-    const consentPuts = saveSection.mock.calls.filter((c) => c[0].key === "consent").length;
-    expect(consentPuts).toBe(1);
+    fireEvent.click(screen.getByRole("radio", { name: "لا" }));
+    expect(screen.queryByRole("button", { name: "التالي" })).not.toBeInTheDocument();
+    expect(screen.getByText("شكرًا لوقتكم — تم إنهاء المقابلة")).toBeInTheDocument();
 
-    expect(screen.getByRole("heading", { level: 3, name: "المحافظة" })).toBeInTheDocument();
-
-    const basicInfoPuts = saveSection.mock.calls.filter((c) => c[0].key === "basicInfo").length;
-    expect(basicInfoPuts).toBe(0);
+    fireEvent.click(screen.getByRole("button", { name: "الانتقال إلى الإرسال" }));
+    expect(
+      await screen.findByRole("heading", { name: "مراجعة الأقسام قبل الإرسال" })
+    ).toBeInTheDocument();
   });
 });
