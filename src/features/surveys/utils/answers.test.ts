@@ -168,6 +168,54 @@ describe("isSectionComplete + consent", () => {
   });
 });
 
+describe("equipmentItems (toolsEquipment block)", () => {
+  const field = SECTIONS.find((section) => section.key === "toolsEquipment")!.fields.find(
+    (entry) => entry.key === "equipmentItems"
+  )!;
+
+  const full = (patch: Record<string, unknown> = {}) => ({
+    recoveryMachine: { available: "yes", condition: "working" },
+    leakDetector: { available: "no" },
+    vacuumPump: { available: "yes", condition: "inadequate", powerHp: 2 },
+    recoveryCylinders: { available: "no" },
+    electronicScale: { available: "yes", condition: "working", precisionG: 1 },
+    manifoldGauges: { available: "no" },
+    ...patch,
+  });
+
+  it("requires an availability answer for every item", () => {
+    expect(isFieldValid(field, {})).toBe(false);
+    expect(isFieldValid(field, { recoveryMachine: { available: "yes" } })).toBe(false);
+    expect(isFieldValid(field, full())).toBe(true);
+  });
+
+  it("requires condition once an item is available", () => {
+    expect(
+      isFieldValid(field, full({ recoveryMachine: { available: "yes" } }))
+    ).toBe(false);
+    expect(
+      isFieldValid(field, full({ recoveryMachine: { available: "yes", condition: "working" } }))
+    ).toBe(true);
+    // condition is NOT required for unavailable items
+    expect(isFieldValid(field, full({ leakDetector: { available: "no" } }))).toBe(true);
+  });
+
+  it("buildSectionPayload strips condition/specs of unavailable items", () => {
+    const payload = buildSectionPayload(
+      SECTIONS.find((section) => section.key === "toolsEquipment")!,
+      {
+        equipmentItems: {
+          leakDetector: { available: "no", condition: "working", dualGas: "yes" },
+          vacuumPump: { available: "yes", condition: "working", powerHp: 3 },
+        },
+      }
+    );
+    const items = payload.equipmentItems as Record<string, Record<string, unknown>>;
+    expect(items.leakDetector).toEqual({ available: "no" });
+    expect(items.vacuumPump).toEqual({ available: "yes", condition: "working", powerHp: 3 });
+  });
+});
+
 describe("parseStoredSections", () => {
   it("parses stored raw JSON and drops corrupt entries", () => {
     const parsed = parseStoredSections({
