@@ -412,6 +412,11 @@ export const ar = {
   "survey.toc.complete": "مكتمل",
   "survey.toc.count": "مُجاب {answered} من {total}",
   "survey.toc.empty": "لم يبدأ",
+  // autosave indicator
+  "survey.save.saving": "جارٍ الحفظ…",
+  "survey.save.saved": "تم الحفظ",
+  "survey.save.dirty": "تغييرات غير محفوظة",
+  "survey.save.failed": "تعذر الحفظ",
   "survey.section.consent": "الموافقة على المشاركة",
   "survey.section.basicInfo": "البيانات الأساسية للورشة",
   "survey.section.workforce": "حجم النشاط والقوى العاملة",

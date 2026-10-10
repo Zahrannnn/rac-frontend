@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Route } from "next";
@@ -25,6 +25,7 @@ import { ClosingEvidence } from "./ClosingEvidence";
 import { InterviewShell, type TocSection, type TocSectionState } from "./InterviewShell";
 import { ReviewStep } from "./ReviewStep";
 import { SectionStage } from "./SectionStage";
+import { SaveIndicator, type WizardSaveState } from "./SaveIndicator";
 import { ValidationPanel } from "./ValidationPanel";
 import {
   useRecordGps,
@@ -42,9 +43,12 @@ import {
   parseStoredSections,
   type SectionAnswers,
 } from "../utils/answers";
+import { clearLastSectionKey, readLastSectionKey, writeLastSectionKey } from "../utils/resume";
 import type { SurveyRecord, SurveyStatus, ValidationEntry } from "../types";
 
 const REVIEW_STEP = WIZARD_STEPS.length; // index 13 — after the 13 questionnaire steps
+/** Debounce window for section autosave (~1.5s after the last answer change). */
+const AUTOSAVE_DELAY_MS = 1500;
 
 /** Seed paper basicInfo fields already known from the workshop record. */
 function withWorkshopContext(
@@ -68,10 +72,21 @@ function withWorkshopContext(
   return next;
 }
 
-/** Landing step on hydration — terminal statuses view-only on review. */
+/**
+ * Landing step on hydration. Terminal statuses are view-only (review);
+ * Draft/Incomplete resume onto the last-visited section (localStorage),
+ * falling back to consent on a first open.
+ */
 function initialStep(survey: SurveyRecord, stepHint?: string): number {
   if (stepHint === "review" || survey.status === "Submitted" || survey.status === "Complete") {
     return REVIEW_STEP;
+  }
+  const stored = readLastSectionKey(survey.id);
+  if (stored) {
+    const index = WIZARD_STEPS.findIndex((section) => section.key === stored);
+    if (index >= 0) {
+      return index;
+    }
   }
   return 0; // first open lands on consent
 }
@@ -100,7 +115,8 @@ export function SurveyWizardPage({
       ? { code: survey.workshopCode, name: undefined, ownerName: undefined }
       : null;
 
-  // ---- wizard state ----
+  // ---- wizard state (answersRef mirrors answers for event-driven saves) ----
+  const answersRef = useRef<Record<string, SectionAnswers>>({});
   const [answers, setAnswers] = useState<Record<string, SectionAnswers>>({});
   const [step, setStep] = useState(0);
   const [touchedBySection, setTouchedBySection] = useState<Record<string, string[]>>({});
@@ -108,6 +124,12 @@ export function SurveyWizardPage({
     status: SurveyStatus;
     validation: ValidationEntry[];
   } | null>(null);
+
+  // ---- autosave state ----
+  const [saveState, setSaveState] = useState<WizardSaveState>("idle");
+  const dirtySectionRef = useRef<string | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const performSaveRef = useRef<() => Promise<boolean>>(async () => true);
 
   // Hydration key includes workshop fields so late-arriving workshop detail can seed answers.
   const hydrateKey = survey
@@ -118,6 +140,7 @@ export function SurveyWizardPage({
     setHydratedFromKey(hydrateKey);
     const parsed = parseStoredSections(survey.sections);
     parsed.basicInfo = withWorkshopContext(parsed.basicInfo, workshopContext);
+    answersRef.current = parsed;
     setAnswers(parsed);
     setTouchedBySection({});
     setStep(initialStep(survey, stepHint));
@@ -131,6 +154,38 @@ export function SurveyWizardPage({
 
   const consent = consentAnswer(answers);
   const currentSection = step < WIZARD_STEPS.length ? WIZARD_STEPS[step] : null;
+
+  // Resume: remember the section being visited so reopening lands there.
+  useEffect(() => {
+    if (!survey || step >= WIZARD_STEPS.length) {
+      return;
+    }
+    writeLastSectionKey(survey.id, WIZARD_STEPS[step].key);
+  }, [survey, step]);
+
+  // Latest performSave for timer/event callbacks (registered once).
+  useEffect(() => {
+    performSaveRef.current = performSave;
+  });
+
+  // Flush pending changes when the tab is hidden or the page is being unloaded.
+  useEffect(() => {
+    function flushOnHide() {
+      if (document.visibilityState === "hidden") {
+        void performSaveRef.current();
+      }
+    }
+    const onPageHide = () => void performSaveRef.current();
+    document.addEventListener("visibilitychange", flushOnHide);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", flushOnHide);
+      window.removeEventListener("pagehide", onPageHide);
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
 
   // GPS: capture + editable map confirmation, saved to the survey record immediately.
   // Backend contract mirrored: world-impossible coordinates are rejected (400);
@@ -164,14 +219,92 @@ export function SurveyWizardPage({
   }
 
   function setAnswer(sectionKey: string, key: string, value: unknown) {
-    setAnswers((prev) => ({
-      ...prev,
-      [sectionKey]: { ...(prev[sectionKey] ?? {}), [key]: value },
-    }));
+    const next = {
+      ...answersRef.current,
+      [sectionKey]: { ...(answersRef.current[sectionKey] ?? {}), [key]: value },
+    };
+    answersRef.current = next;
+    setAnswers(next);
     setTouchedBySection((prev) => {
       const touched = prev[sectionKey] ?? [];
       return touched.includes(key) ? prev : { ...prev, [sectionKey]: [...touched, key] };
     });
+    markDirty(sectionKey);
+  }
+
+  /** Queue a debounced autosave for the section the surveyor just edited. */
+  function markDirty(sectionKey: string) {
+    dirtySectionRef.current = sectionKey;
+    setSaveState("dirty");
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+    saveTimerRef.current = setTimeout(() => {
+      saveTimerRef.current = null;
+      void performSaveRef.current();
+    }, AUTOSAVE_DELAY_MS);
+  }
+
+  function clearSaveTimer() {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+  }
+
+  /**
+   * PUT the dirty section (same per-section endpoint as before). Returns false
+   * when the save failed — the answers stay dirty so the next change, flush or
+   * explicit retry re-attempts; nothing is silently dropped.
+   */
+  async function performSave(): Promise<boolean> {
+    clearSaveTimer();
+    const sectionKey = dirtySectionRef.current;
+    const section = sectionKey
+      ? WIZARD_STEPS.find((candidate) => candidate.key === sectionKey)
+      : undefined;
+    if (!sectionKey || !section) {
+      return true;
+    }
+
+    let sectionAnswers = answersRef.current[sectionKey] ?? {};
+    if (sectionKey === "basicInfo") {
+      sectionAnswers = withWorkshopContext(sectionAnswers, workshopContext);
+    }
+    const payload = buildSectionPayload(section, sectionAnswers);
+
+    setSaveState("saving");
+    try {
+      await saveSection.mutateAsync({ key: sectionKey, data: payload });
+      if (dirtySectionRef.current === sectionKey) {
+        dirtySectionRef.current = null;
+        setSaveState("saved");
+      }
+      if (sectionKey === "basicInfo") {
+        const seeded = withWorkshopContext(answersRef.current.basicInfo, workshopContext);
+        answersRef.current = { ...answersRef.current, basicInfo: seeded };
+        setAnswers(answersRef.current);
+      }
+      return true;
+    } catch (error) {
+      handleSaveError(error);
+      return false;
+    }
+  }
+
+  // 409 = survey went terminal elsewhere (redirect out); 403 already toasts upstream.
+  function handleSaveError(error: unknown) {
+    const status = (error as { status?: number }).status;
+    if (status === 409) {
+      toast.warning(t("survey.terminalConflict"));
+      router.push(`${routes.workshops}/${workshopId}`);
+    } else if (status !== 403) {
+      // keep the section dirty — the visible indicator offers a retry
+      setSaveState("error");
+      toast.error(`${t("common.error")} — ${t("common.retry")}`);
+    } else {
+      setSaveState("error");
+    }
   }
 
   // 409 = survey went terminal elsewhere (redirect out); 403 already toasts upstream.
@@ -185,40 +318,17 @@ export function SurveyWizardPage({
     }
   }
 
-  /** PUT the section's DataJson (save-on-continue until autosave lands). */
-  function putSection(section: SectionSpec) {
-    let sectionAnswers = answers[section.key] ?? {};
-    if (section.key === "basicInfo") {
-      sectionAnswers = withWorkshopContext(sectionAnswers, workshopContext);
-    }
-    const payload = buildSectionPayload(section, sectionAnswers);
-    saveSection.mutate(
-      { key: section.key, data: payload },
-      {
-        onSuccess: () => {
-          toast.success(t("survey.sectionSaved"));
-          if (section.key === "basicInfo") {
-            setAnswers((prev) => ({ ...prev, basicInfo: sectionAnswers }));
-          }
-        },
-        onError: (error) => handleStepError(error, "survey.terminalConflict"),
-      }
-    );
-  }
-
   /** Free navigation — answers live in local state, nothing is discarded. */
   function goToSection(target: number) {
     const clamped = Math.max(0, Math.min(target, REVIEW_STEP));
     setSubmitResult(null);
     setStep(clamped);
+    // leaving a section (or the wizard via review) flushes its pending answers
+    void performSaveRef.current();
   }
 
-  /** Continue = flush the section (legacy save-on-exit), then move forward. */
   function goNext() {
     if (step >= REVIEW_STEP) return;
-    const section = WIZARD_STEPS[step];
-    if (!section) return;
-    putSection(section);
     goToSection(step + 1);
   }
 
@@ -227,14 +337,19 @@ export function SurveyWizardPage({
     goToSection(step - 1);
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!survey) {
       return;
+    }
+    const saved = await performSaveRef.current();
+    if (!saved) {
+      return; // save failed — error indicator is visible, answers kept for retry
     }
     submit.mutate(undefined as never, {
       onSuccess: (result) => {
         setSubmitResult({ status: result.status, validation: result.validation });
         if (result.status === "Complete") {
+          clearLastSectionKey(survey.id);
           toast.success(t("survey.completeBanner"));
           setTimeout(() => router.push(`${routes.workshops}/${workshopId}`), 1600);
         } else {
@@ -243,6 +358,16 @@ export function SurveyWizardPage({
       },
       onError: (error) => handleStepError(error, "survey.alreadySubmitted"),
     });
+  }
+
+  function retrySave() {
+    void performSaveRef.current();
+  }
+
+  function handleTocOpenChange(open: boolean) {
+    if (open) {
+      void performSaveRef.current();
+    }
   }
 
   // ---- loading / not-started / error states ----
@@ -345,7 +470,11 @@ export function SurveyWizardPage({
 
   const footerEnd =
     step === REVIEW_STEP ? (
-      <Button type="button" disabled={submit.isPending} onClick={handleSubmit}>
+      <Button
+        type="button"
+        disabled={submit.isPending || saveState === "saving"}
+        onClick={handleSubmit}
+      >
         {submit.isPending ? t("survey.submitting") : t("survey.submit")}
       </Button>
     ) : consentDeclined ? null : (
@@ -381,6 +510,8 @@ export function SurveyWizardPage({
         progressPercent={progressPercent}
         sections={tocSections}
         onNavigateToSection={goToSection}
+        onTocOpenChange={handleTocOpenChange}
+        saveIndicator={<SaveIndicator state={saveState} onRetry={retrySave} />}
         footerStart={footerStart}
         footerEnd={footerEnd}
       >

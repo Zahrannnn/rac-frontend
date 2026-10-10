@@ -415,6 +415,11 @@ export const en: Dictionary = {
   "survey.toc.complete": "Complete",
   "survey.toc.count": "{answered}/{total} answered",
   "survey.toc.empty": "Not started",
+  // autosave indicator
+  "survey.save.saving": "Saving…",
+  "survey.save.saved": "Saved",
+  "survey.save.dirty": "Unsaved changes",
+  "survey.save.failed": "Save failed",
   "survey.section.consent": "Participation consent",
   "survey.section.basicInfo": "Workshop basic info",
   "survey.section.workforce": "Business size & workforce",
