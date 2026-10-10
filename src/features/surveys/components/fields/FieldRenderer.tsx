@@ -143,6 +143,18 @@ export function FieldRenderer({
         </div>
       );
 
+    case "date":
+      return (
+        <div className="flex flex-col gap-1">
+          {hideLabel ? null : <Label>{label}</Label>}
+          <DatePicker
+            aria-label={hideLabel ? label : undefined}
+            className="w-full md:w-56"
+            value={typeof answers[field.key] === "string" ? (answers[field.key] as string) : ""}
+            onChange={(next) => onChange(field.key, next)}
+          />
+        </div>
+      );
     case "email":
     case "string":
     default:
@@ -265,18 +277,6 @@ export function ComplexFieldRenderer({
           value={typeof answers[field.key] === "string" ? (answers[field.key] as string) : null}
           onChange={(next) => onChange(field.key, next)}
         />
-      );
-    case "date":
-      return (
-        <div className="flex flex-col gap-1">
-          {hideLabel ? null : <Label>{label}</Label>}
-          <DatePicker
-            aria-label={hideLabel ? label : undefined}
-            className="w-56"
-            value={typeof answers[field.key] === "string" ? (answers[field.key] as string) : ""}
-            onChange={(next) => onChange(field.key, next)}
-          />
-        </div>
       );
     default:
       return null;

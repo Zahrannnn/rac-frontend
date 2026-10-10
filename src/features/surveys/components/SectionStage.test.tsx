@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { I18nProvider } from "@/shared/i18n";
 import { SECTIONS } from "../schema";
 import { SectionStage } from "./SectionStage";
@@ -66,5 +66,43 @@ describe("SectionStage (one scrollable section page)", () => {
     expect(screen.getByText("هذا الحقل مطلوب")).toBeInTheDocument();
     // untouched required fields stay quiet — free navigation, no wall of red
     expect(screen.getAllByText("هذا الحقل مطلوب")).toHaveLength(1);
+  });
+
+  it("renders the interview date as a calendar date picker (Arabic locale)", async () => {
+    const section = SECTIONS.find((candidate) => candidate.key === "closing")!;
+    const onChange = vi.fn();
+
+    renderWithI18n(
+      <SectionStage
+        section={section}
+        answers={{}}
+        onChange={onChange}
+        touchedFields={[]}
+        howToFill="أكمل بيانات الختام"
+      />
+    );
+
+    // the date field renders the shared DatePicker trigger, not a free-text input
+    const trigger = screen.getByRole("button", { name: "اختر تاريخًا" });
+    expect(trigger).toBeInTheDocument();
+
+    fireEvent.click(trigger);
+    await waitFor(() => {
+      // react-day-picker grid with Arabic month caption (October 2026)
+      const caption = screen.getByText(/أكتوبر|٢٠٢٦/, { exact: false });
+      expect(caption).toBeInTheDocument();
+    });
+    const dayButton = screen
+      .getAllByRole("gridcell")
+      .map((cell) => cell.querySelector("button"))
+      .filter((button): button is HTMLButtonElement => button !== null)[0];
+    expect(dayButton).toBeTruthy();
+    fireEvent.click(dayButton!);
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith(
+        "date",
+        expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/)
+      )
+    );
   });
 });

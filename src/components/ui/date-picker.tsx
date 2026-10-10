@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
+import { ar as arDateFns, enUS as enDateFns } from "date-fns/locale";
 import { Calendar as CalendarIcon, Check, ChevronDown, ChevronUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -15,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useT, type TranslationKey } from "@/shared/i18n";
+import { useI18n, useT, type TranslationKey } from "@/shared/i18n";
 import { cn } from "@/shared/utils/cn";
 
 function pad(part: number): string {
@@ -72,6 +73,18 @@ type DatePickerProps = {
   "aria-label"?: string;
 };
 
+/**
+ * Calendar localization: Arabic month/weekday names (week starting Saturday) in the
+ * ar locale, English otherwise. Keeps Latin digits — the app renders numbers in
+ * Western numerals throughout.
+ */
+function useCalendarLocale() {
+  const { locale } = useI18n();
+  return locale === "ar"
+    ? { locale: arDateFns, displayFormat: "d MMMM yyyy" }
+    : { locale: enDateFns, displayFormat: "yyyy/MM/dd" };
+}
+
 /** shadcn date picker — value is YYYY-MM-DD (empty string when cleared). */
 export function DatePicker({
   id,
@@ -85,6 +98,7 @@ export function DatePicker({
   "aria-label": ariaLabel,
 }: DatePickerProps) {
   const t = useT();
+  const calendar = useCalendarLocale();
   const [open, setOpen] = useState(false);
   const selected = parseDateValue(value);
   const label = placeholder ?? t("common.pickDate");
@@ -108,13 +122,14 @@ export function DatePicker({
           >
             <CalendarIcon className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
             <span className="truncate" dir="ltr">
-              {selected ? format(selected, "yyyy/MM/dd") : label}
+              {selected ? format(selected, calendar.displayFormat, { locale: calendar.locale }) : label}
             </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto min-w-[18.5rem] p-0" align="start" sideOffset={6}>
           <Calendar
             mode="single"
+            locale={calendar.locale}
             selected={selected}
             defaultMonth={selected}
             onSelect={(date) => {
