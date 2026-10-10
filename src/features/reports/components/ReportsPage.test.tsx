@@ -76,9 +76,9 @@ const emptyRuns: PagedResult<ReportRun> = {
 
 const executiveSummary: ExecutiveDashboardSummary = {
   totalWorkshops: 21,
-  byStatus: [{ status: "Scored", count: 6 }],
+  byStatus: [{ status: "Submitted", count: 6 }],
   byGovernorate: [],
-  pulse: { scoredCount: 6, recommendedTarget: 150 },
+  pulse: { rankedCount: 6, recommendedTarget: 150 },
 };
 
 function renderPage(runs: PagedResult<ReportRun> = emptyRuns, catalog = definition) {

@@ -35,18 +35,18 @@ const fullSummary: FullDashboardSummary = {
   workshopsLast30Days: 2,
   byStatus: [
     { status: "Complete", count: 8 },
-    { status: "Scored", count: 6 },
+    { status: "Submitted", count: 6 },
   ],
   byGovernorate: [
     { governorate: "Cairo", count: 12 },
     { governorate: "Giza", count: 9 },
   ],
   surveys: [],
-  pulse: { scoredCount: 6, recommendedTarget: 150 },
+  pulse: { rankedCount: 6, recommendedTarget: 150 },
   attention: {
     incompleteFailing: 0,
     stuckDrafts: 0,
-    unscoredComplete: 0,
+    awaitingSelectionCount: 0,
   },
 };
 
@@ -54,11 +54,11 @@ const executiveSummary: ExecutiveDashboardSummary = {
   totalWorkshops: 21,
   byStatus: [
     { status: "Complete", count: 8 },
-    { status: "Scored", count: 6 },
+    { status: "Submitted", count: 6 },
     { status: "Draft", count: 4 },
   ],
   byGovernorate: [],
-  pulse: { scoredCount: 6, recommendedTarget: 150 },
+  pulse: { rankedCount: 6, recommendedTarget: 150 },
 };
 
 const assignedSummary: AssignedDashboardSummary = {

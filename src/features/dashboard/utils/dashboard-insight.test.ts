@@ -31,12 +31,12 @@ describe("buildDashboardInsight", () => {
 
   it("falls back to the status context with the translated status label", () => {
     const text = buildDashboardInsight(
-      { governorate: "all", district: "all", status: "Scored" },
+      { governorate: "all", district: "all", status: "Complete" },
       12,
       t
     );
     expect(text).toBe(
-      'dashboard.insightFilteredStatus({"count":12,"status":"status.Scored"})'
+      'dashboard.insightFilteredStatus({"count":12,"status":"status.Complete"})'
     );
   });
 });

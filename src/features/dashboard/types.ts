@@ -5,9 +5,10 @@ export type WorkshopStatus = "Draft" | "Submitted" | "Complete" | "Incomplete" |
 export type StatusCount = { status: WorkshopStatus; count: number };
 export type GovernorateCount = { governorate: string; count: number };
 
-/** Program pulse — Scored progress toward the selection recommended band. */
+/** Program pulse — the latest participation run's ranked pool toward the recommended
+ * target (ADR-0004: the old Scored-count pulse died with the manual model). */
 export type DashboardPulse = {
-  scoredCount: number;
+  rankedCount: number;
   recommendedTarget: number;
 };
 
@@ -15,7 +16,8 @@ export type DashboardPulse = {
 export type DashboardAttention = {
   incompleteFailing: number;
   stuckDrafts: number;
-  unscoredComplete: number;
+  /** Complete-survey workshops missing from the latest participation run's ranked set. */
+  awaitingSelectionCount: number;
 };
 
 /** FieldTeams slim attention — assignment-scoped ops only. */

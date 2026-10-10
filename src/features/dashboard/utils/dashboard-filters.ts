@@ -20,13 +20,17 @@ export const DEFAULT_FILTERS: DashboardFilterState = {
   status: "all",
 };
 
-/** Program lifecycle order — mirrors the backend state machine. */
+/**
+ * Program lifecycle order — mirrors the backend state machine. ADR-0004 removed the
+ * Scored state (runs never write back into workshops), so it is gone from the
+ * lifecycle rail and the status filter (the API would reject it with 400).
+ * Legacy "Scored" rows may still arrive on old map points — statusCountMap tolerates it.
+ */
 export const WORKSHOP_STATUSES: WorkshopStatus[] = [
   "Draft",
   "Submitted",
   "Complete",
   "Incomplete",
-  "Scored",
 ];
 
 /** Complete/Incomplete counts + the failing subset, in one pass over the list. */
@@ -67,14 +71,13 @@ export function statusCountMap(byStatus: StatusCount[]): Record<WorkshopStatus, 
   return map;
 }
 
-/** Share of workshops in Complete + Scored (program “progress” signal). */
+/** Share of workshops with a Complete survey (program “progress” signal). */
 export function progressPercent(byStatus: StatusCount[], totalWorkshops: number): number {
   if (totalWorkshops <= 0) {
     return 0;
   }
   const counts = statusCountMap(byStatus);
-  const advanced = counts.Complete + counts.Scored;
-  return Math.round((advanced / totalWorkshops) * 100);
+  return Math.round((counts.Complete / totalWorkshops) * 100);
 }
 
 export function filterGovernorates(

@@ -35,7 +35,7 @@ export function ExecutiveDashboard({
         byStatus={summary.byStatus}
         activeStatus={filters.status}
         onSelectStatus={(status) => onFiltersChange({ ...filters, status })}
-        scored={summary.pulse.scoredCount}
+        ranked={summary.pulse.rankedCount}
         target={summary.pulse.recommendedTarget}
         insight={insight}
         showNextStep={summary.totalWorkshops === 0}
@@ -43,7 +43,7 @@ export function ExecutiveDashboard({
         nextStepLabelKey="dashboard.nextStepWorkshops"
         stats={[
           {
-            labelKey: "dashboard.completeOrScored",
+            labelKey: "dashboard.surveysComplete",
             value: progress,
             suffix: "%",
           },

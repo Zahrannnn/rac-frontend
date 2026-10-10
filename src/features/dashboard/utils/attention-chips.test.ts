@@ -6,7 +6,7 @@ describe("buildAttentionChips", () => {
     const chips = buildAttentionChips({
       incompleteFailing: 2,
       stuckDrafts: 1,
-      unscoredComplete: 0,
+      awaitingSelectionCount: 0,
     });
 
     expect(chips.map((c) => c.key)).toEqual(["incompleteFailing", "stuckDrafts"]);
@@ -27,7 +27,7 @@ describe("buildAttentionChips", () => {
 describe("attention chip deep links", () => {
   it("deep-links the failing-survey chip to the wizard review step when a brief anchors it", () => {
     const chips = buildAttentionChips(
-      { incompleteFailing: 2, stuckDrafts: 0, unscoredComplete: 0 },
+      { incompleteFailing: 2, stuckDrafts: 0, awaitingSelectionCount: 0 },
       {
         surveyBriefs: [
           {
@@ -47,7 +47,7 @@ describe("attention chip deep links", () => {
 
   it("falls back to the surveys list when no failing-survey brief anchors the chip", () => {
     const chips = buildAttentionChips(
-      { incompleteFailing: 1, stuckDrafts: 0, unscoredComplete: 0 },
+      { incompleteFailing: 1, stuckDrafts: 0, awaitingSelectionCount: 0 },
       { includeOfficeChips: false, surveyBriefs: [] }
     );
 
@@ -60,7 +60,7 @@ describe("attention chip deep links", () => {
       {
         incompleteFailing: 0,
         stuckDrafts: 3,
-        unscoredComplete: 0,
+        awaitingSelectionCount: 0,
       },
       { includeOfficeChips: true }
     );
@@ -69,17 +69,19 @@ describe("attention chip deep links", () => {
     expect(chip!.href).toBe("/workshops?status=Draft");
   });
 
-  it("deep-links unscored Complete to the Complete-filtered registry", () => {
+  it("deep-links Complete surveys awaiting a selection run to the Complete-filtered registry", () => {
     const chips = buildAttentionChips(
       {
         incompleteFailing: 0,
         stuckDrafts: 0,
-        unscoredComplete: 5,
+        awaitingSelectionCount: 5,
       },
       { includeOfficeChips: true }
     );
 
-    const chip = chips.find((c) => c.key === "unscoredComplete");
+    const chip = chips.find((c) => c.key === "awaitingSelectionCount");
+    expect(chip).toBeDefined();
+    expect(chip!.count).toBe(5);
     expect(chip!.href).toBe("/workshops?status=Complete");
   });
 });

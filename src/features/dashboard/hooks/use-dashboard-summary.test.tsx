@@ -21,11 +21,11 @@ const summary: FullDashboardSummary = {
   byStatus: [],
   byGovernorate: [],
   surveys: [],
-  pulse: { scoredCount: 0, recommendedTarget: 0 },
+  pulse: { rankedCount: 0, recommendedTarget: 0 },
   attention: {
     incompleteFailing: 0,
     stuckDrafts: 0,
-    unscoredComplete: 0,
+    awaitingSelectionCount: 0,
   },
 };
 

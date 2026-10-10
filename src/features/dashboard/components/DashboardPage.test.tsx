@@ -55,7 +55,7 @@ const fullSummary: DashboardSummary = {
   byStatus: [
     { status: "Draft", count: 4 },
     { status: "Complete", count: 5 },
-    { status: "Scored", count: 3 },
+    { status: "Submitted", count: 3 },
   ],
   byGovernorate: [
     { governorate: "Cairo", count: 7 },
@@ -65,11 +65,11 @@ const fullSummary: DashboardSummary = {
     { workshopId: "w1", workshopCode: "RAC-CAR-000001", status: "Complete", failingRules: 0 },
     { workshopId: "w2", workshopCode: "RAC-CAR-000002", status: "Incomplete", failingRules: 2 },
   ],
-  pulse: { scoredCount: 3, recommendedTarget: 150 },
+  pulse: { rankedCount: 3, recommendedTarget: 150 },
   attention: {
     incompleteFailing: 2,
     stuckDrafts: 0,
-    unscoredComplete: 5,
+    awaitingSelectionCount: 5,
   },
 };
 
@@ -86,12 +86,12 @@ const assignedSummary: DashboardSummary = {
 
 const executiveSummary: DashboardSummary = {
   totalWorkshops: 40,
-  byStatus: [{ status: "Scored", count: 40 }],
+  byStatus: [{ status: "Complete", count: 40 }],
   byGovernorate: [
     { governorate: "Cairo", count: 7 },
     { governorate: "Giza", count: 5 },
   ],
-  pulse: { scoredCount: 40, recommendedTarget: 150 },
+  pulse: { rankedCount: 40, recommendedTarget: 150 },
 };
 
 describe("DashboardPage hybrid pulse + attention", () => {
@@ -107,7 +107,7 @@ describe("DashboardPage hybrid pulse + attention", () => {
     expect(screen.getByRole("button", { name: /مسودة/ })).toBeInTheDocument();
     expect(screen.getByText("يحتاج متابعة")).toBeInTheDocument();
     expect(screen.getByText("استبيانات غير مكتملة (قواعد راسبة)")).toBeInTheDocument();
-    expect(screen.getByText("مكتملة — جاهزة للتقييم")).toBeInTheDocument();
+    expect(screen.getByText("استبيانات مكتملة بانتظار الترتيب")).toBeInTheDocument();
     expect(screen.queryByText("استبيانات بها بنود ناقصة")).not.toBeInTheDocument();
     expect(screen.queryByText("RAC-CAR-000002")).not.toBeInTheDocument();
   });
@@ -118,7 +118,7 @@ describe("DashboardPage hybrid pulse + attention", () => {
       attention: {
         incompleteFailing: 0,
         stuckDrafts: 0,
-        unscoredComplete: 0,
+        awaitingSelectionCount: 0,
       },
     };
     renderDashboard();
@@ -144,7 +144,8 @@ describe("DashboardPage hybrid pulse + attention", () => {
 
     expect(screen.getByRole("button", { name: /مسودة/ })).toBeInTheDocument();
     expect(screen.queryByText("يحتاج متابعة")).not.toBeInTheDocument();
-    expect(screen.queryByText("استبيانات مكتملة")).not.toBeInTheDocument();
+    // The completed-surveys stat rides the pipeline hero (dashboard.surveysComplete).
+    expect(screen.getByText("استبيانات مكتملة")).toBeInTheDocument();
     expect(screen.queryByText("استبياناتي المكتملة")).not.toBeInTheDocument();
   });
 });

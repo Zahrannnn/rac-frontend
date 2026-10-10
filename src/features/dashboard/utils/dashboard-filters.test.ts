@@ -10,15 +10,14 @@ import {
 describe("dashboard-filters", () => {
   const byStatus = [
     { status: "Draft" as const, count: 10 },
-    { status: "Complete" as const, count: 5 },
-    { status: "Scored" as const, count: 5 },
+    { status: "Complete" as const, count: 10 },
   ];
   const byGovernorate = [
     { governorate: "Cairo", count: 12 },
     { governorate: "Giza", count: 8 },
   ];
 
-  it("computes Complete+Scored progress percent", () => {
+  it("computes Complete progress percent (Scored is gone — ADR-0004)", () => {
     expect(progressPercent(byStatus, 20)).toBe(50);
     expect(progressPercent(byStatus, 0)).toBe(0);
   });
@@ -35,7 +34,7 @@ describe("dashboard-filters", () => {
       totalWorkshops: 20,
       byStatus,
       byGovernorate,
-      pulse: { scoredCount: 5, recommendedTarget: 150 },
+      pulse: { rankedCount: 5, recommendedTarget: 150 },
     };
     expect(
       filteredWorkshopTotal(summary, { governorate: "all", district: "all", status: "all" })

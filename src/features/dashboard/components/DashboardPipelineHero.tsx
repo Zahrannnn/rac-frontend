@@ -21,8 +21,8 @@ type DashboardPipelineHeroProps = {
   byStatus: StatusCount[];
   activeStatus?: WorkshopStatus | "all";
   onSelectStatus?: (status: WorkshopStatus | "all") => void;
-  /** Workshops scored toward the recommended selection band. */
-  scored: number;
+  /** Workshops ranked by the latest participation run, toward the recommended target. */
+  ranked: number;
   target: number;
   /** Compact context stats in the header row (role-dependent availability). */
   stats?: PipelineStat[];
@@ -44,7 +44,7 @@ export function DashboardPipelineHero({
   byStatus,
   activeStatus = "all",
   onSelectStatus,
-  scored,
+  ranked,
   target,
   stats = [],
   insight,
@@ -56,7 +56,7 @@ export function DashboardPipelineHero({
   const { dir } = useI18n();
   const counts = statusCountMap(byStatus);
   const scoredShare =
-    target > 0 ? Math.min(100, Math.round((scored / target) * 100)) : 0;
+    target > 0 ? Math.min(100, Math.round((ranked / target) * 100)) : 0;
 
   return (
     <section className="rounded-lg border bg-card p-5 sm:p-6">
@@ -165,7 +165,7 @@ export function DashboardPipelineHero({
           <span className="text-muted-foreground">{t("dashboard.pulse.towardTarget")}</span>
           <span className="font-bold tabular-nums text-primary" dir="ltr">
             {target > 0
-              ? `${scored.toLocaleString("en-US")} / ${target.toLocaleString("en-US")} · `
+              ? `${ranked.toLocaleString("en-US")} / ${target.toLocaleString("en-US")} · `
               : ""}
             {scoredShare}%
           </span>

@@ -6,7 +6,7 @@ import type { AssignedDashboardAttention, DashboardAttention, SurveySummaryBrief
 export type AttentionChipKey =
   | "incompleteFailing"
   | "stuckDrafts"
-  | "unscoredComplete";
+  | "awaitingSelectionCount";
 
 export type AttentionChip = {
   key: AttentionChipKey;
@@ -29,8 +29,8 @@ function firstFailingSurveyWorkshopId(
 /**
  * Build visible attention chips. Every chip deep-links to its exact surface:
  * failing survey → the workshop's survey wizard review step (needs the survey briefs;
- * falls back to the filtered surveys list), stuck drafts / unscored Complete → the
- * filtered registry.
+ * falls back to the filtered surveys list), stuck drafts / Complete surveys awaiting a
+ * selection run → the filtered registry.
  */
 export function buildAttentionChips(
   attention: DashboardAttention | AssignedDashboardAttention,
@@ -66,11 +66,11 @@ export function buildAttentionChips(
     });
   }
 
-  if (includeOffice && "unscoredComplete" in attention && attention.unscoredComplete > 0) {
+  if (includeOffice && "awaitingSelectionCount" in attention && attention.awaitingSelectionCount > 0) {
     chips.push({
-      key: "unscoredComplete",
-      count: attention.unscoredComplete,
-      labelKey: "dashboard.attention.unscoredComplete",
+      key: "awaitingSelectionCount",
+      count: attention.awaitingSelectionCount,
+      labelKey: "dashboard.attention.awaitingSelectionCount",
       href: `${routes.workshops}?status=Complete` as Route,
       tone: "info",
     });
