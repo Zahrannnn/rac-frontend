@@ -41,6 +41,23 @@ export const GOVERNORATE_AR: Record<Governorate, string> = {
   Suez: "السويس",
 };
 
+/**
+ * Survey enum key for a governorate: "Kafr El Sheikh" -> "kafr_el_sheikh".
+ * The survey questionnaire stores governorates as these slugged keys
+ * (i18n label keys are `survey.opt.<slug>`); the workshop record stores the
+ * canonical English name — this maps between the two.
+ */
+export function governorateSurveyKey(governorate: string): string {
+  return governorate.trim().toLowerCase().replace(/\s+/g, "_");
+}
+
+/** The survey's governorate enum options — one slugged key per canonical governorate. */
+export const SURVEY_GOVERNORATE_OPTIONS: readonly string[] = GOVERNORATES.map(
+  governorateSurveyKey
+);
+
+
+
 /** Display label for a stored governorate — Arabic in the ar locale, English otherwise. */
 export function governorateLabel(governorate: string, locale: string): string {
   if (locale !== "ar") {

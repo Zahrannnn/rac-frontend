@@ -100,7 +100,8 @@ describe("isFieldValid", () => {
       (field) => field.key === "governorate"
     )!;
     expect(isFieldValid(governorate, "cairo")).toBe(true);
-    expect(isFieldValid(governorate, "alexandria")).toBe(false);
+    expect(isFieldValid(governorate, "kafr_el_sheikh")).toBe(true); // all 27 governorates are options
+    expect(isFieldValid(governorate, "atlantis")).toBe(false);
   });
 
   it("treats empty arrays as unanswered", () => {

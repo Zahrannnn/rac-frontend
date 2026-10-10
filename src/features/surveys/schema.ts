@@ -1,3 +1,5 @@
+import { SURVEY_GOVERNORATE_OPTIONS } from "@/shared/constants/egypt";
+
 // 1:1 transcription of docs/survey-schema-v2.json — no invented fields.
 // Axis sections (order 2–9) are Likert tables transcribed from the paper
 // questionnaire (one mark per row); axis 8 also carries a 12-item priority
@@ -128,7 +130,7 @@ export const SECTIONS: readonly SectionSpec[] = [
       { key: "ownerOrManagerName", type: "string", required: true },
       {
         key: "governorate", type: "enum", required: true,
-        options: ["cairo", "giza", "qalyubia"],
+        options: [...SURVEY_GOVERNORATE_OPTIONS],
       },
       { key: "district", type: "string", required: true },
       { key: "address", type: "text", required: true },

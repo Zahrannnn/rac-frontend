@@ -44,34 +44,13 @@ import {
   type SectionAnswers,
 } from "../utils/answers";
 import { clearLastSectionKey, readLastSectionKey, writeLastSectionKey } from "../utils/resume";
+import { withWorkshopContext, type WorkshopSurveyContext } from "../utils/workshop-prefill";
 import { createTelemetryTracker, type TelemetryTracker } from "../utils/telemetry";
 import type { SurveyRecord, SurveyStatus, ValidationEntry } from "../types";
 
 const REVIEW_STEP = WIZARD_STEPS.length; // index 13 — after the 13 questionnaire steps
 /** Debounce window for section autosave (~1.5s after the last answer change). */
 const AUTOSAVE_DELAY_MS = 1500;
-
-/** Seed paper basicInfo fields already known from the workshop record. */
-function withWorkshopContext(
-  basicInfo: SectionAnswers | undefined,
-  workshop: {
-    code?: string;
-    name?: string;
-    ownerName?: string;
-  } | null | undefined
-): SectionAnswers {
-  const next = { ...(basicInfo ?? {}) };
-  if (workshop?.code && !(typeof next.projectCode === "string" && next.projectCode)) {
-    next.projectCode = workshop.code;
-  }
-  if (workshop?.name && !(typeof next.workshopName === "string" && next.workshopName)) {
-    next.workshopName = workshop.name;
-  }
-  if (workshop?.ownerName && !(typeof next.ownerOrManagerName === "string" && next.ownerOrManagerName)) {
-    next.ownerOrManagerName = workshop.ownerName;
-  }
-  return next;
-}
 
 /**
  * Landing step on hydration. Terminal statuses are view-only (review);
@@ -106,14 +85,18 @@ export function SurveyWizardPage({
   const { data: survey, isPending, isError } = useSurvey(workshopId);
   const { data: workshop } = useWorkshop(workshopId);
   const startSurvey = useStartSurvey(workshopId);
-  const workshopContext = workshop
+  const workshopContext: WorkshopSurveyContext | null = workshop
     ? {
         code: survey?.workshopCode || workshop.code,
         name: workshop.nameAr?.trim() || workshop.nameEn?.trim() || undefined,
         ownerName: workshop.ownerName?.trim() || undefined,
+        governorate: workshop.governorate,
+        district: workshop.district ?? undefined,
+        address: workshop.address,
+        mobile: workshop.mobile,
       }
     : survey
-      ? { code: survey.workshopCode, name: undefined, ownerName: undefined }
+      ? { code: survey.workshopCode }
       : null;
 
   // ---- wizard state (answersRef mirrors answers for event-driven saves) ----
@@ -138,7 +121,7 @@ export function SurveyWizardPage({
 
   // Hydration key includes workshop fields so late-arriving workshop detail can seed answers.
   const hydrateKey = survey
-    ? `${survey.id}:${workshopContext?.name ?? ""}:${workshopContext?.ownerName ?? ""}:${workshopContext?.code ?? ""}`
+    ? `${survey.id}:${JSON.stringify(workshopContext ?? {})}`
     : null;
   const [hydratedFromKey, setHydratedFromKey] = useState<string | null>(null);
   if (survey && hydrateKey && hydratedFromKey !== hydrateKey) {
