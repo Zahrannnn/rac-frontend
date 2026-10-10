@@ -15,7 +15,7 @@ import { useT } from "@/shared/i18n";
 import { useTrainers } from "../hooks/use-reports";
 import type { ReportFilters } from "../types";
 
-const WORKSHOP_STATUSES = ["Draft", "Submitted", "Complete", "Incomplete", "Scored"] as const;
+const WORKSHOP_STATUSES = ["Draft", "Submitted", "Complete", "Incomplete"] as const;
 const WORKSHOP_TYPES = [
   "Formal",
   "Informal",

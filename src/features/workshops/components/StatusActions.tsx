@@ -28,8 +28,8 @@ export function StatusActions({ workshop }: { workshop: Workshop }) {
   const targets = LIFECYCLE_TRANSITIONS[workshop.status];
 
   if (targets.length === 0) {
-    // Complete is not terminal — it awaits validator scores + a selection run; only
-    // Scored is terminal. The backend rejects manual Scored PATCHes with the same rule.
+    // Complete is terminal (ADR-0004) — the workshop is selection-eligible; scoring
+    // is machine-derived from its survey when the next run fires.
     return (
       <p className="text-sm text-muted-foreground">
         {workshop.status === "Complete"

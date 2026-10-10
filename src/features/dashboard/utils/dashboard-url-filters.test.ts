@@ -33,7 +33,7 @@ describe("parseDashboardFilters", () => {
 
   it("round-trips through search params", () => {
     const filters = parseDashboardFilters(
-      new URLSearchParams("governorate=Giza&district=Nasr&status=Scored")
+      new URLSearchParams("governorate=Giza&district=Nasr&status=Complete")
     );
     const roundTripped = parseDashboardFilters(dashboardFiltersToSearchParams(filters));
     expect(roundTripped).toEqual(filters);

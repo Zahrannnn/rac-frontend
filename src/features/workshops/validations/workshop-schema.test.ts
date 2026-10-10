@@ -132,14 +132,11 @@ describe("canTransition (lifecycle guard)", () => {
     expect(canTransition("Submitted", "Complete")).toBe(true);
     expect(canTransition("Submitted", "Incomplete")).toBe(true);
     expect(canTransition("Incomplete", "Submitted")).toBe(true);
-    // Scored is earned by a SelectionRun, never set manually — the UI map has no
-    // manual path into Scored (the backend PATCH rejects Scored targets with 400).
-    expect(canTransition("Complete", "Scored")).toBe(false);
   });
 
   it("forbids skipping and terminal transitions", () => {
-    expect(canTransition("Draft", "Scored")).toBe(false);
+    // ADR-0004: Complete is terminal (the former Scored state is demolished).
     expect(canTransition("Draft", "Complete")).toBe(false);
-    expect(canTransition("Scored", "Submitted")).toBe(false);
+    expect(canTransition("Complete", "Submitted")).toBe(false);
   });
 });

@@ -118,7 +118,7 @@ export const en: Dictionary = {
   "dashboard.insightAssigned": "Your assigned workshops and survey pipeline.",
   "dashboard.nextStepWorkshops": "Go to workshop registry",
   "dashboard.lifecycle": "Workshop lifecycle",
-  "dashboard.lifecycleHint": "Draft through Scored — select a bar to filter.",
+  "dashboard.lifecycleHint": "Draft through Complete — select a bar to filter.",
   "dashboard.lifecycleFilterHint": "Select the same stage again to clear the filter.",
   "dashboard.rankingTitle": "Workshops by governorate",
   "dashboard.rankingHint": "Share by governorate — select a slice or row to filter.",
@@ -180,7 +180,6 @@ export const en: Dictionary = {
   "status.Submitted": "Submitted",
   "status.Complete": "Complete",
   "status.Incomplete": "Incomplete",
-  "status.Scored": "Scored",
   "flag.DuplicateSuspected": "Duplicate suspected",
   "flag.NotRelevant": "Not relevant",
 

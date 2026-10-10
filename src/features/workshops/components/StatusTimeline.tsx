@@ -5,7 +5,8 @@ import { useT } from "@/shared/i18n";
 import { LIFECYCLE_ORDER, type WorkshopStatus } from "../types";
 
 /**
- * Horizontal lifecycle stepper: Draft → Submitted → Complete/Incomplete → Scored.
+ * Horizontal lifecycle stepper: Draft → Submitted → Complete/Incomplete
+ * (ADR-0004: Complete is terminal — the former Scored stage is gone).
  * Reached states tint in, unreached ones stay grey (no per-state timestamps in
  * the contract — created/updated shown separately as the audit hint).
  */
@@ -31,11 +32,9 @@ export function StatusTimeline({ status }: { status: WorkshopStatus }) {
                 reached
                   ? step === "Incomplete"
                     ? "bg-[var(--warning)]/15 text-[#8a5a14]"
-                    : step === "Scored"
-                      ? "bg-primary/15 text-primary"
-                      : step === "Complete"
-                        ? "bg-[var(--success)]/15 text-[var(--success)]"
-                        : "bg-[var(--accent)] text-[var(--accent-foreground)]"
+                    : step === "Complete"
+                      ? "bg-[var(--success)]/15 text-[var(--success)]"
+                      : "bg-[var(--accent)] text-[var(--accent-foreground)]"
                   : "bg-muted text-muted-foreground/60",
                 index === currentIndex && "ring-2 ring-[var(--secondary)] ring-offset-1"
               )}

@@ -24,7 +24,6 @@ export const DEFAULT_FILTERS: DashboardFilterState = {
  * Program lifecycle order — mirrors the backend state machine. ADR-0004 removed the
  * Scored state (runs never write back into workshops), so it is gone from the
  * lifecycle rail and the status filter (the API would reject it with 400).
- * Legacy "Scored" rows may still arrive on old map points — statusCountMap tolerates it.
  */
 export const WORKSHOP_STATUSES: WorkshopStatus[] = [
   "Draft",
@@ -63,10 +62,11 @@ export function statusCountMap(byStatus: StatusCount[]): Record<WorkshopStatus, 
     Submitted: 0,
     Complete: 0,
     Incomplete: 0,
-    Scored: 0,
   };
   for (const entry of byStatus) {
-    map[entry.status] = entry.count;
+    if (entry.status in map) {
+      map[entry.status as WorkshopStatus] = entry.count;
+    }
   }
   return map;
 }

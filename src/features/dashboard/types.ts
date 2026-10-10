@@ -1,6 +1,6 @@
 import type { TranslationKey } from "@/shared/i18n";
 
-export type WorkshopStatus = "Draft" | "Submitted" | "Complete" | "Incomplete" | "Scored";
+export type WorkshopStatus = "Draft" | "Submitted" | "Complete" | "Incomplete";
 
 export type StatusCount = { status: WorkshopStatus; count: number };
 export type GovernorateCount = { governorate: string; count: number };

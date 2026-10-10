@@ -14,7 +14,6 @@ export function StatusBadge({ status }: { status: WorkshopStatus }) {
     Submitted: "bg-[var(--accent)] text-[var(--accent-foreground)]",
     Complete: "bg-[var(--success)]/15 text-[var(--success)]",
     Incomplete: "bg-[var(--warning)]/15 text-[#8a5a14]",
-    Scored: "bg-primary/15 text-primary",
   };
 
   return (

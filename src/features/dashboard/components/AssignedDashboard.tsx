@@ -26,7 +26,6 @@ export function AssignedDashboard({ summary }: { summary: AssignedDashboardSumma
     { status: "Submitted", count: summary.mySurveysSubmitted },
     { status: "Complete", count: summary.mySurveysComplete },
     { status: "Incomplete", count: summary.mySurveysIncomplete },
-    { status: "Scored", count: 0 },
   ];
 
   const filteredStatuses = filterStatuses(byStatus, filters.status);

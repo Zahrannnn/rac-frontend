@@ -1,6 +1,6 @@
 // Mirrors rac-backend Features/Workshops/WorkshopContracts.cs — do not invent fields.
 
-export type WorkshopStatus = "Draft" | "Submitted" | "Complete" | "Incomplete" | "Scored";
+export type WorkshopStatus = "Draft" | "Submitted" | "Complete" | "Incomplete";
 
 export type WorkshopType = "Formal" | "Informal" | "Freelance" | "AuthorizedServiceCenter" | "Other";
 
@@ -8,16 +8,14 @@ export type WorkshopFlags = "None" | "DuplicateSuspected" | "NotRelevant";
 
 /** Allowed lifecycle transitions (Domain/WorkshopStatus.cs WorkshopLifecycle). */
 /**
- * MANUAL transition targets per status. Mirrors the backend's WorkshopLifecycle with
- * one deliberate divergence: no manual path into Scored — the backend rejects Scored
- * targets on PATCH (Scored is earned by SelectionRun inclusion, never set by hand).
+ * MANUAL transition targets per status. Mirrors the backend's WorkshopLifecycle
+ * (ADR-0004: Complete is terminal — the former Scored state was demolished).
  */
 export const LIFECYCLE_TRANSITIONS: Record<WorkshopStatus, WorkshopStatus[]> = {
   Draft: ["Submitted"],
   Submitted: ["Complete", "Incomplete"],
   Incomplete: ["Submitted"],
   Complete: [],
-  Scored: [],
 };
 
 /**
@@ -29,7 +27,6 @@ export const LIFECYCLE_ORDER: readonly WorkshopStatus[] = [
   "Submitted",
   "Complete",
   "Incomplete",
-  "Scored",
 ];
 
 export type Workshop = {

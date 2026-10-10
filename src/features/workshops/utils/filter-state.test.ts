@@ -32,7 +32,7 @@ describe("parseWorkshopFilters", () => {
 
 describe("filtersToSearchParams", () => {
   it("round-trips through the URL", () => {
-    const filters = parseWorkshopFilters(new URLSearchParams("page=2&search=ac&status=Scored"));
+    const filters = parseWorkshopFilters(new URLSearchParams("page=2&search=ac&status=Complete"));
     const roundTripped = parseWorkshopFilters(filtersToSearchParams(filters));
     expect(roundTripped).toEqual(filters);
   });

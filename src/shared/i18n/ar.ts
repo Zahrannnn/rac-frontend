@@ -115,7 +115,7 @@ export const ar = {
   "dashboard.insightAssigned": "ملخص ورشك ومسارات الاستبيان المسندة إليك.",
   "dashboard.nextStepWorkshops": "الانتقال إلى سجل الورش",
   "dashboard.lifecycle": "دورة حياة الورشة",
-  "dashboard.lifecycleHint": "من المسودة إلى التقييم — اضغط عمودًا للتصفية.",
+  "dashboard.lifecycleHint": "من المسودة إلى الاكتمال — اضغط عمودًا للتصفية.",
   "dashboard.lifecycleFilterHint": "اضغط مرحلة مرة أخرى لإلغاء التصفية.",
   "dashboard.rankingTitle": "الورش حسب المحافظة",
   "dashboard.rankingHint": "حصة كل محافظة — اضغط شريحة أو صفًا للتصفية.",
@@ -177,7 +177,6 @@ export const ar = {
   "status.Submitted": "مُرسلة",
   "status.Complete": "مكتملة",
   "status.Incomplete": "غير مكتملة",
-  "status.Scored": "مُقيّمة",
   "flag.DuplicateSuspected": "مشتبه بها كتكرار",
   "flag.NotRelevant": "غير مناسبة",
 

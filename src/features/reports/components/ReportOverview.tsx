@@ -36,7 +36,6 @@ function fullSummaryKpis(summary: FullDashboardSummary): OverviewKpi[] {
   return [
     { labelKey: "dashboard.totalWorkshops", value: summary.totalWorkshops },
     { labelKey: "status.Complete", value: statusCount(summary.byStatus, "Complete") },
-    { labelKey: "status.Scored", value: statusCount(summary.byStatus, "Scored") },
     { labelKey: "dashboard.totalTechnicians", value: summary.totalTechnicians },
   ];
 }
@@ -46,7 +45,6 @@ function executiveSummaryKpis(summary: ExecutiveDashboardSummary): OverviewKpi[]
   return [
     { labelKey: "dashboard.totalWorkshops", value: summary.totalWorkshops },
     { labelKey: "status.Complete", value: statusCount(summary.byStatus, "Complete") },
-    { labelKey: "status.Scored", value: statusCount(summary.byStatus, "Scored") },
     { labelKey: "status.Draft", value: statusCount(summary.byStatus, "Draft") },
   ];
 }
