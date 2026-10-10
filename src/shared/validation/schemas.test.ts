@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createDeliverySchema } from "@/features/equipment-deliveries/validations/delivery-schema";
 import { createTrainingSchema } from "@/features/trainings/validations/training-schema";
-import { weightsSchema } from "@/features/selection/validations/weights-schema";
 
 describe("edge-input validation parity (brief Part 3.5)", () => {
   const validDelivery = {
@@ -87,25 +86,6 @@ describe("edge-input validation parity (brief Part 3.5)", () => {
   it("training: rejects unknown governorate", () => {
     expect(
       createTrainingSchema.safeParse({ ...validTraining, governorate: "Atlantis" }).success
-    ).toBe(false);
-  });
-
-  it("weights: exact 100 passes, 99.99 passes tolerance, 100.02 fails", () => {
-    const base = {
-      technical_profile: 0,
-      refrigerant_exposure: 0,
-      competency_gaps: 0,
-      environmental_performance: 0,
-      geographic_representation: 0,
-    };
-    expect(
-      weightsSchema.safeParse({ ...base, rac_activity: 100, commitment: 0 }).success
-    ).toBe(true);
-    expect(
-      weightsSchema.safeParse({ ...base, rac_activity: 99.995, commitment: 0 }).success
-    ).toBe(true);
-    expect(
-      weightsSchema.safeParse({ ...base, rac_activity: 100.02, commitment: 0 }).success
     ).toBe(false);
   });
 });

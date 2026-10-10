@@ -41,13 +41,6 @@ export const SCORE_MAX = 100;
 export const FEEDBACK_MIN = 1;
 export const FEEDBACK_MAX = 5;
 
-// ---- Selection weights ----
-
-export const WEIGHT_MIN = 0;
-export const WEIGHT_MAX = 100;
-export const WEIGHT_SUM_TARGET = 100;
-export const WEIGHT_SUM_TOLERANCE = 0.01;
-
 // ---- GPS bounds ----
 
 /** Physically possible coordinates — outside rejects with 400. */

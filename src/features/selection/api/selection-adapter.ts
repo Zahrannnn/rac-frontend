@@ -2,62 +2,12 @@ import { racApi } from "@/shared/api/rac-api";
 import { downloadBlob } from "@/shared/api/file-transfer";
 import type { PagedResult } from "@/shared/api/paged-result";
 import type {
-  CriterionWeight,
-  RankedWorkshop,
   RecommendedCompaniesResponse,
+  ScorecardResponse,
   SelectionRunDetail,
   SelectionRunSummary,
-  WeightsResponse,
-  WorkshopScore,
+  RubricKind,
 } from "../types";
-
-export async function fetchRanking(): Promise<RankedWorkshop[]> {
-  const { data } = await racApi.get<RankedWorkshop[]>("/selection/ranking");
-  return data;
-}
-
-export async function fetchWeights(): Promise<WeightsResponse> {
-  const { data } = await racApi.get<WeightsResponse>("/selection/weights");
-  return data;
-}
-
-export async function updateWeights(weights: CriterionWeight[]): Promise<WeightsResponse> {
-  const { data } = await racApi.put<WeightsResponse>("/selection/weights", { weights });
-  return data;
-}
-
-/** Enters/updates validator criterion scores — requires the workshop's survey Complete
- * (the backend answers 409 otherwise). The server computes the weighted total. */
-export async function saveWorkshopScore(
-  workshopId: string,
-  scores: Omit<
-    WorkshopScore,
-    "workshopId" | "workshopCode" | "workshopName" | "governorate" | "totalWeighted" | "updatedAtUtc"
-  >
-): Promise<WorkshopScore> {
-  const { data } = await racApi.put<WorkshopScore>(`/workshops/${workshopId}/score`, scores);
-  return data;
-}
-
-/** 404 when the workshop has no recorded score — callers treat that as "none". */
-export async function fetchWorkshopScore(workshopId: string): Promise<WorkshopScore | null> {
-  try {
-    const { data } = await racApi.get<WorkshopScore>(`/workshops/${workshopId}/score`);
-    return data;
-  } catch (error) {
-    if ((error as { status?: number }).status === 404) {
-      return null;
-    }
-    throw error;
-  }
-}
-
-export async function fetchRecommendedCompanies(): Promise<RecommendedCompaniesResponse> {
-  const { data } = await racApi.get<RecommendedCompaniesResponse>(
-    "/selection/recommended-companies"
-  );
-  return data;
-}
 
 export async function fetchSelectionRuns(
   page = 1,
@@ -74,8 +24,14 @@ export async function fetchSelectionRun(runId: string): Promise<SelectionRunDeta
   return data;
 }
 
-export async function createSelectionRun(notes?: string): Promise<SelectionRunDetail> {
+/** Creates an immutable machine-scored run snapshot. The backend answers 409 when there is
+ * nothing to rank (participation: no Complete surveys; equipment: no participation run). */
+export async function createSelectionRun(
+  kind: RubricKind,
+  notes?: string
+): Promise<SelectionRunDetail> {
   const { data } = await racApi.post<SelectionRunDetail>("/selection/runs", {
+    kind,
     notes: notes ?? null,
   });
   return data;
@@ -85,4 +41,28 @@ export async function exportSelectionRun(
   runId: string
 ): Promise<{ blob: Blob; fileName: string }> {
   return downloadBlob(racApi, `/selection/runs/${runId}/export`, `selection-run-${runId}.xlsx`);
+}
+
+export async function fetchRecommendedCompanies(): Promise<RecommendedCompaniesResponse> {
+  const { data } = await racApi.get<RecommendedCompaniesResponse>(
+    "/selection/recommended-companies"
+  );
+  return data;
+}
+
+/**
+ * Live machine-scored rubric breakdown of one workshop. The backend answers 409 when the
+ * workshop is not scorable for the kind (participation: no Complete survey; equipment: not
+ * in the latest participation run's recommended set) — callers render that as an
+ * explanatory empty state, not an error toast.
+ */
+export async function fetchScorecard(
+  workshopId: string,
+  kind: RubricKind
+): Promise<ScorecardResponse> {
+  const { data } = await racApi.get<ScorecardResponse>(
+    `/workshops/${workshopId}/scorecard`,
+    { params: { kind } }
+  );
+  return data;
 }
