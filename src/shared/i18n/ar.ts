@@ -402,7 +402,6 @@ export const ar = {
   "survey.workshopCode": "كود الورشة",
   "survey.stepOf": "القسم {current} من {total}",
   "survey.stepReview": "المراجعة والإرسال",
-  "survey.interview.questionOf": "السؤال {current} من {total}",
   "survey.interview.howToFill": "حدّد إجابة واحدة في كل صف",
   "survey.interview.howToFillChecklist": "اختر حالة لكل بند",
   // TOC drawer (section navigation)

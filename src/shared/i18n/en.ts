@@ -405,7 +405,6 @@ export const en: Dictionary = {
   "survey.workshopCode": "Workshop code",
   "survey.stepOf": "Section {current} of {total}",
   "survey.stepReview": "Review & submit",
-  "survey.interview.questionOf": "Question {current} of {total}",
   "survey.interview.howToFill": "Mark one answer per row",
   "survey.interview.howToFillChecklist": "Choose a state for each item",
   // TOC drawer (section navigation)
