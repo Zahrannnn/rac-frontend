@@ -20,6 +20,7 @@ export type FieldType =
   | "matrix3col"
   | "likert"
   | "checklist"
+  | "equipment"
   | "signature"
   | "date"
   | "photo";
@@ -39,6 +40,8 @@ export type FieldSpec = {
   max?: number;
   /** i18n label key suffix — full key is `survey.field.{section}.{key}`. */
   label?: boolean;
+  /** Renders helper text from `survey.helper.{section}.{key}` under the input. */
+  helper?: boolean;
 };
 
 export type SectionSpec = {
@@ -85,6 +88,28 @@ export const OPERATIONAL_CHALLENGE_ITEMS = [
   "recoveredGasDisposal",
 ] as const;
 
+/** The 6 equipment items of the toolsEquipment block (backend-pinned keys). */
+export const EQUIPMENT_ITEMS = [
+  "recoveryMachine",
+  "leakDetector",
+  "vacuumPump",
+  "recoveryCylinders",
+  "electronicScale",
+  "manifoldGauges",
+] as const;
+
+/** Per-item spec inputs (rendered only while the item is available). */
+export const EQUIPMENT_SPEC_KEYS: Readonly<
+  Record<(typeof EQUIPMENT_ITEMS)[number], readonly string[]>
+> = {
+  recoveryMachine: [],
+  leakDetector: ["dualGas"],
+  vacuumPump: ["powerHp"],
+  recoveryCylinders: ["capacityKg"],
+  electronicScale: ["precisionG"],
+  manifoldGauges: ["dualGas"],
+};
+
 export const CONSENT_SECTION: SectionSpec = {
   key: "consent",
   order: -1,
@@ -118,6 +143,8 @@ export const SECTIONS: readonly SectionSpec[] = [
         key: "gasSizeClass", type: "enum", required: true,
         options: ["small_lt680", "medium_680_1360", "large_gt1360"],
       },
+      // service-center floor area (m²) — program eligibility guidance ≥ 25 m²
+      { key: "serviceAreaM2", type: "int", required: true, min: 1, helper: true },
       {
         key: "legalStatus", type: "enum", required: true,
         options: ["registered", "underRegistration", "unregistered", "declinesToDisclose"],
@@ -226,6 +253,10 @@ export const SECTIONS: readonly SectionSpec[] = [
         options: ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"],
         scale: AXIS_SCALE,
       },
+      {
+        key: "equipmentItems", type: "equipment", required: true,
+        options: EQUIPMENT_ITEMS,
+      },
     ],
   },
   {
@@ -305,7 +336,8 @@ export const SECTIONS: readonly SectionSpec[] = [
 export const WIZARD_STEPS: readonly SectionSpec[] = [CONSENT_SECTION, ...SECTIONS];
 
 export const WORKFORCE_COLS = ["male", "female", "total"] as const;
-export const SEASONAL_COLS = ["lt20", "20_49", "50_99", "100_200", "gt200"] as const;
+/** Seasonal volume bands (backend-pinned): <30 / 30–50 / 51–100 / >100 cars/month. */
+export const SEASONAL_COLS = ["lt30", "30_50", "51_100", "gt100"] as const;
 export const MATRIX3COL_COLS = ["lt860", "680_1360", "gt1360"] as const;
 export const REFRIGERANT_COLS = ["used", "supplyDifficulty", "carsPerMonthApprox"] as const;
 export const SUPPLY_DIFFICULTY_OPTIONS = ["available", "difficult", "unavailable"] as const;

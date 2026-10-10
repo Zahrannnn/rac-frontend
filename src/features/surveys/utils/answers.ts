@@ -136,6 +136,24 @@ export function isFieldValid(field: FieldSpec, value: unknown): boolean {
     case "matrixDynamic":
     case "checklist":
       return typeof value === "object" && value !== null && Object.keys(value as object).length > 0;
+    case "equipment": {
+      // every item needs available (yes/no); condition is required once available
+      if (typeof value !== "object" || value === null) {
+        return false;
+      }
+      const items = value as Record<string, { available?: unknown; condition?: unknown }>;
+      return (field.options ?? []).every((item) => {
+        const entry = items[item];
+        if (!entry || (entry.available !== "yes" && entry.available !== "no")) {
+          return false;
+        }
+        return (
+          entry.available === "no" ||
+          entry.condition === "working" ||
+          entry.condition === "inadequate"
+        );
+      });
+    }
     case "likert": {
       // Paper rule: exactly one mark per row — every row answered with a valid scale value.
       if (typeof value !== "object" || value === null) {
@@ -183,6 +201,17 @@ export function buildSectionPayload(
       normalized[row] = { male, female, total: computeWorkforceTotal({ male, female }) };
     }
     return { ...answers, workforce: normalized };
+  }
+
+  // condition/specs only make sense for available items — drop stale values
+  if (section.key === "toolsEquipment" && answers.equipmentItems) {
+    const items = answers.equipmentItems as Record<string, Record<string, unknown>>;
+    const normalized: Record<string, Record<string, unknown>> = {};
+    for (const [item, entry] of Object.entries(items)) {
+      normalized[item] =
+        entry.available === "yes" ? entry : { available: entry.available === "no" ? "no" : entry.available };
+    }
+    return { ...answers, equipmentItems: normalized };
   }
 
   return answers;

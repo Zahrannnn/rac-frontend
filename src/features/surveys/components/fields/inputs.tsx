@@ -14,6 +14,8 @@ import {
   matrixRowLabelKey,
   optionLabelKey,
   CHECKLIST_VALUES,
+  EQUIPMENT_ITEMS,
+  EQUIPMENT_SPEC_KEYS,
   MATRIX3COL_COLS,
   SEASONAL_COLS,
   SUPPLY_DIFFICULTY_OPTIONS,
@@ -611,6 +613,130 @@ export function ChecklistTable({
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/** One equipment row of the toolsEquipment block. */
+export type EquipmentItemValue = {
+  available?: "yes" | "no";
+  condition?: "working" | "inadequate";
+  powerHp?: number | null;
+  capacityKg?: number | null;
+  precisionG?: number | null;
+  dualGas?: "yes" | "no";
+};
+
+const EQUIPMENT_SPEC_LABELS: Record<string, string> = {
+  powerHp: "survey.spec.powerHp",
+  capacityKg: "survey.spec.capacityKg",
+  precisionG: "survey.spec.precisionG",
+};
+
+/**
+ * toolsEquipment block: one card per item — availability toggle, condition,
+ * then the item's spec inputs (specs render only while available = yes).
+ */
+export function EquipmentChecklist({
+  label,
+  hideLabel = false,
+  value,
+  onChange,
+}: {
+  label: string;
+  hideLabel?: boolean;
+  value: Record<string, EquipmentItemValue>;
+  onChange: (next: Record<string, EquipmentItemValue>) => void;
+}) {
+  const t = useT();
+
+  const setItem = (item: string, patch: Partial<EquipmentItemValue>) => {
+    onChange({ ...value, [item]: { ...value[item], ...patch } });
+  };
+
+  return (
+    <div className="flex flex-col gap-2" role="group" aria-label={hideLabel ? label : undefined}>
+      {hideLabel ? null : <Label className="text-sm font-medium">{label}</Label>}
+      <div className="flex flex-col gap-3">
+        {EQUIPMENT_ITEMS.map((item) => {
+          const entry = value[item] ?? {};
+          const available = entry.available ?? null;
+          const specs = EQUIPMENT_SPEC_KEYS[item] ?? [];
+          return (
+            <div key={item} className="flex flex-col gap-3 rounded-lg border p-3">
+              <p className="text-sm font-semibold text-[var(--navy)]">
+                {t(`survey.equipment.${item}` as never)}
+              </p>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {t("survey.equipment.availableLabel")}
+                </span>
+                <SegmentedRow
+                  name={`${t(`survey.equipment.${item}` as never)} — ${t("survey.equipment.availableLabel")}`}
+                  value={available}
+                  options={["yes", "no"]}
+                  onSelect={(option) =>
+                    setItem(item, option === "yes" ? { available: "yes" } : { available: "no" })
+                  }
+                  labelFor={(option) => t(optionLabelKey(option) as never)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {t("survey.equipment.conditionLabel")}
+                </span>
+                <SegmentedRow
+                  name={`${t(`survey.equipment.${item}` as never)} — ${t("survey.equipment.conditionLabel")}`}
+                  value={entry.condition ?? null}
+                  options={["working", "inadequate"]}
+                  onSelect={(option) =>
+                    setItem(item, { condition: option as "working" | "inadequate" })
+                  }
+                  labelFor={(option) => t(`survey.cond.${option}` as never)}
+                />
+              </div>
+              {available === "yes" && specs.length > 0 ? (
+                <div className="flex flex-wrap gap-3 border-t pt-3">
+                  {specs.map((spec) =>
+                    spec === "dualGas" ? (
+                      <div key={spec} className="flex min-w-0 flex-1 flex-col gap-1">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {t("survey.spec.dualGas")}
+                        </span>
+                        <SegmentedRow
+                          name={`${t(`survey.equipment.${item}` as never)} — ${t("survey.spec.dualGas")}`}
+                          value={entry.dualGas ?? null}
+                          options={["yes", "no"]}
+                          onSelect={(option) => setItem(item, { dualGas: option as "yes" | "no" })}
+                          labelFor={(option) => t(optionLabelKey(option) as never)}
+                        />
+                      </div>
+                    ) : (
+                      <div key={spec} className="flex w-40 flex-col gap-1">
+                        <Label className="text-xs font-medium text-muted-foreground">
+                          {t(EQUIPMENT_SPEC_LABELS[spec] as never)}
+                        </Label>
+                        <Input
+                          inputMode="decimal"
+                          className="min-h-11 tabular-nums"
+                          aria-label={`${t(`survey.equipment.${item}` as never)} — ${t(EQUIPMENT_SPEC_LABELS[spec] as never)}`}
+                          value={entry[spec as "powerHp"] ?? ""}
+                          onChange={(event) => {
+                            const raw = event.target.value.replace(/[^0-9.]/g, "");
+                            setItem(item, {
+                              [spec]: raw === "" ? null : Number(raw),
+                            } as Partial<EquipmentItemValue>);
+                          }}
+                        />
+                      </div>
+                    )
+                  )}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

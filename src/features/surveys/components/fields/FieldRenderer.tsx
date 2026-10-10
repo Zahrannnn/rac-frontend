@@ -15,6 +15,7 @@ import {
 import {
   CheckGroup,
   ChecklistTable,
+  EquipmentChecklist,
   LikertTable,
   PhoneField,
   RadioCards,
@@ -115,7 +116,11 @@ export function FieldRenderer({
               onChange(field.key, raw === "" ? null : Number(raw));
             }}
           />
-          {field.min !== undefined && field.max !== undefined ? (
+          {field.helper ? (
+            <p className="text-xs text-muted-foreground">
+              {t(`survey.helper.${section.key}.${field.key}` as never)}
+            </p>
+          ) : field.min !== undefined && field.max !== undefined ? (
             <p className="text-xs text-muted-foreground tabular-nums">
               {field.min} – {field.max}
             </p>
@@ -239,6 +244,15 @@ export function ComplexFieldRenderer({
           label={label}
           hideLabel={hideLabel}
           items={field.options ?? []}
+          value={value as never}
+          onChange={(next) => onChange(field.key, next)}
+        />
+      );
+    case "equipment":
+      return (
+        <EquipmentChecklist
+          label={label}
+          hideLabel={hideLabel}
           value={value as never}
           onChange={(next) => onChange(field.key, next)}
         />
