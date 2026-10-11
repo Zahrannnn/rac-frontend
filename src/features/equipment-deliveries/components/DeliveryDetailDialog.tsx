@@ -79,6 +79,10 @@ export function DeliveryDetailDialog({
                   {data.recipientPhone ? ` · ${data.recipientPhone}` : ""}
                 </dd>
               </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">{t("equipment.deliveredAt")}</dt>
+                <dd className="tabular-nums">{formatDateTimeUtc(data.deliveredAtUtc)} UTC</dd>
+              </div>
               {data.notes ? (
                 <div>
                   <dt className="text-xs text-muted-foreground">{t("equipment.notes")}</dt>
@@ -86,12 +90,6 @@ export function DeliveryDetailDialog({
                 </div>
               ) : null}
             </dl>
-
-            {canEdit ? (
-              <Button type="button" variant="outline" size="sm" onClick={onEdit}>
-                {t("equipment.edit")}
-              </Button>
-            ) : null}
 
             <section className="flex flex-col gap-2" aria-labelledby="eq-photos">
               <div className="flex items-center justify-between gap-2">
@@ -178,6 +176,14 @@ export function DeliveryDetailDialog({
                 </ul>
               )}
             </section>
+
+            {canEdit ? (
+              <div className="mt-auto flex flex-wrap justify-end gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={onEdit}>
+                  {t("equipment.edit")}
+                </Button>
+              </div>
+            ) : null}
           </>
         )}
       </DialogContent>

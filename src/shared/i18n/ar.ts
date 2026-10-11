@@ -1024,7 +1024,7 @@ export const ar = {
   "equipment.deleted": "تم حذف التسليم",
   "equipment.deleteFailed": "تعذّر حذف التسليم",
   "equipment.delete": "حذف",
-  "equipment.deleteConfirm": "حذف هذا التسليم وصوره؟",
+  "equipment.deleteConfirm": "حذف تسليم {workshop} وصوره؟",
   "equipment.empty": "لا توجد تسليمات بعد",
   "equipment.emptyHint": "سجّل تسليمًا لورشة موصى بها.",
   "equipment.filters": "مرشحات التسليم",

@@ -11,6 +11,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/shared/components/form/form-field";
 import { useT, type TranslationKey } from "@/shared/i18n";
@@ -161,19 +168,21 @@ export function DeliveryFormDialog({
             required
             error={submitted ? fieldError(t, errors.workshopId) : undefined}
           >
-            <select
-              className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              value={values.workshopId}
-              onChange={(e) => pickRecommended(e.target.value)}
-              aria-invalid={submitted && Boolean(errors.workshopId)}
+            <Select
+              value={values.workshopId || undefined}
+              onValueChange={(workshopId) => pickRecommended(workshopId)}
             >
-              <option value="">{t("equipment.pickWorkshop")}</option>
-              {(recommended?.items ?? []).map((item) => (
-                <option key={item.workshopId} value={item.workshopId}>
-                  {item.code} · {item.name} ({item.governorate})
-                </option>
-              ))}
-            </select>
+              <SelectTrigger aria-invalid={submitted && Boolean(errors.workshopId)}>
+                <SelectValue placeholder={t("equipment.pickWorkshop")} />
+              </SelectTrigger>
+              <SelectContent>
+                {(recommended?.items ?? []).map((item) => (
+                  <SelectItem key={item.workshopId} value={item.workshopId}>
+                    {item.code} · {item.name} ({item.governorate})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {values.sourceBadge ? (
               <p className="mt-1 text-xs text-muted-foreground">
                 {t("equipment.source", { source: values.sourceBadge })}

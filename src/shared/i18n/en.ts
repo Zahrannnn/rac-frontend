@@ -1027,7 +1027,7 @@ export const en: Dictionary = {
   "equipment.deleted": "Delivery deleted",
   "equipment.deleteFailed": "Could not delete the delivery",
   "equipment.delete": "Delete",
-  "equipment.deleteConfirm": "Delete this delivery and its photos?",
+  "equipment.deleteConfirm": "Delete delivery {workshop} and its photos?",
   "equipment.empty": "No deliveries yet",
   "equipment.emptyHint": "Record a delivery against a recommended workshop.",
   "equipment.filters": "Delivery filters",

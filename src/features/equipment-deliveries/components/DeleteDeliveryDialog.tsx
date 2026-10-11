@@ -34,12 +34,16 @@ export function DeleteDeliveryDialog({
           <div className="min-w-0">
             <DialogTitle>{t("equipment.delete")}</DialogTitle>
             <DialogDescription className="mt-1">
-              {t("equipment.deleteConfirm")}
+              {t("equipment.deleteConfirm", {
+                workshop: pendingDelete
+                  ? `${pendingDelete.workshopCode} · ${pendingDelete.workshopName}`
+                  : "",
+              })}
             </DialogDescription>
           </div>
         </div>
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={onClose}>
             {t("common.cancel")}
           </Button>
           <Button type="button" variant="destructive" onClick={onConfirm} disabled={isPending}>

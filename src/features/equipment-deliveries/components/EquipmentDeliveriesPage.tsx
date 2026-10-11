@@ -2,12 +2,11 @@
 
 import { totalPagesOf } from "@/shared/utils/pagination";
 import { useState } from "react";
-import { Package, Plus } from "lucide-react";
+import { Package, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { ListPagination } from "@/shared/components/list-pagination";
+import { QueryErrorState, SkeletonRows } from "@/shared/components/query-states";
 import { useT } from "@/shared/i18n";
 import { formatDateTimeUtc, utcDayBounds } from "@/shared/utils/datetime";
 import { can, useAuth } from "@/features/auth";
@@ -70,6 +70,12 @@ export function EquipmentDeliveriesPage() {
     }));
   };
 
+  const clearDateRange = () => {
+    setDateFrom("");
+    setDateTo("");
+    setFilters(DEFAULT_FILTERS);
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={t("equipment.title")} description={t("equipment.subtitle")}>
@@ -97,26 +103,38 @@ export function EquipmentDeliveriesPage() {
             onChange={(range) => applyDateRange(range.from ?? "", range.to ?? "")}
           />
         </div>
+        {dateFrom || dateTo ? (
+          <Button type="button" variant="ghost" size="sm" onClick={clearDateRange}>
+            <X data-icon="inline-start" />
+            {t("workshops.clearFilters")}
+          </Button>
+        ) : null}
       </section>
 
       {isPending && !data ? (
-        <div className="flex flex-col gap-2" aria-busy>
-          {Array.from({ length: 5 }, (_, i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-lg" />
-          ))}
-        </div>
+        <SkeletonRows count={5} className="h-12 w-full rounded-lg" />
       ) : isError ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-6 text-sm text-muted-foreground">
-          <p>{t("common.error")}</p>
-          <Button type="button" variant="outline" size="sm" onClick={() => refetch()}>
-            {t("common.retry")}
-          </Button>
-        </div>
+        <QueryErrorState
+          onRetry={() => refetch()}
+          className="rounded-lg border bg-card p-6"
+        />
       ) : !data || data.items.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-lg border bg-card px-6 py-14 text-center">
-          <Package className="h-8 w-8 text-muted-foreground" />
+          <Package className="h-8 w-8 text-muted-foreground" aria-hidden />
           <p className="text-lg font-semibold text-[var(--navy)]">{t("equipment.empty")}</p>
           <p className="max-w-[40ch] text-sm text-muted-foreground">{t("equipment.emptyHint")}</p>
+          {canCreate ? (
+            <Button
+              type="button"
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus data-icon="inline-start" aria-hidden />
+              {t("equipment.create")}
+            </Button>
+          ) : null}
         </div>
       ) : (
         <>
@@ -141,7 +159,7 @@ export function EquipmentDeliveriesPage() {
                   <TableHead className={HEADER_CELL_CLASS}>
                     {t("equipment.photos")}
                   </TableHead>
-                  {canDelete && <TableHead className={`w-28 ${HEADER_CELL_CLASS}`} />}
+                  {canDelete && <TableHead className={`w-16 ${HEADER_CELL_CLASS}`} />}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -152,10 +170,23 @@ export function EquipmentDeliveriesPage() {
                     onClick={() => setDetailId(row.id)}
                   >
                     <TableCell>
-                      <span className="block font-mono text-xs text-primary">{row.workshopCode}</span>
-                      <span className="block truncate text-sm font-medium">{row.workshopName}</span>
+                      <button
+                        type="button"
+                        className="block w-full text-start"
+                        onClick={() => setDetailId(row.id)}
+                      >
+                        <span className="block font-mono text-xs text-primary">
+                          {row.workshopCode}
+                        </span>
+                        <span className="block truncate text-sm font-medium">
+                          {row.workshopName}
+                        </span>
+                      </button>
                     </TableCell>
-                    <TableCell className="max-w-[20ch] truncate text-sm">
+                    <TableCell
+                      className="max-w-[20ch] truncate text-sm"
+                      title={row.equipmentDescription}
+                    >
                       {row.equipmentDescription}
                     </TableCell>
                     <TableCell className="text-sm">{row.recipientName}</TableCell>
@@ -165,20 +196,18 @@ export function EquipmentDeliveriesPage() {
                     <TableCell className="tabular-nums text-sm">{row.photoCount}</TableCell>
                     {canDelete && (
                       <TableCell onClick={(e) => e.stopPropagation()}>
-                        <div className="flex gap-1">
-                          {canDelete ? (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive"
-                              disabled={remove.isPending}
-                              onClick={() => setPendingDelete(row)}
-                            >
-                              {t("equipment.delete")}
-                            </Button>
-                          ) : null}
-                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive"
+                          disabled={remove.isPending}
+                          onClick={() => setPendingDelete(row)}
+                          aria-label={t("equipment.delete")}
+                          title={t("equipment.delete")}
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden />
+                        </Button>
                       </TableCell>
                     )}
                   </TableRow>
