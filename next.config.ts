@@ -25,7 +25,14 @@ const nextConfig: NextConfig = {
   // literally. Next's default for prerendered HTML (s-maxage=31536000) poisons
   // the edge with stale documents after every deploy — HTML must revalidate;
   // content-hashed static assets stay immutable.
+  // Dev is exempt: Turbopack's dev chunk URLs are not content-hashed, so the
+  // immutable header would pin a year-old chunk in the local browser and every
+  // code change would look "not applied" until a hard reload.
   async headers() {
+    if (process.env.NODE_ENV !== "production") {
+      return [];
+    }
+
     return [
       {
         source: "/:path*",

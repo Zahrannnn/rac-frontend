@@ -1,4 +1,14 @@
 import { racApi } from "@/shared/api/rac-api";
+
+/**
+ * The API serializes enums in PascalCase ("Participation") while the feature works
+ * with the lowercase union — normalize at this seam so every consumer compares
+ * reliably (chips, gating, scorecard hints).
+ */
+export function normalizeRunKind(value: unknown): RubricKind {
+  const kind = String(value ?? "").toLowerCase();
+  return kind === "equipment" ? "equipment" : "participation";
+}
 import { downloadBlob } from "@/shared/api/file-transfer";
 import type { PagedResult } from "@/shared/api/paged-result";
 import type {
@@ -16,12 +26,12 @@ export async function fetchSelectionRuns(
   const { data } = await racApi.get<PagedResult<SelectionRunSummary>>("/selection/runs", {
     params: { page, pageSize },
   });
-  return data;
+  return { ...data, items: data.items.map((run) => ({ ...run, kind: normalizeRunKind(run.kind) })) };
 }
 
 export async function fetchSelectionRun(runId: string): Promise<SelectionRunDetail> {
   const { data } = await racApi.get<SelectionRunDetail>(`/selection/runs/${runId}`);
-  return data;
+  return { ...data, kind: normalizeRunKind(data.kind) };
 }
 
 /** Creates an immutable machine-scored run snapshot. The backend answers 409 when there is
@@ -34,7 +44,7 @@ export async function createSelectionRun(
     kind,
     notes: notes ?? null,
   });
-  return data;
+  return { ...data, kind: normalizeRunKind(data.kind) };
 }
 
 export async function exportSelectionRun(
@@ -64,5 +74,5 @@ export async function fetchScorecard(
     `/workshops/${workshopId}/scorecard`,
     { params: { kind } }
   );
-  return data;
+  return { ...data, kind: normalizeRunKind(data.kind) };
 }
