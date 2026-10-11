@@ -789,7 +789,7 @@ export const en: Dictionary = {
   // ===== Selection module (machine-scored rubrics — ADR-0004) =====
   "selection.title": "Selection",
   "selection.subtitle":
-    "Machine-scored rubric runs: workshops ranked automatically from survey data, with recommended and reserve lists.",
+    "The latest machine-scored recommendations (participation and equipment) plus the full run history — recommendation is decided off-platform.",
   "selection.kind.participation": "Participation",
   "selection.kind.equipment": "Equipment",
   "selection.recommended": "Recommended list",
@@ -802,23 +802,35 @@ export const en: Dictionary = {
   "selection.score": "Score",
   "selection.tier": "List",
   "selection.criterion.unknown": "Unknown criterion",
-  "selection.runs.title": "Selection runs",
+  "selection.current.participationTitle": "Current recommendation — Participation",
+  "selection.current.equipmentTitle": "Current recommendation — Equipment",
+  "selection.current.participationEmpty":
+    "No participation run yet — once created, every workshop with a Complete survey is scored against the participation rubric and ranked into the recommended and reserve lists.",
+  "selection.current.equipmentEmpty":
+    "No equipment run yet — once created, the recommended set of the latest participation run is scored against the need-inverted rubric (missing equipment scores higher).",
+  "selection.runs.historyTitle": "Run history",
   "selection.runs.subtitle":
     "Immutable snapshots per run kind — Recommended pending program decision (off-platform).",
   "selection.runs.createParticipation": "Create participation run",
   "selection.runs.createEquipment": "Create equipment run",
   "selection.runs.equipmentNeedsParticipationHint":
     "An equipment run requires a participation run first",
-  "selection.runs.empty": "No selection runs yet.",
+  "selection.runs.emptyHint":
+    "A selection run machine-ranks workshops against a versioned rubric and freezes the result as an immutable snapshot.",
   "selection.runs.emptyTier": "No workshops in this list for this run.",
   "selection.runs.by": "By {name}",
   "selection.runs.counts": "{ranked} ranked · {recommended} recommended · {reserve} reserve",
   "selection.runs.confirmParticipationTitle": "Create participation run?",
   "selection.runs.confirmParticipationMessage":
     "The participation rubric machine-scores every workshop with a Complete survey and saves an immutable snapshot: {recommended} recommended / {reserve} reserve. Workshop statuses are not changed.",
+  "selection.runs.confirmParticipationCount": "{count} workshops with a Complete survey will be scored",
+  "selection.runs.confirmParticipationCountNew":
+    "{total} workshops with a Complete survey will be scored — {fresh} new since the last run",
   "selection.runs.confirmEquipmentTitle": "Create equipment run?",
   "selection.runs.confirmEquipmentMessage":
     "The equipment rubric machine-scores the recommended set of the latest participation run and saves an immutable snapshot: {recommended} recommended / {reserve} reserve. Workshop statuses are not changed.",
+  "selection.runs.confirmEquipmentCount":
+    "The recommended set of the latest participation run will be scored ({count} workshops)",
   "selection.runs.confirm": "Run scoring",
   "selection.runs.running": "Running…",
   "selection.runs.created": "Selection run created",
@@ -827,9 +839,10 @@ export const en: Dictionary = {
     "No workshop has a Complete survey to rank — surveys become Complete by passing auto-validation.",
   "selection.runs.equipmentNeedsParticipationConflict":
     "No participation run exists yet — create a participation run first.",
-  "selection.runs.detailTitle": "Selection run detail",
-  "selection.runs.detailMeta": "{date} UTC · {by} · {ranked} ranked",
-  "selection.runs.loading": "Loading run…",
+  "selection.runs.viewList": "View the list",
+  "selection.runs.newRun": "New run",
+  "selection.runs.backToSelection": "Back to Selection",
+  "selection.runs.rankedTitle": "Ranked list",
   "selection.runs.offPlatformHint":
     "Recommended — pending program decision (off-platform). No Selected/Reserve write-back.",
   "selection.runs.rubricVersion": "Rubric version: {version}",

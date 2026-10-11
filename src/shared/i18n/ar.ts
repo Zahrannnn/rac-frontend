@@ -786,7 +786,7 @@ export const ar = {
   // ===== Selection module (machine-scored rubrics — ADR-0004) =====
   "selection.title": "الاختيار",
   "selection.subtitle":
-    "تشغيلات سلّم التقييم الآلي: ترتيب آلي للورش من بيانات الاستبيان مع قائمتَي التوصية والاحتياط.",
+    "أحدث قائمتَي التوصية (المشاركة والمعدات) من سلّم التقييم الآلي مع سجل كل التشغيلات — الترشيح قرارٌ يُتخذ خارج المنصة.",
   "selection.kind.participation": "مشاركة",
   "selection.kind.equipment": "معدات",
   "selection.recommended": "قائمة الترشيح",
@@ -799,23 +799,35 @@ export const ar = {
   "selection.score": "الدرجة",
   "selection.tier": "القائمة",
   "selection.criterion.unknown": "معيار غير معروف",
-  "selection.runs.title": "تشغيلات الاختيار",
+  "selection.current.participationTitle": "التوصية الحالية — المشاركة",
+  "selection.current.equipmentTitle": "التوصية الحالية — المعدات",
+  "selection.current.participationEmpty":
+    "لم تُنشأ تشغيلة مشاركة بعد — عند إنشائها تُقيَّم جميع الورش ذات الاستبيان المكتمل وفق سلّم المشاركة وتُرتَّب في قائمتَي التوصية والاحتياط.",
+  "selection.current.equipmentEmpty":
+    "لم تُنشأ تشغيلة معدات بعد — عند إنشائها تُقيَّم القائمة الموصى بها من أحدث تشغيلة مشاركة وفق سلّم الاحتياج (غياب المعدة يمنح درجة أعلى).",
+  "selection.runs.historyTitle": "سجل التشغيلات",
   "selection.runs.subtitle":
     "لقطات غير قابلة للتعديل لكل نوع تشغيلة — الترشيح بانتظار قرار البرنامج (خارج المنصة).",
   "selection.runs.createParticipation": "إنشاء تشغيلة مشاركة",
   "selection.runs.createEquipment": "إنشاء تشغيلة معدات",
   "selection.runs.equipmentNeedsParticipationHint":
-    "تتطلب تشغيلة المعدات وجود تشغيلة مشاركة سابقة",
-  "selection.runs.empty": "لا توجد تشغيلات بعد.",
+    "تتطلّب تشغيلة المعدات وجود تشغيلة مشاركة سابقة",
+  "selection.runs.emptyHint":
+    "تشغيلة الاختيار ترتيبٌ آلي للورش وفق سلّم تقييم مُعتمد، وتُحفظ نتيجتها كلقطة غير قابلة للتعديل.",
   "selection.runs.emptyTier": "لا توجد ورش في هذه القائمة لهذا التشغيل.",
   "selection.runs.by": "بواسطة {name}",
   "selection.runs.counts": "{ranked} مُرتّبة · {recommended} موصى بها · {reserve} احتياطي",
   "selection.runs.confirmParticipationTitle": "إنشاء تشغيلة مشاركة؟",
   "selection.runs.confirmParticipationMessage":
     "تُقيّم آلة سلّم المشاركة جميع الورش ذات الاستبيان المكتمل وترتّبها آليًا، وتحفظ لقطة غير قابلة للتعديل: {recommended} موصى بها / {reserve} احتياطي. لا تتغير حالات الورش.",
+  "selection.runs.confirmParticipationCount": "سيُقيَّم {count} ورشة باستبيان مكتمل",
+  "selection.runs.confirmParticipationCountNew":
+    "سيُقيَّم {total} ورشة باستبيان مكتمل — منها {fresh} جديدة منذ آخر تشغيلة",
   "selection.runs.confirmEquipmentTitle": "إنشاء تشغيلة معدات؟",
   "selection.runs.confirmEquipmentMessage":
     "تُقيّم آلة سلّم المعدات القائمة الموصى بها من أحدث تشغيلة مشاركة، وتحفظ لقطة غير قابلة للتعديل: {recommended} موصى بها / {reserve} احتياطي. لا تتغير حالات الورش.",
+  "selection.runs.confirmEquipmentCount":
+    "ستُقيَّم القائمة الموصى بها من أحدث تشغيلة مشاركة ({count} ورشة)",
   "selection.runs.confirm": "تشغيل التقييم",
   "selection.runs.running": "جارٍ التشغيل…",
   "selection.runs.created": "تم إنشاء تشغيلة الاختيار",
@@ -824,9 +836,10 @@ export const ar = {
     "لا توجد ورش باستبيان مكتمل لتقسيمها — يصبح الاستبيان مكتملًا باجتياز التحقق التلقائي.",
   "selection.runs.equipmentNeedsParticipationConflict":
     "لا توجد تشغيلة مشاركة بعد — أنشئ تشغيلة مشاركة أولًا.",
-  "selection.runs.detailTitle": "تفاصيل تشغيلة الاختيار",
-  "selection.runs.detailMeta": "{date} UTC · {by} · {ranked} مُرتّبة",
-  "selection.runs.loading": "جارٍ تحميل التشغيل…",
+  "selection.runs.viewList": "عرض القائمة",
+  "selection.runs.newRun": "تشغيلة جديدة",
+  "selection.runs.backToSelection": "العودة إلى الاختيار",
+  "selection.runs.rankedTitle": "القائمة المرتبة",
   "selection.runs.offPlatformHint":
     "موصى بها — بانتظار قرار البرنامج (خارج المنصة). لا كتابة Selected/Reserve على الورش.",
   "selection.runs.rubricVersion": "إصدار سلّم التقييم: {version}",

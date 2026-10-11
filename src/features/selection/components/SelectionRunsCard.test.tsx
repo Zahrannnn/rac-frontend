@@ -1,18 +1,19 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nProvider } from "@/shared/i18n";
 import type { PagedResult } from "@/shared/api/paged-result";
 import type { SelectionRunSummary } from "../types";
+import { groupRunsForHistory } from "./SelectionRunsCard";
 
-const { useSelectionRunsMock, createMutateMock, toastSuccessMock, toastErrorMock } = vi.hoisted(
-  () => ({
+const { useSelectionRunsMock, exportMutateMock, toastSuccessMock, toastErrorMock, saveBlobMock } =
+  vi.hoisted(() => ({
     useSelectionRunsMock: vi.fn(),
-    createMutateMock: vi.fn(),
+    exportMutateMock: vi.fn(),
     toastSuccessMock: vi.fn(),
     toastErrorMock: vi.fn(),
-  })
-);
+    saveBlobMock: vi.fn(),
+  }));
 
 vi.mock("sonner", () => ({
   toast: { success: toastSuccessMock, error: toastErrorMock },
@@ -20,25 +21,14 @@ vi.mock("sonner", () => ({
 
 vi.mock("../hooks/use-selection", () => ({
   useSelectionRuns: useSelectionRunsMock,
-  useSelectionRun: () => ({ data: undefined, isPending: false, isError: false, refetch: vi.fn() }),
-  useCreateSelectionRun: () => ({ mutate: createMutateMock, isPending: false }),
-  useExportSelectionRun: () => ({ mutate: vi.fn(), isPending: false }),
+  useExportSelectionRun: () => ({ mutate: exportMutateMock, isPending: false }),
 }));
 
-vi.mock("@/features/auth", () => ({
-  useAuth: () => ({ user: { permissions: permissionsState.current } }),
-  can: (permissions: string[], permission: string) =>
-    permissions.includes("*") || permissions.includes(permission),
-}));
-
-// RunDetailDialog renders inside the card; its own tests cover the detail view.
-vi.mock("./RunDetailDialog", () => ({
-  RunDetailDialog: () => null,
+vi.mock("@/shared/api/file-transfer", () => ({
+  saveBlob: saveBlobMock,
 }));
 
 import { SelectionRunsCard } from "./SelectionRunsCard";
-
-const permissionsState: { current: string[] } = { current: [] };
 
 const participationRun: SelectionRunSummary = {
   id: "run-1",
@@ -53,14 +43,16 @@ const participationRun: SelectionRunSummary = {
   notes: null,
 };
 
+/** Newer than the participation run — an equipment run derived from it. */
 const equipmentRun: SelectionRunSummary = {
   ...participationRun,
   id: "run-2",
+  runAtUtc: "2026-10-05T10:00:00Z",
   kind: "equipment",
   rubricVersion: "equipment-v1",
-  rankedCount: 50,
-  recommendedCount: 50,
-  reserveCount: 10,
+  rankedCount: 12,
+  recommendedCount: 6,
+  reserveCount: 2,
 };
 
 const runsPage = (items: SelectionRunSummary[]): PagedResult<SelectionRunSummary> => ({
@@ -82,47 +74,106 @@ function renderCard() {
 }
 
 beforeEach(() => {
-  createMutateMock.mockReset();
+  exportMutateMock.mockReset();
   toastSuccessMock.mockReset();
   toastErrorMock.mockReset();
-  permissionsState.current = [];
+  saveBlobMock.mockReset();
+  useSelectionRunsMock.mockReset();
   useSelectionRunsMock.mockReturnValue({
-    data: runsPage([participationRun]),
+    data: runsPage([equipmentRun, participationRun]),
     isPending: false,
     isError: false,
     refetch: vi.fn(),
   });
 });
 
-describe("SelectionRunsCard", () => {
-  it("hides both create actions without the selection:run permission", async () => {
-    renderCard();
+describe("groupRunsForHistory (audit-trail grouping)", () => {
+  it("nests an equipment run under the most recent earlier participation run", () => {
+    const olderParticipation = { ...participationRun, id: "run-0", runAtUtc: "2026-09-01T10:00:00Z" };
+    const groups = groupRunsForHistory([equipmentRun, participationRun, olderParticipation]);
 
-    expect(await screen.findByText("تشغيلات الاختيار")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /إنشاء تشغيلة مشاركة/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /إنشاء تشغيلة معدات/ })).not.toBeInTheDocument();
+    expect(groups.map((group) => group.run.id)).toEqual(["run-1", "run-0"]);
+    expect(groups[0].children.map((child) => child.id)).toEqual(["run-2"]);
+    expect(groups[1].children).toEqual([]);
   });
 
-  it("shows both create actions and kind chips with selection:run held", async () => {
-    permissionsState.current = ["selection:run"];
+  it("keeps an equipment run flat when its parent is outside the loaded page", () => {
+    const groups = groupRunsForHistory([equipmentRun]);
+
+    expect(groups).toEqual([{ run: equipmentRun, children: [] }]);
+  });
+
+  it("walks an equipment run that is newer than its parent first in the list", () => {
+    // Newest-first list where the equipment run appears before its parent.
+    const groups = groupRunsForHistory([equipmentRun, participationRun]);
+
+    expect(groups.map((group) => group.run.id)).toEqual(["run-1"]);
+    expect(groups[0].children.map((child) => child.id)).toEqual(["run-2"]);
+  });
+});
+
+describe("SelectionRunsCard (compact run history)", () => {
+  it("renders compact rows: kind chips, run-by, counts, mono version, view links", async () => {
+    renderCard();
+
+    expect(await screen.findByText("سجل التشغيلات")).toBeInTheDocument();
+    expect(screen.getByText("مشاركة")).toBeInTheDocument();
+    expect(screen.getByText("معدات")).toBeInTheDocument();
+    expect(screen.getAllByText("بواسطة admin")).toHaveLength(2);
+    expect(screen.getByText("12 مُرتّبة · 12 موصى بها · 0 احتياطي")).toBeInTheDocument();
+    expect(screen.getByText("12 مُرتّبة · 6 موصى بها · 2 احتياطي")).toBeInTheDocument();
+    expect(screen.getByText("participation-v1")).toBeInTheDocument();
+    expect(screen.getByText("equipment-v1")).toBeInTheDocument();
+
+    const viewLinks = screen.getAllByRole("link", { name: "عرض القائمة" });
+    // Parent participation row first, its derived equipment run nested after it.
+    expect(viewLinks.map((link) => link.getAttribute("href"))).toEqual([
+      "/selection/runs/run-1",
+      "/selection/runs/run-2",
+    ]);
+  });
+
+  it("visually nests the equipment row under the participation run it derived from", async () => {
+    renderCard();
+
+    const participationRow = screen.getByText("مشاركة").closest("li");
+    const equipmentRow = screen.getByText("معدات").closest("li");
+    expect(participationRow).toContainElement(equipmentRow);
+  });
+
+  it("exports a row via the lightweight export action", async () => {
+    exportMutateMock.mockImplementation(
+      (_runId: string, options: { onSuccess: (payload: { blob: Blob; fileName: string }) => void }) =>
+        options.onSuccess({ blob: new Blob(["xlsx"]), fileName: "selection-run.xlsx" })
+    );
+    renderCard();
+
+    const exportButtons = await screen.findAllByRole("button", { name: "تصدير Excel" });
+    expect(exportButtons).toHaveLength(2); // one per history row
+    fireEvent.click(exportButtons[0]);
+
+    // The parent participation row renders before its nested equipment row.
+    await waitFor(() => expect(exportMutateMock).toHaveBeenCalledWith("run-1", expect.anything()));
+    expect(saveBlobMock).toHaveBeenCalled();
+    expect(toastSuccessMock).toHaveBeenCalledWith("تم تنزيل ملف Excel");
+  });
+
+  it("keeps 10-per-page pagination and refetches by page number", async () => {
     useSelectionRunsMock.mockReturnValue({
-      data: runsPage([participationRun, equipmentRun]),
+      data: runsPage(Array.from({ length: 12 }, (_, i) => ({ ...participationRun, id: `run-${i}` }))),
       isPending: false,
       isError: false,
       refetch: vi.fn(),
     });
     renderCard();
 
-    expect(await screen.findByRole("button", { name: /إنشاء تشغيلة مشاركة/ })).toBeEnabled();
-    expect(screen.getByRole("button", { name: /إنشاء تشغيلة معدات/ })).toBeEnabled();
+    const next = await screen.findByRole("button", { name: "التالي" });
+    fireEvent.click(next);
 
-    // Kind chips on the run rows (text labels — never color alone).
-    expect(screen.getByText("مشاركة")).toBeInTheDocument();
-    expect(screen.getByText("معدات")).toBeInTheDocument();
+    await waitFor(() => expect(useSelectionRunsMock).toHaveBeenLastCalledWith(2));
   });
 
-  it("disables the equipment action with a hint until a participation run exists", async () => {
-    permissionsState.current = ["selection:run"];
+  it("shows the purposeful empty state with no create buttons (the cards own creation)", async () => {
     useSelectionRunsMock.mockReturnValue({
       data: runsPage([]),
       isPending: false,
@@ -131,60 +182,27 @@ describe("SelectionRunsCard", () => {
     });
     renderCard();
 
-    expect(await screen.findByRole("button", { name: /إنشاء تشغيلة معدات/ })).toBeDisabled();
     expect(
-      screen.getByText("تتطلب تشغيلة المعدات وجود تشغيلة مشاركة سابقة")
-    ).toBeInTheDocument();
-  });
-
-  it("posts the run kind on confirm (participation)", async () => {
-    permissionsState.current = ["selection:run"];
-    createMutateMock.mockImplementation((_vars, options) => options.onSuccess());
-    renderCard();
-
-    fireEvent.click(await screen.findByRole("button", { name: /إنشاء تشغيلة مشاركة/ }));
-    const dialog = await screen.findByRole("dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: "تشغيل التقييم" }));
-
-    await waitFor(() =>
-      expect(createMutateMock).toHaveBeenCalledWith({ kind: "participation" }, expect.anything())
-    );
-    expect(toastSuccessMock).toHaveBeenCalledWith("تم إنشاء تشغيلة الاختيار");
-  });
-
-  it("toasts the localized 409 reason when an equipment run has no participation gateway", async () => {
-    permissionsState.current = ["selection:run"];
-    createMutateMock.mockImplementation((_vars, options) =>
-      options.onError({ status: 409, message: "No participation SelectionRun exists yet" })
-    );
-    renderCard();
-
-    fireEvent.click(await screen.findByRole("button", { name: /إنشاء تشغيلة معدات/ }));
-    const dialog = await screen.findByRole("dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: "تشغيل التقييم" }));
-
-    await waitFor(() =>
-      expect(toastErrorMock).toHaveBeenCalledWith(
-        "لا توجد تشغيلة مشاركة بعد — أنشئ تشغيلة مشاركة أولًا."
+      await screen.findByText(
+        "تشغيلة الاختيار ترتيبٌ آلي للورش وفق سلّم تقييم مُعتمد، وتُحفظ نتيجتها كلقطة غير قابلة للتعديل."
       )
-    );
-    // The English-only server detail is never surfaced raw.
-    expect(toastErrorMock).not.toHaveBeenCalledWith(expect.stringContaining("SelectionRun"));
+    ).toBeInTheDocument();
+
+    // History explains only — the recommendation cards above carry the CTAs,
+    // so a runs-less page never stacks duplicate create buttons.
+    expect(screen.queryByRole("button", { name: /إنشاء تشغيلة مشاركة/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /إنشاء تشغيلة معدات/ })).not.toBeInTheDocument();
   });
 
-  it("falls back to the generic failure toast for non-409 errors", async () => {
-    permissionsState.current = ["selection:run"];
-    createMutateMock.mockImplementation((_vars, options) =>
-      options.onError({ status: 500, message: "boom" })
-    );
+  it("renders the retryable error state when the runs query fails", async () => {
+    useSelectionRunsMock.mockReturnValue({
+      data: undefined,
+      isPending: false,
+      isError: true,
+      refetch: vi.fn(),
+    });
     renderCard();
 
-    fireEvent.click(await screen.findByRole("button", { name: /إنشاء تشغيلة مشاركة/ }));
-    const dialog = await screen.findByRole("dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: "تشغيل التقييم" }));
-
-    await waitFor(() =>
-      expect(toastErrorMock).toHaveBeenCalledWith("تعذّر إنشاء تشغيلة الاختيار")
-    );
+    expect(await screen.findByRole("button", { name: "إعادة المحاولة" })).toBeInTheDocument();
   });
 });

@@ -18,7 +18,7 @@ export const routes = {
 export type AppRoute = (typeof routes)[keyof typeof routes];
 
 /**
- * Dynamic-route helpers for workshop deep links (typedRoutes-validated).
+ * Dynamic-route helpers for deep links (typedRoutes-validated).
  * Keep building new workshop URLs through these instead of inline templates.
  */
 export function workshopProfile(id: string): Route {
@@ -27,4 +27,9 @@ export function workshopProfile(id: string): Route {
 
 export function workshopEdit(id: string): Route {
   return `/workshops/${id}/edit` as Route;
+}
+
+/** Deep link to one selection run's ranked list (Screen 05 drill-in). */
+export function selectionRun(runId: string): Route {
+  return `/selection/runs/${runId}` as Route;
 }
