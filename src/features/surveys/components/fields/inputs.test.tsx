@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useState } from "react";
 import { I18nProvider } from "@/shared/i18n";
 import {
@@ -11,8 +11,16 @@ import {
   WorkforceMatrix,
   type EquipmentItemValue,
 } from "./inputs";
-import { ComplexFieldRenderer } from "./FieldRenderer";
+import { ComplexFieldRenderer, FieldRenderer } from "./FieldRenderer";
 import { SECTIONS } from "../../schema";
+
+// Radix Select (governorate dropdown) relies on pointer-capture APIs jsdom
+// does not implement — same stubs as the workshops DistrictSelect tests.
+beforeAll(() => {
+  HTMLElement.prototype.hasPointerCapture = () => false;
+  HTMLElement.prototype.scrollIntoView = () => {};
+  Element.prototype.releasePointerCapture = () => {};
+});
 
 function renderWithI18n(ui: React.ReactElement) {
   return render(<I18nProvider>{ui}</I18nProvider>);
@@ -37,6 +45,65 @@ describe("RadioCards (singleChoice renderer)", () => {
       <RadioCards label="النوع" value="no" options={["yes", "no"]} onChange={vi.fn()} />
     );
     expect(screen.getByRole("radio", { name: "لا" })).toHaveAttribute("aria-checked", "true");
+  });
+});
+
+describe("FieldRenderer — enum with ui:\"select\" (governorate dropdown)", () => {
+  const basicInfo = SECTIONS.find((candidate) => candidate.key === "basicInfo")!;
+  const governorate = basicInfo.fields.find((field) => field.key === "governorate")!;
+
+  it("renders a dropdown with all 27 governorates and a placeholder when unanswered", async () => {
+    renderWithI18n(
+      <FieldRenderer section={basicInfo} field={governorate} answers={{}} onChange={vi.fn()} />
+    );
+
+    // closed state: combobox showing the placeholder, no radio grid
+    expect(screen.queryAllByRole("radio")).toHaveLength(0);
+    const trigger = screen.getByRole("combobox");
+    expect(trigger).toHaveTextContent("اختر من القائمة");
+
+    fireEvent.click(trigger);
+    await waitFor(() => expect(screen.getByRole("listbox")).toBeInTheDocument());
+    expect(screen.getAllByRole("option")).toHaveLength(27);
+    expect(screen.getByRole("option", { name: "كفر الشيخ" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "القاهرة" })).toBeInTheDocument();
+  });
+
+  it("shows a prefilled workshop governorate as the selected option", () => {
+    renderWithI18n(
+      <FieldRenderer
+        section={basicInfo}
+        field={governorate}
+        answers={{ governorate: "kafr_el_sheikh" }}
+        onChange={vi.fn()}
+      />
+    );
+
+    // slugged key prefilled by withWorkshopContext → Arabic survey.opt.* label
+    expect(screen.getByRole("combobox")).toHaveTextContent("كفر الشيخ");
+  });
+
+  it("reports the chosen slugged key through onChange", async () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <FieldRenderer section={basicInfo} field={governorate} answers={{}} onChange={onChange} />
+    );
+
+    fireEvent.click(screen.getByRole("combobox"));
+    await waitFor(() => expect(screen.getByRole("listbox")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("option", { name: "القاهرة" }));
+    expect(onChange).toHaveBeenCalledWith("governorate", "cairo");
+  });
+
+  it("keeps plain enum fields on radio cards", () => {
+    const workshopType = basicInfo.fields.find((field) => field.key === "workshopType")!;
+
+    renderWithI18n(
+      <FieldRenderer section={basicInfo} field={workshopType} answers={{}} onChange={vi.fn()} />
+    );
+
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("radio")).toHaveLength(3);
   });
 });
 

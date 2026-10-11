@@ -4,10 +4,18 @@ import { useId } from "react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useT } from "@/shared/i18n";
 import {
   checklistItemLabelKey,
   fieldLabelKey,
+  optionLabelKey,
   statementLabelKey,
   type FieldSpec,
   type SectionSpec,
@@ -51,7 +59,37 @@ export function FieldRenderer({
   const value = answers[field.key] ?? null;
 
   switch (field.type) {
-    case "enum":
+    case "enum": {
+      // Long option lists (27 governorates) render as a dropdown; everything
+      // else stays the radio-card column. Values remain the slugged keys.
+      if (field.ui === "select") {
+        const current = value === null || value === "" ? null : String(value);
+        return (
+          <div className="flex flex-col gap-1">
+            {hideLabel ? null : <Label htmlFor={id}>{label}</Label>}
+            <Select
+              value={current ?? undefined}
+              onValueChange={(next) => onChange(field.key, next)}
+            >
+              <SelectTrigger id={id} aria-label={hideLabel ? label : undefined}>
+                {/* Children win over the placeholder once a value exists — Radix
+                    only shows the selected item text after the list has opened,
+                    so the label is passed directly (workshop prefill must show). */}
+                <SelectValue placeholder={t("survey.selectOption" as never)}>
+                  {current ? t(optionLabelKey(current) as never) : undefined}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {(field.options ?? []).map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {t(optionLabelKey(option) as never)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        );
+      }
       return (
         <RadioCards
           label={label}
@@ -61,6 +99,7 @@ export function FieldRenderer({
           onChange={(next) => onChange(field.key, next)}
         />
       );
+    }
 
     case "multi":
       return (

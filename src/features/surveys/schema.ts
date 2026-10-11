@@ -44,6 +44,8 @@ export type FieldSpec = {
   label?: boolean;
   /** Renders helper text from `survey.helper.{section}.{key}` under the input. */
   helper?: boolean;
+  /** enum only: render as a dropdown instead of radio cards (long lists, e.g. the 27 governorates). */
+  ui?: "select";
 };
 
 export type SectionSpec = {
@@ -129,7 +131,7 @@ export const SECTIONS: readonly SectionSpec[] = [
       { key: "workshopName", type: "string", required: true },
       { key: "ownerOrManagerName", type: "string", required: true },
       {
-        key: "governorate", type: "enum", required: true,
+        key: "governorate", type: "enum", required: true, ui: "select",
         options: [...SURVEY_GOVERNORATE_OPTIONS],
       },
       { key: "district", type: "string", required: true },

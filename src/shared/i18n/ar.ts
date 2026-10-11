@@ -428,6 +428,7 @@ export const ar = {
   "survey.section.observationChecklist": "قائمة الملاحظة الميدانية للباحث",
   "survey.section.closing": "الإغلاق والموافقات",
   "survey.optional": "اختياري",
+  "survey.selectOption": "اختر من القائمة",
   "survey.fieldRequired": "هذا الحقل مطلوب",
   "survey.fieldInvalid": "القيمة غير صحيحة",
   "survey.helper.basicInfo.serviceAreaM2": "لا تقل عن ٢٥ مترًا مربعًا",

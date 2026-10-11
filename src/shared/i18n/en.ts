@@ -431,6 +431,7 @@ export const en: Dictionary = {
   "survey.section.observationChecklist": "Field observation checklist",
   "survey.section.closing": "Closing & approvals",
   "survey.optional": "optional",
+  "survey.selectOption": "Select from the list",
   "survey.fieldRequired": "This field is required",
   "survey.fieldInvalid": "Invalid value",
   "survey.helper.basicInfo.serviceAreaM2": "At least 25 square meters",
