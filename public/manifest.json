@@ -1,7 +1,7 @@
 {
-  "name": "RAC-DAMP — منصة التقييم والمتابعة الرقمية لقطاع التبريد والتكييف",
-  "short_name": "RAC-DAMP",
-  "description": "منصة التقييم والمتابعة الرقمية لقطاع التبريد والتكييف — RAC Digital Assessment & Monitoring Platform (UNIDO / NOU / EED).",
+  "name": "MAC-DAMP — منصة التقييم والمتابعة الرقمية لقطاع تكييف المركبات",
+  "short_name": "MAC-DAMP",
+  "description": "منصة التقييم والمتابعة الرقمية لقطاع تكييف المركبات — MAC Digital Assessment & Monitoring Platform (UNIDO / NOU / EED).",
   "dir": "rtl",
   "lang": "ar",
   "start_url": "/",

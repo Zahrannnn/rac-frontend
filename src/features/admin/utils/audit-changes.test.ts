@@ -14,9 +14,9 @@ describe("parseChanges", () => {
   });
 
   it("maps Added/Deleted entries into flat snapshots", () => {
-    const lines = parseChanges("Added", { Code: "RAC-CAR-000125", NumberOfTechnicians: 4 });
+    const lines = parseChanges("Added", { Code: "MAC-CAR-000125", NumberOfTechnicians: 4 });
     expect(lines).toEqual([
-      { field: "Code", to: "RAC-CAR-000125" },
+      { field: "Code", to: "MAC-CAR-000125" },
       { field: "NumberOfTechnicians", to: "4" },
     ]);
   });

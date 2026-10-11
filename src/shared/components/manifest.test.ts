@@ -19,9 +19,9 @@ describe("PWA web app manifest", () => {
   const manifest = loadManifest();
 
   it("carries the bilingual app name and a short install label", () => {
-    expect(manifest.name).toMatch(/RAC-DAMP/);
+    expect(manifest.name).toMatch(/MAC-DAMP/);
     expect(manifest.name).toMatch(/[\u0600-\u06FF]/); // Arabic name present
-    expect(manifest.short_name).toBe("RAC-DAMP");
+    expect(manifest.short_name).toBe("MAC-DAMP");
   });
 
   it("declares the RTL Arabic standalone app shell", () => {

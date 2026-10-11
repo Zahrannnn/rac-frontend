@@ -33,7 +33,7 @@ const rankedRow = (over: Partial<SelectionRunRankedRow>): SelectionRunRankedRow 
   rank: 1,
   rankInGovernorate: 1,
   workshopId: "w-1",
-  workshopCode: "RAC-CAR-000042",
+  workshopCode: "MAC-CAR-000042",
   workshopName: "ورشة النور",
   governorate: "Cairo",
   totalScore: 88,
@@ -46,7 +46,7 @@ const first = rankedRow({});
 const second = rankedRow({
   rank: 2,
   workshopId: "w-2",
-  workshopCode: "RAC-CAR-000043",
+  workshopCode: "MAC-CAR-000043",
   workshopName: "ورشة الأمل",
   governorate: "Giza",
   totalScore: 81,
@@ -54,7 +54,7 @@ const second = rankedRow({
 const reserveRow = rankedRow({
   rank: 3,
   workshopId: "w-3",
-  workshopCode: "RAC-CAR-000044",
+  workshopCode: "MAC-CAR-000044",
   workshopName: "ورشة السلام",
   governorate: "Alexandria",
   totalScore: 70,
@@ -134,7 +134,7 @@ describe("SelectionRunDetailPage (ranked list of one run snapshot)", () => {
     expect(within(recommended).getByText("#1")).toBeInTheDocument();
     expect(within(recommended).getByText("#2")).toBeInTheDocument();
     expect(within(recommended).getByText("ورشة النور")).toBeInTheDocument();
-    expect(within(recommended).getByText("RAC-CAR-000042")).toBeInTheDocument();
+    expect(within(recommended).getByText("MAC-CAR-000042")).toBeInTheDocument();
     expect(within(recommended).getByText("القاهرة")).toBeInTheDocument();
     expect(within(recommended).getByText("الجيزة")).toBeInTheDocument();
     expect(within(recommended).getAllByText("88")).toHaveLength(1);

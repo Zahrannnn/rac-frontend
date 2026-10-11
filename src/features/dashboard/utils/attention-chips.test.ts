@@ -32,7 +32,7 @@ describe("attention chip deep links", () => {
         surveyBriefs: [
           {
             workshopId: "ws-77",
-            workshopCode: "RAC-CAR-000077",
+            workshopCode: "MAC-CAR-000077",
             status: "Incomplete",
             failingRules: 3,
           },

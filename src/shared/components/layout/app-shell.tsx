@@ -62,7 +62,7 @@ function AppSidebar() {
             >
               <Link href={routes.dashboard}>
                 <span className="flex size-8 items-center justify-center rounded-md bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
-                  RAC
+                  MAC
                 </span>
                 <span className="grid flex-1 text-start text-sm leading-tight">
                   <span className="truncate font-semibold text-sidebar-foreground">

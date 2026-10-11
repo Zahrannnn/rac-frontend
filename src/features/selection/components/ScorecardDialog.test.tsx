@@ -65,7 +65,7 @@ function renderDialog(props: Partial<Parameters<typeof ScorecardDialog>[0]> = {}
         <ScorecardDialog
           workshopId="w-1"
           kind="participation"
-          workshopLabel="RAC-CAR-000042 — ورشة الاختبار"
+          workshopLabel="MAC-CAR-000042 — ورشة الاختبار"
           onOpenChange={vi.fn()}
           {...props}
         />

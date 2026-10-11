@@ -15,7 +15,7 @@ describe("InterviewShell", () => {
     render(
       <I18nProvider>
         <InterviewShell
-          workshopCode="RAC-CAR-000009"
+          workshopCode="MAC-CAR-000009"
           status="Draft"
           title="بيانات الورشة"
           progressLabel="القسم 2 من 13"
@@ -30,7 +30,7 @@ describe("InterviewShell", () => {
       </I18nProvider>
     );
 
-    expect(screen.getByText("RAC-CAR-000009")).toBeInTheDocument();
+    expect(screen.getByText("MAC-CAR-000009")).toBeInTheDocument();
     expect(screen.getByText("بيانات الورشة")).toBeInTheDocument();
     expect(screen.getByText("القسم 2 من 13")).toBeInTheDocument();
     expect(screen.getByText("Stage body")).toBeInTheDocument();
@@ -43,7 +43,7 @@ describe("InterviewShell", () => {
     render(
       <I18nProvider>
         <InterviewShell
-          workshopCode="RAC-CAR-000009"
+          workshopCode="MAC-CAR-000009"
           status="Draft"
           title="بيانات الورشة"
           progressLabel="القسم 2 من 13"
@@ -87,7 +87,7 @@ describe("InterviewShell", () => {
     render(
       <I18nProvider>
         <InterviewShell
-          workshopCode="RAC-CAR-000009"
+          workshopCode="MAC-CAR-000009"
           status="Draft"
           title="بيانات الورشة"
           progressLabel="القسم 2 من 13"

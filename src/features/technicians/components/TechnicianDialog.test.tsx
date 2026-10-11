@@ -15,7 +15,7 @@ vi.mock("@/features/auth", () => ({
 
 vi.mock("@/features/workshops/api/workshops-adapter", () => ({
   fetchWorkshops: vi.fn().mockResolvedValue({
-    items: [{ id: "w-1", code: "RAC-CAR-000001", name: "Nasr Workshop" }],
+    items: [{ id: "w-1", code: "MAC-CAR-000001", name: "Nasr Workshop" }],
   }),
 }));
 
@@ -97,10 +97,10 @@ describe("TechnicianDialog validation", () => {
     const { fetchWorkshops } = await import("@/features/workshops/api/workshops-adapter");
     renderDialog({
       lockedWorkshopId: "w-1",
-      lockedWorkshopLabel: "RAC-CAR-000001 — Nasr Workshop",
+      lockedWorkshopLabel: "MAC-CAR-000001 — Nasr Workshop",
     });
 
-    expect(screen.getByDisplayValue("RAC-CAR-000001 — Nasr Workshop")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("MAC-CAR-000001 — Nasr Workshop")).toBeInTheDocument();
     expect(screen.queryByText(/اختر ورشة/)).not.toBeInTheDocument();
     expect(fetchWorkshops).not.toHaveBeenCalled();
   });

@@ -27,7 +27,7 @@ vi.mock("@/features/technicians", async () => {
             nationalId: "30001011234567",
             mobile: "01012345678",
             workshopId: "w-1",
-            workshopCode: "RAC-CAR-000001",
+            workshopCode: "MAC-CAR-000001",
             specialty: "HVAC",
             yearsOfExperience: 5,
             status: "Active",
@@ -60,7 +60,7 @@ function renderCard() {
       <I18nProvider>
         <WorkshopTechniciansCard
           workshopId="w-1"
-          workshopCode="RAC-CAR-000001"
+          workshopCode="MAC-CAR-000001"
           workshopName="ورشة نصر"
         />
       </I18nProvider>

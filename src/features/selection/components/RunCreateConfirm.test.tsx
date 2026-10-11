@@ -65,9 +65,9 @@ const fullSummary: FullDashboardSummary = {
   // The machine re-scores every Complete survey — the live count reads this
   // total, with attention.awaitingSelectionCount only as the "new since" delta.
   surveys: [
-    { workshopId: "w-1", workshopCode: "RAC-CAR-000001", status: "Complete", failingRules: 0 },
-    { workshopId: "w-2", workshopCode: "RAC-CAR-000002", status: "Complete", failingRules: 0 },
-    { workshopId: "w-3", workshopCode: "RAC-CAR-000003", status: "Submitted", failingRules: 2 },
+    { workshopId: "w-1", workshopCode: "MAC-CAR-000001", status: "Complete", failingRules: 0 },
+    { workshopId: "w-2", workshopCode: "MAC-CAR-000002", status: "Complete", failingRules: 0 },
+    { workshopId: "w-3", workshopCode: "MAC-CAR-000003", status: "Submitted", failingRules: 2 },
   ],
   pulse: { rankedCount: 5, recommendedTarget: 150 },
   attention: { incompleteFailing: 0, stuckDrafts: 0, awaitingSelectionCount: 1 },

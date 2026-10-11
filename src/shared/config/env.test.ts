@@ -34,7 +34,7 @@ describe("mergePublicEnv", () => {
 
   it("returns the process env untouched without a runtime config", () => {
     const processEnv = {
-      NEXT_PUBLIC_APP_NAME: "RAC-DAMP",
+      NEXT_PUBLIC_APP_NAME: "MAC-DAMP",
       NEXT_PUBLIC_APP_URL: undefined,
       NEXT_PUBLIC_SHOW_HEALTH_URLS: undefined,
       NEXT_PUBLIC_RAC_API_BASE_URL: undefined,

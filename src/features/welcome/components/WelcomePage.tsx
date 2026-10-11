@@ -44,7 +44,7 @@ export function WelcomePage({ cachedDemo, dynamicDemo }: WelcomePageProps) {
           <div className="space-y-5">
             <div className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-1 text-sm text-muted-foreground">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              Agent-ready RAC-DAMP frontend
+              Agent-ready MAC-DAMP frontend
             </div>
             <div className="space-y-3">
               <h1 className="max-w-3xl text-4xl font-semibold tracking-normal text-balance md:text-5xl">

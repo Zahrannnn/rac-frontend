@@ -36,8 +36,8 @@ describe("countDuplicateMatches", () => {
     expect(countDuplicateMatches([])).toBe(0);
     expect(
       countDuplicateMatches([
-        { workshopId: "1", code: "RAC-CAR-00001", name: "A", governorate: "Cairo", reasons: [] },
-        { workshopId: "2", code: "RAC-CAR-00002", name: "B", governorate: "Giza", reasons: [] },
+        { workshopId: "1", code: "MAC-CAR-00001", name: "A", governorate: "Cairo", reasons: [] },
+        { workshopId: "2", code: "MAC-CAR-00002", name: "B", governorate: "Giza", reasons: [] },
       ])
     ).toBe(2);
   });

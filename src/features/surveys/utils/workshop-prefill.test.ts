@@ -7,7 +7,7 @@ import {
 import { SURVEY_GOVERNORATE_OPTIONS } from "@/shared/constants/egypt";
 
 const FULL_WORKSHOP: WorkshopSurveyContext = {
-  code: "RAC-CAR-000125",
+  code: "MAC-CAR-000125",
   name: "ورشة النور",
   ownerName: "محمد عبدالله",
   governorate: "Kafr El Sheikh",
@@ -36,7 +36,7 @@ describe("withWorkshopContext", () => {
   it("fills every overlapping basicInfo field from the workshop record", () => {
     const seeded = withWorkshopContext(undefined, FULL_WORKSHOP);
     expect(seeded).toEqual({
-      projectCode: "RAC-CAR-000125",
+      projectCode: "MAC-CAR-000125",
       workshopName: "ورشة النور",
       ownerOrManagerName: "محمد عبدالله",
       governorate: "kafr_el_sheikh",
@@ -63,10 +63,10 @@ describe("withWorkshopContext", () => {
 
   it("skips missing workshop fields and unconvertible phones", () => {
     const seeded = withWorkshopContext(undefined, {
-      code: "RAC-CAR-000001",
+      code: "MAC-CAR-000001",
       mobile: "broken",
     });
-    expect(seeded).toEqual({ projectCode: "RAC-CAR-000001" });
+    expect(seeded).toEqual({ projectCode: "MAC-CAR-000001" });
   });
 
   it("ignores governorates outside the canonical list", () => {

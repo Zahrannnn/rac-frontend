@@ -3,9 +3,9 @@ import type { Dictionary } from "./ar";
 // English dictionary — Record<keyof typeof ar, string> keeps the key sets in sync at compile time.
 export const en: Dictionary = {
   // App / shell
-  "app.name": "RAC-DAMP",
-  "app.programTitle": "RAC Digital Assessment & Monitoring Platform",
-  "app.programTitleShort": "Digital Assessment & Monitoring — RAC sector",
+  "app.name": "MAC-DAMP",
+  "app.programTitle": "MAC Digital Assessment & Monitoring Platform",
+  "app.programTitleShort": "Digital Assessment & Monitoring — MAC sector",
   "app.partners": "UNIDO · NOU · EED",
   "shell.themeLight": "Light mode",
   "shell.themeDark": "Dark mode",

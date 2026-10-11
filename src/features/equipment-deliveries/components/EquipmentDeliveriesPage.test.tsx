@@ -66,7 +66,7 @@ import { EquipmentDeliveriesPage } from "./EquipmentDeliveriesPage";
 const delivery: EquipmentDelivery = {
   id: "d-1",
   workshopId: "w-1",
-  workshopCode: "RAC-CAR-000125",
+  workshopCode: "MAC-CAR-000125",
   workshopName: "ورشة النصر للتبريد",
   equipmentDescription: "ماكينة استرجاع وسيط التبريد",
   recipientName: "أحمد سمير",
@@ -181,7 +181,7 @@ describe("EquipmentDeliveriesPage", () => {
   it("renders delivery rows with workshop identity and the delete icon action", async () => {
     renderPage();
 
-    expect(await screen.findByText("RAC-CAR-000125")).toBeInTheDocument();
+    expect(await screen.findByText("MAC-CAR-000125")).toBeInTheDocument();
     expect(screen.getByText("ورشة النصر للتبريد")).toBeInTheDocument();
     expect(screen.getByText("ماكينة استرجاع وسيط التبريد")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "حذف" })).toBeInTheDocument();
@@ -191,7 +191,7 @@ describe("EquipmentDeliveriesPage", () => {
     authUser.permissions = ["equipment:create"];
     renderPage();
 
-    expect(await screen.findByText("RAC-CAR-000125")).toBeInTheDocument();
+    expect(await screen.findByText("MAC-CAR-000125")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "حذف" })).not.toBeInTheDocument();
     // Create stays available with only equipment:create.
     expect(screen.getByRole("button", { name: "تسليم جديد" })).toBeInTheDocument();
@@ -200,11 +200,11 @@ describe("EquipmentDeliveriesPage", () => {
   it("opens the detail dialog from the workshop identity cell button", async () => {
     renderPage();
 
-    fireEvent.click(screen.getByRole("button", { name: /RAC-CAR-000125/ }));
+    fireEvent.click(screen.getByRole("button", { name: /MAC-CAR-000125/ }));
 
     expect(await screen.findByText("تفاصيل التسليم")).toBeInTheDocument();
     // Row cell + dialog description both carry the workshop code.
-    expect(screen.getAllByText(/RAC-CAR-000125/).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/MAC-CAR-000125/).length).toBeGreaterThanOrEqual(2);
   });
 
   it("names the workshop in the delete confirmation copy", async () => {
@@ -213,7 +213,7 @@ describe("EquipmentDeliveriesPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "حذف" }));
 
     expect(
-      await screen.findByText("حذف تسليم RAC-CAR-000125 · ورشة النصر للتبريد وصوره؟")
+      await screen.findByText("حذف تسليم MAC-CAR-000125 · ورشة النصر للتبريد وصوره؟")
     ).toBeInTheDocument();
   });
 });

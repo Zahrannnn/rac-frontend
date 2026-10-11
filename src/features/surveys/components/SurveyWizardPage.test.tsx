@@ -19,7 +19,7 @@ vi.mock("@/features/workshops/hooks/use-workshops", () => ({
   useWorkshop: () => ({
     data: {
       id: "w-1",
-      code: "RAC-CAR-000009",
+      code: "MAC-CAR-000009",
       nameEn: "Nasr Workshop",
       nameAr: "ورشة نصر",
       ownerName: "أحمد سمير",
@@ -33,7 +33,7 @@ vi.mock("../hooks/use-survey", () => ({
     data: {
       id: "sv-1",
       workshopId: "w-1",
-      workshopCode: "RAC-CAR-000009",
+      workshopCode: "MAC-CAR-000009",
       status: "Draft",
       latitude: null,
       longitude: null,

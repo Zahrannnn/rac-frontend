@@ -49,9 +49,9 @@ describe("dashboard-filters", () => {
 
   describe("surveyMetrics (single pass over survey briefs)", () => {
     const surveys = [
-      { workshopId: "w1", workshopCode: "RAC-CAR-000001", status: "Complete" as const, failingRules: 0 },
-      { workshopId: "w2", workshopCode: "RAC-CAR-000002", status: "Incomplete" as const, failingRules: 2 },
-      { workshopId: "w3", workshopCode: "RAC-CAR-000003", status: "Incomplete" as const, failingRules: 0 },
+      { workshopId: "w1", workshopCode: "MAC-CAR-000001", status: "Complete" as const, failingRules: 0 },
+      { workshopId: "w2", workshopCode: "MAC-CAR-000002", status: "Incomplete" as const, failingRules: 2 },
+      { workshopId: "w3", workshopCode: "MAC-CAR-000003", status: "Incomplete" as const, failingRules: 0 },
     ];
 
     it("counts Complete/Incomplete and collects only failing Incomplete surveys", () => {

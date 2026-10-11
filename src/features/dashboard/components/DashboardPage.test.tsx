@@ -62,8 +62,8 @@ const fullSummary: DashboardSummary = {
     { governorate: "Giza", count: 5 },
   ],
   surveys: [
-    { workshopId: "w1", workshopCode: "RAC-CAR-000001", status: "Complete", failingRules: 0 },
-    { workshopId: "w2", workshopCode: "RAC-CAR-000002", status: "Incomplete", failingRules: 2 },
+    { workshopId: "w1", workshopCode: "MAC-CAR-000001", status: "Complete", failingRules: 0 },
+    { workshopId: "w2", workshopCode: "MAC-CAR-000002", status: "Incomplete", failingRules: 2 },
   ],
   pulse: { rankedCount: 3, recommendedTarget: 150 },
   attention: {
@@ -109,7 +109,7 @@ describe("DashboardPage hybrid pulse + attention", () => {
     expect(screen.getByText("استبيانات غير مكتملة (قواعد راسبة)")).toBeInTheDocument();
     expect(screen.getByText("استبيانات مكتملة بانتظار الترتيب")).toBeInTheDocument();
     expect(screen.queryByText("استبيانات بها بنود ناقصة")).not.toBeInTheDocument();
-    expect(screen.queryByText("RAC-CAR-000002")).not.toBeInTheDocument();
+    expect(screen.queryByText("MAC-CAR-000002")).not.toBeInTheDocument();
   });
 
   it("full shape: shows all-clear when attention counts are zero", () => {

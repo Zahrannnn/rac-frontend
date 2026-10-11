@@ -26,11 +26,11 @@ export const metadata: Metadata = {
     template: `%s | ${env.NEXT_PUBLIC_APP_NAME}`,
   },
   description:
-    "منصة التقييم والمتابعة الرقمية لقطاع التبريد والتكييف — RAC Digital Assessment & Monitoring Platform (UNIDO / NOU / EED).",
+    "منصة التقييم والمتابعة الرقمية لقطاع تكييف المركبات — MAC Digital Assessment & Monitoring Platform (UNIDO / NOU / EED).",
   openGraph: {
     title: env.NEXT_PUBLIC_APP_NAME,
     description:
-      "Bilingual (Arabic RTL / English) M&E platform for Egypt's refrigeration & air-conditioning servicing sector.",
+      "Bilingual (Arabic RTL / English) M&E platform for Egypt's mobile air-conditioning (MAC) servicing sector.",
     type: "website",
   },
   robots: {

@@ -1,9 +1,9 @@
 // Arabic dictionary — the default and source of truth for the key set.
 export const ar = {
   // App / shell
-  "app.name": "RAC-DAMP",
-  "app.programTitle": "منصة التقييم والمتابعة الرقمية لقطاع التبريد والتكييف",
-  "app.programTitleShort": "التقييم والمتابعة الرقمية — قطاع التبريد والتكييف",
+  "app.name": "MAC-DAMP",
+  "app.programTitle": "منصة التقييم والمتابعة الرقمية لقطاع تكييف المركبات",
+  "app.programTitleShort": "التقييم والمتابعة الرقمية — قطاع تكييف المركبات",
   "app.partners": "UNIDO · NOU · EED",
   "shell.themeLight": "الوضع الفاتح",
   "shell.themeDark": "الوضع الداكن",

@@ -25,7 +25,7 @@ import type { Workshop } from "../types";
 
 const workshop: Workshop = {
   id: "w1",
-  code: "RAC-CAR-000125",
+  code: "MAC-CAR-000125",
   nameEn: "Nasr Workshop",
   nameAr: "ورشة النصر",
   ownerName: "سمير",
