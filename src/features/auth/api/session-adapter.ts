@@ -93,6 +93,36 @@ export async function refreshSession(): Promise<Session | null> {
   return rotateSession();
 }
 
+/**
+ * Boot-time resume for the login/root routing: rotation with cold-start
+ * retries, because the hosted backend can need tens of seconds to wake and
+ * a transport failure says nothing about the session's validity.
+ *
+ * - a rotation lands (fresh or adopted-from-another-tab token) → the session;
+ * - the backend definitively rejects the token → null (session cleared);
+ * - every attempt dies on transport → the stored session, unchanged — the
+ *   caller proceeds into the app and the 401 interceptor finishes recovery.
+ */
+export async function resumeSession(attempts = 3): Promise<Session | null> {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const tokenBefore = readSession()?.token ?? null;
+    const result = await rotateSession();
+
+    if (!result) {
+      return null;
+    }
+    if (result.token !== tokenBefore) {
+      return result;
+    }
+
+    if (attempt < attempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, (attempt + 1) * 2000));
+    }
+  }
+
+  return readSession();
+}
+
 // ---------------------------------------------------------------------------
 // Token rotation core
 // ---------------------------------------------------------------------------

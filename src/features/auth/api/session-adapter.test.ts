@@ -9,6 +9,7 @@ import {
   logoutSession,
   readSession,
   refreshSession,
+  resumeSession,
   rotateSession,
   subscribeToSession,
 } from "./session-adapter";
@@ -317,6 +318,55 @@ describe("refreshSession", () => {
   it("returns null without a network call when nothing is cached", async () => {
     await expect(refreshSession()).resolves.toBeNull();
     expect(postMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("resumeSession", () => {
+  it("retries a cold backend and lands when a later attempt rotates", async () => {
+    vi.useFakeTimers();
+    seedLocalSession();
+    postMock
+      .mockRejectedValueOnce({ message: "timeout of 20000ms exceeded" })
+      .mockRejectedValueOnce({ message: "timeout of 20000ms exceeded" })
+      .mockResolvedValue({
+        data: {
+          accessToken: "rotated-access",
+          expiresAtUtc: new Date(Date.now() + 60 * MINUTE).toISOString(),
+          refreshToken: "rotated-refresh",
+          user,
+        },
+      });
+
+    const pending = resumeSession();
+    await vi.advanceTimersByTimeAsync(10_000);
+    const session = await pending;
+
+    expect(postMock).toHaveBeenCalledTimes(3);
+    expect(session?.token).toBe("rotated-access");
+    expect(storedSession()?.refreshToken).toBe("rotated-refresh");
+  });
+
+  it("returns the stored session after exhausting transport failures", async () => {
+    vi.useFakeTimers();
+    const seeded = seedLocalSession();
+    postMock.mockRejectedValue({ message: "timeout of 20000ms exceeded" });
+
+    const pending = resumeSession();
+    await vi.advanceTimersByTimeAsync(10_000);
+    const session = await pending;
+
+    expect(postMock).toHaveBeenCalledTimes(3);
+    expect(session?.token).toBe(seeded.token);
+    expect(storedSession()?.refreshToken).toBe("refresh-token");
+  });
+
+  it("stops at null the moment the token is definitively rejected", async () => {
+    seedLocalSession();
+    postMock.mockRejectedValue({ status: 401 });
+
+    await expect(resumeSession()).resolves.toBeNull();
+    expect(postMock).toHaveBeenCalledTimes(1);
+    expect(window.localStorage.getItem(sessionStorageKey)).toBeNull();
   });
 });
 

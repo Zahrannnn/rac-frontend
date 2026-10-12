@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LanguageToggle } from "@/shared/components/layout/language-toggle";
 import { useI18n, useT } from "@/shared/i18n";
 import { routes } from "@/shared/constants/routes";
-import { refreshSession } from "../api/session-adapter";
+import { readSession, resumeSession } from "../api/session-adapter";
 import { useAuth } from "../hooks/use-auth-session";
 import { LoginForm } from "./LoginForm";
 
@@ -122,7 +122,7 @@ export function LoginPage() {
     }
     // The cached session isn't proof the server cookie is alive — let the
     // API decide before bouncing an already-open login form back to the app.
-    // refreshSession persists a new session object, which would re-run this
+    // resumeSession persists a new session object, which would re-run this
     // effect and cancel the very redirect it just requested — so the check
     // runs once per mount (checkedRef), not once per session identity.
     let cancelled = false;
@@ -130,13 +130,31 @@ export function LoginPage() {
       return;
     }
     checkedRef.current = true;
-    refreshSession().then((valid) => {
-      if (!cancelled && valid) {
+
+    // Watchdog: a wedged probe must never trap the user on the skeleton.
+    // After 30s continue into the app with whatever session is stored —
+    // the 401 interceptor owns recovery from there.
+    const watchdog = window.setTimeout(() => {
+      if (!cancelled && readSession()) {
         router.replace(routes.dashboard);
       }
-    });
+    }, 30_000);
+
+    resumeSession()
+      .then((valid) => {
+        if (!cancelled && valid) {
+          router.replace(routes.dashboard);
+        }
+      })
+      .catch(() => {
+        // rotateSession settles its own failures; this guard only makes the
+        // chain unfailable so the skeleton always resolves one way or another.
+      })
+      .finally(() => window.clearTimeout(watchdog));
+
     return () => {
       cancelled = true;
+      window.clearTimeout(watchdog);
     };
   }, [router, session]);
 
