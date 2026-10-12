@@ -11,18 +11,22 @@ import {
   createTraining,
   deleteTraining,
   deleteTrainingPhoto,
+  fetchTechnicianCandidates,
   fetchTraining,
   fetchTrainingPhotos,
   fetchTrainings,
   removeAttendee,
+  updateAttendee,
   updateTraining,
   uploadTrainingPhoto,
 } from "../api/trainings-adapter";
+import { isCandidateSearchReady } from "../utils/candidate-search";
 import { trainingKeys } from "../utils/query-keys";
 import type {
   AddAttendeePayload,
   CreateTrainingPayload,
   TrainingListFilters,
+  UpdateAttendeePayload,
   UpdateTrainingPayload,
 } from "../types";
 
@@ -91,11 +95,32 @@ export function useAttendeeMutations(trainingId: string) {
       mutationFn: (payload: AddAttendeePayload) => addAttendee(trainingId, payload),
       onSuccess: invalidate,
     }),
+    update: useMutation({
+      mutationFn: ({
+        attendeeId,
+        payload,
+      }: {
+        attendeeId: string;
+        payload: UpdateAttendeePayload;
+      }) => updateAttendee(trainingId, attendeeId, payload),
+      onSuccess: invalidate,
+    }),
     remove: useMutation({
       mutationFn: (attendeeId: string) => removeAttendee(trainingId, attendeeId),
       onSuccess: invalidate,
     }),
   };
+}
+
+/** Participant-picker candidates — the purpose-built endpoint only answers
+ * searches of two or more characters, so shorter terms keep the query idle. */
+export function useTechnicianCandidates(search: string) {
+  return useQuery({
+    queryKey: trainingKeys.technicianCandidates(search),
+    queryFn: () => fetchTechnicianCandidates(search),
+    enabled: isCandidateSearchReady(search),
+    staleTime: 30_000,
+  });
 }
 
 export function useTrainingPhotoMutations(trainingId: string) {

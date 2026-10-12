@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, UserPlus } from "lucide-react";
+import { Pencil, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -13,12 +12,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
 import { useT } from "@/shared/i18n";
-import { useTechnicians } from "@/features/technicians";
 import { useAttendeeMutations } from "../hooks/use-trainings";
 import type { TrainingAttendee } from "../types";
-import { parseAttendeeScorePair } from "../utils/attendee-scores";
+import { AddAttendeeDialog } from "./AddAttendeeDialog";
+import { AttendeeRemoveDialog } from "./AttendeeRemoveDialog";
+import { AttendeeScoresDialog } from "./AttendeeScoresDialog";
 
 /** Navy shell shared by every header cell of the attendees table. */
 const TABLE_HEAD_CLASS = "h-10 bg-[var(--navy-shell)] text-xs text-white";
@@ -33,95 +32,37 @@ export function AttendeesSection({
   canEdit: boolean;
 }) {
   const t = useT();
-  const { add, remove } = useAttendeeMutations(trainingId);
-  const [search, setSearch] = useState("");
-  // Debounced so the technician query fires after typing settles, not per keystroke.
-  const technicianQuery = useDebouncedValue(search.trim(), 400);
-  const { data: techs } = useTechnicians({ page: 1, search: technicianQuery || undefined });
-  const [techId, setTechId] = useState("");
-  const [preScore, setPreScore] = useState("");
-  const [postScore, setPostScore] = useState("");
+  const { remove } = useAttendeeMutations(trainingId);
+  const [addOpen, setAddOpen] = useState(false);
+  const [editing, setEditing] = useState<TrainingAttendee | null>(null);
+  const [pendingRemove, setPendingRemove] = useState<TrainingAttendee | null>(null);
 
-  const addAttendee = () => {
-    if (!techId) {
-      toast.error(t("trainings.attendeeRequired"));
+  const confirmRemove = () => {
+    if (!pendingRemove) {
       return;
     }
-    const scores = parseAttendeeScorePair(preScore, postScore);
-    if (!scores) {
-      toast.error(t("trainings.scoreInvalid"));
-      return;
-    }
-
-    add.mutate(
-      { technicianId: techId, preScore: scores.pre, postScore: scores.post },
-      {
-        onSuccess: () => {
-          toast.success(t("trainings.attendeeAdded"));
-          setTechId("");
-          setPreScore("");
-          setPostScore("");
-        },
-        onError: (error) => {
-          const status = (error as { status?: number }).status;
-          toast.error(
-            status === 409 ? t("trainings.attendeeDuplicate") : t("trainings.attendeeFailed")
-          );
-        },
-      }
-    );
+    remove.mutate(pendingRemove.id, {
+      onSuccess: () => {
+        setPendingRemove(null);
+        toast.success(t("trainings.attendeeRemoved"));
+      },
+      onError: () => toast.error(t("trainings.attendeeRemoveFailed")),
+    });
   };
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="attendees-heading">
-      <h3 id="attendees-heading" className="text-sm font-semibold text-[var(--navy)]">
-        {t("trainings.attendees")} ({attendees.length})
-      </h3>
-
-      {canEdit ? (
-        <div className="flex flex-col gap-2 rounded-lg border p-3">
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t("trainings.searchTechnician")}
-          />
-          <select
-            className="h-10 rounded-md border bg-background px-3 text-sm"
-            value={techId}
-            onChange={(e) => setTechId(e.target.value)}
-            aria-label={t("trainings.technician")}
-          >
-            <option value="">{t("trainings.pickTechnician")}</option>
-            {(techs?.items ?? []).map((tech) => (
-              <option key={tech.id} value={tech.id}>
-                {tech.fullName} · {tech.workshopCode}
-              </option>
-            ))}
-          </select>
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              value={preScore}
-              onChange={(e) => setPreScore(e.target.value)}
-              placeholder={t("trainings.preScore")}
-            />
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              value={postScore}
-              onChange={(e) => setPostScore(e.target.value)}
-              placeholder={t("trainings.postScore")}
-            />
-          </div>
-          <Button type="button" size="sm" disabled={add.isPending} onClick={addAttendee}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 id="attendees-heading" className="text-sm font-semibold text-[var(--navy)]">
+          {t("trainings.participants")} ({attendees.length})
+        </h3>
+        {canEdit ? (
+          <Button type="button" size="sm" onClick={() => setAddOpen(true)}>
             <UserPlus data-icon="inline-start" />
-            {t("trainings.addAttendee")}
+            {t("trainings.addParticipant")}
           </Button>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       {attendees.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("trainings.attendeesEmpty")}</p>
@@ -140,7 +81,7 @@ export function AttendeesSection({
                   {t("trainings.postScore")}
                 </TableHead>
                 {canEdit ? (
-                  <TableHead className={`${TABLE_HEAD_CLASS} w-16`} />
+                  <TableHead className={`${TABLE_HEAD_CLASS} w-24`} />
                 ) : null}
               </TableRow>
             </TableHeader>
@@ -152,21 +93,27 @@ export function AttendeesSection({
                   <TableCell className="tabular-nums">{row.postScore ?? "—"}</TableCell>
                   {canEdit ? (
                     <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={remove.isPending}
-                        onClick={() =>
-                          remove.mutate(row.id, {
-                            onSuccess: () => toast.success(t("trainings.attendeeRemoved")),
-                            onError: () => toast.error(t("trainings.attendeeRemoveFailed")),
-                          })
-                        }
-                        aria-label={t("trainings.removeAttendee")}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditing(row)}
+                          aria-label={t("trainings.editScores")}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive"
+                          onClick={() => setPendingRemove(row)}
+                          aria-label={t("trainings.removeAttendee")}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   ) : null}
                 </TableRow>
@@ -175,6 +122,27 @@ export function AttendeesSection({
           </Table>
         </div>
       )}
+
+      {canEdit ? (
+        <>
+          <AddAttendeeDialog
+            trainingId={trainingId}
+            open={addOpen}
+            onOpenChange={setAddOpen}
+          />
+          <AttendeeScoresDialog
+            trainingId={trainingId}
+            attendee={editing}
+            onOpenChange={(open) => !open && setEditing(null)}
+          />
+          <AttendeeRemoveDialog
+            attendee={pendingRemove}
+            isPending={remove.isPending}
+            onConfirm={confirmRemove}
+            onClose={() => setPendingRemove(null)}
+          />
+        </>
+      ) : null}
     </section>
   );
 }

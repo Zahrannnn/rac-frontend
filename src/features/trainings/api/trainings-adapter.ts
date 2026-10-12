@@ -4,11 +4,13 @@ import type { PagedResult } from "@/shared/api/paged-result";
 import type {
   AddAttendeePayload,
   CreateTrainingPayload,
+  TechnicianCandidate,
   TrainingAttendee,
   TrainingDetails,
   TrainingListFilters,
   TrainingListItem,
   TrainingPhoto,
+  UpdateAttendeePayload,
   UpdateTrainingPayload,
 } from "../types";
 
@@ -65,6 +67,23 @@ export async function addAttendee(
 
 export async function removeAttendee(trainingId: string, attendeeId: string): Promise<void> {
   await racApi.delete(`/trainings/${trainingId}/attendees/${attendeeId}`);
+}
+
+export async function updateAttendee(
+  trainingId: string,
+  attendeeId: string,
+  payload: UpdateAttendeePayload
+): Promise<void> {
+  await racApi.put(`/trainings/${trainingId}/attendees/${attendeeId}`, payload);
+}
+
+/** GET /trainings/technician-candidates?search={q} — the participant picker
+ * source (min 2 chars, ≤20 rows). */
+export async function fetchTechnicianCandidates(search: string): Promise<TechnicianCandidate[]> {
+  const { data } = await racApi.get<TechnicianCandidate[]>("/trainings/technician-candidates", {
+    params: { search },
+  });
+  return data;
 }
 
 export async function fetchTrainingPhotos(trainingId: string): Promise<TrainingPhoto[]> {

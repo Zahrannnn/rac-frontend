@@ -26,8 +26,7 @@ export function TrainingDetailDialog({
   const t = useT();
   const { data, isPending, isError, refetch } = useTraining(trainingId);
   const { data: photos } = useTrainingPhotos(trainingId);
-  const attendees = data?.attendees;
-  const showAttendees = Array.isArray(attendees);
+  const attendees = data?.attendees ?? [];
 
   return (
     <Dialog open={Boolean(trainingId)} onOpenChange={onOpenChange}>
@@ -72,13 +71,9 @@ export function TrainingDetailDialog({
               ) : null}
             </dl>
 
-            {showAttendees && trainingId ? (
+            {trainingId ? (
               <AttendeesSection trainingId={trainingId} attendees={attendees} canEdit={canEdit} />
-            ) : (
-              <p className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                {t("trainings.privacyNote")}
-              </p>
-            )}
+            ) : null}
 
             {trainingId ? (
               <PhotosSection trainingId={trainingId} canEdit={canEdit} photos={photos ?? []} />

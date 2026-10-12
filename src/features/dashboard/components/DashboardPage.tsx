@@ -5,13 +5,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { useT } from "@/shared/i18n";
-import { isAssignedSummary, isFullSummary } from "../types";
+import { isAssignedSummary, isFullSummary, isTrainerSummary } from "../types";
 import { useDashboardSummary } from "../hooks/use-dashboard-summary";
 import { useDashboardUrlFilters } from "../hooks/use-dashboard-url-filters";
 import { AssignedDashboard } from "./AssignedDashboard";
 import { DashboardSkeleton } from "./DashboardSkeleton";
 import { ExecutiveDashboard } from "./ExecutiveDashboard";
 import { FullDashboard } from "./FullDashboard";
+import { TrainerDashboard } from "./TrainerDashboard";
 
 export function DashboardPage() {
   const t = useT();
@@ -45,7 +46,9 @@ export function DashboardPage() {
         </div>
       ) : data ? (
         <div className={isFetching ? "opacity-80 transition-opacity duration-150" : undefined}>
-          {isAssignedSummary(data) ? (
+          {isTrainerSummary(data) ? (
+            <TrainerDashboard summary={data} />
+          ) : isAssignedSummary(data) ? (
             <AssignedDashboard summary={data} />
           ) : isFullSummary(data) ? (
             <FullDashboard summary={data} filters={filters} onFiltersChange={setFilters} />

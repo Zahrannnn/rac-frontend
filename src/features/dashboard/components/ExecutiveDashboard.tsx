@@ -16,7 +16,8 @@ type ExecutiveDashboardProps = {
   onFiltersChange: (next: DashboardFilterState) => void;
 };
 
-/** Unido / TrainerViewer — pulse + geography only (no attention strip). */
+/** Unido — pulse + geography only (no attention strip). TrainerViewer has its
+ * own trainer-shaped view (TrainerDashboard). */
 export function ExecutiveDashboard({
   summary,
   filters,

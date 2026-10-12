@@ -8,6 +8,7 @@ import {
   KpiCard,
   isAssignedSummary,
   isFullSummary,
+  isTrainerSummary,
   useDashboardSummary,
   type DashboardSummary,
   type ExecutiveDashboardSummary,
@@ -41,7 +42,7 @@ function fullSummaryKpis(summary: FullDashboardSummary): OverviewKpi[] {
 }
 
 function executiveSummaryKpis(summary: ExecutiveDashboardSummary): OverviewKpi[] {
-  // Executive shape (Unido / TrainerViewer): no technicians / last-30-days fields.
+  // Executive shape (Unido): no technicians / last-30-days fields.
   return [
     { labelKey: "dashboard.totalWorkshops", value: summary.totalWorkshops },
     { labelKey: "status.Complete", value: statusCount(summary.byStatus, "Complete") },
@@ -49,15 +50,23 @@ function executiveSummaryKpis(summary: ExecutiveDashboardSummary): OverviewKpi[]
   ];
 }
 
+/** The reports overview covers the national workshop pipeline only — the
+ * assigned (FieldTeams) and trainer shapes have no workshop geography. */
+function isNationalSummary(
+  summary: DashboardSummary
+): summary is FullDashboardSummary | ExecutiveDashboardSummary {
+  return !isAssignedSummary(summary) && !isTrainerSummary(summary);
+}
+
 function overviewKpis(summary: DashboardSummary | undefined): OverviewKpi[] {
-  if (!summary || isAssignedSummary(summary)) {
+  if (!summary || !isNationalSummary(summary)) {
     return [];
   }
   return isFullSummary(summary) ? fullSummaryKpis(summary) : executiveSummaryKpis(summary);
 }
 
 function topGovernorates(summary: DashboardSummary | undefined): GovernorateCount[] {
-  if (!summary || isAssignedSummary(summary)) {
+  if (!summary || !isNationalSummary(summary)) {
     return [];
   }
   return [...summary.byGovernorate]

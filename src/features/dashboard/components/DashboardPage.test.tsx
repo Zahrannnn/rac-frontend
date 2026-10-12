@@ -94,6 +94,36 @@ const executiveSummary: DashboardSummary = {
   pulse: { rankedCount: 40, recommendedTarget: 150 },
 };
 
+const trainerSummary: DashboardSummary = {
+  totalSessions: 9,
+  completedSessions: 6,
+  upcomingSessions: 3,
+  governoratesCovered: 4,
+  attendeesTrained: 120,
+  avgPreScore: 62.5,
+  avgPostScore: 75,
+  avgGain: 12.5,
+  nextSession: {
+    id: "s-1",
+    title: "دورة صيانة وسط التبريد",
+    governorate: "Cairo",
+    venue: "مركز تدريب القاهرة",
+    startAtUtc: "2026-10-20T09:00:00Z",
+    status: "Upcoming",
+  },
+  recentSessions: [
+    {
+      id: "s-2",
+      title: "دورة التبريد الأساسية",
+      governorate: "Giza",
+      venue: "قاعة الجيزة",
+      startAtUtc: "2026-10-01T09:00:00Z",
+      status: "Completed",
+      attendeeCount: 15,
+    },
+  ],
+};
+
 describe("DashboardPage hybrid pulse + attention", () => {
   beforeEach(() => {
     replaceMock.mockClear();
@@ -147,5 +177,42 @@ describe("DashboardPage hybrid pulse + attention", () => {
     // The completed-surveys stat rides the pipeline hero (dashboard.surveysComplete).
     expect(screen.getByText("استبيانات مكتملة")).toBeInTheDocument();
     expect(screen.queryByText("استبياناتي المكتملة")).not.toBeInTheDocument();
+  });
+
+  it("trainer shape: trainer view renders with its KPI labels, not the executive view", () => {
+    summaryState.data = trainerSummary;
+    renderDashboard();
+
+    expect(screen.getByText("إجمالي الدورات")).toBeInTheDocument();
+    expect(screen.getByText("دورات منتهية")).toBeInTheDocument();
+    expect(screen.getByText("دورات قادمة")).toBeInTheDocument();
+    expect(screen.getByText("إجمالي المتدربين")).toBeInTheDocument();
+    // Trainer ignores national filters — no pipeline or workshop geography view.
+    expect(screen.queryByText("من التسجيل إلى الاختيار")).not.toBeInTheDocument();
+    expect(screen.queryByText("إجمالي الورش")).not.toBeInTheDocument();
+    // Stat chips: coverage + score averages with the highlighted gain.
+    expect(screen.getByText("محافظات مغطاة")).toBeInTheDocument();
+    expect(screen.getByText("متوسط التحسن")).toBeInTheDocument();
+    expect(screen.getByText("+12.5")).toBeInTheDocument();
+    // Recent sessions table carries the completed status label (never color alone).
+    expect(screen.getByText("منتهية")).toBeInTheDocument();
+    expect(screen.getByText("دورة التبريد الأساسية")).toBeInTheDocument();
+  });
+
+  it("trainer shape: null nextSession shows the friendly empty state", () => {
+    summaryState.data = { ...trainerSummary, nextSession: null };
+    renderDashboard();
+
+    expect(screen.getByText("الجلسة القادمة")).toBeInTheDocument();
+    expect(screen.getByText("لا توجد جلسات قادمة")).toBeInTheDocument();
+    expect(screen.queryByText("دورة صيانة وسط التبريد")).not.toBeInTheDocument();
+  });
+
+  it("trainer shape: next session card names the session, date, and venue", () => {
+    summaryState.data = trainerSummary;
+    renderDashboard();
+
+    expect(screen.getByText("دورة صيانة وسط التبريد")).toBeInTheDocument();
+    expect(screen.getByText("القاهرة · مركز تدريب القاهرة")).toBeInTheDocument();
   });
 });

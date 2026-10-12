@@ -18,7 +18,6 @@ export type TrainingListItem = {
   governorate: string;
   startAtUtc: string;
   endAtUtc: string;
-  /** Absent for TrainerViewer list items (privacy). */
   attendeeCount?: number;
   photoCount?: number;
 };
@@ -33,7 +32,6 @@ export type TrainingDetails = {
   startAtUtc: string;
   endAtUtc: string;
   notes?: string | null;
-  /** Absent on TrainerViewer detail (privacy). */
   attendees?: TrainingAttendee[];
   photoCount: number;
   createdAtUtc?: string;
@@ -83,4 +81,20 @@ export type AddAttendeePayload = {
   technicianId: string;
   preScore?: number | null;
   postScore?: number | null;
+};
+
+export type UpdateAttendeePayload = {
+  preScore: number | null;
+  postScore: number | null;
+};
+
+/** GET /trainings/technician-candidates — purpose-built participant picker
+ * source (≤20 rows, min 2-char search). */
+export type TechnicianCandidate = {
+  id: string;
+  fullName: string;
+  mobile: string;
+  workshopCode: string;
+  workshopName: string;
+  governorate: string;
 };

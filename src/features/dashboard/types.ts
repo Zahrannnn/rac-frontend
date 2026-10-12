@@ -63,10 +63,46 @@ export type AssignedDashboardSummary = {
   attention: AssignedDashboardAttention;
 };
 
+/** One of the trainer's own sessions on the trainer dashboard. */
+export type TrainerSessionBrief = {
+  id: string;
+  title: string;
+  governorate: string;
+  venue: string;
+  startAtUtc: string;
+  status: string;
+  attendeeCount: number;
+};
+
+/** The trainer's next scheduled session (null when nothing is upcoming). */
+export type TrainerNextSession = {
+  id: string;
+  title: string;
+  governorate: string;
+  venue: string;
+  startAtUtc: string;
+  status: string;
+};
+
+/** TrainerViewer — the caller's own sessions, participants, and score gains. */
+export type TrainerDashboardSummary = {
+  totalSessions: number;
+  completedSessions: number;
+  upcomingSessions: number;
+  governoratesCovered: number;
+  attendeesTrained: number;
+  avgPreScore: number | null;
+  avgPostScore: number | null;
+  avgGain: number | null;
+  nextSession: TrainerNextSession | null;
+  recentSessions: TrainerSessionBrief[];
+};
+
 export type DashboardSummary =
   | FullDashboardSummary
   | ExecutiveDashboardSummary
-  | AssignedDashboardSummary;
+  | AssignedDashboardSummary
+  | TrainerDashboardSummary;
 
 /** GPS pins for the dashboard geographic map (GET /dashboard/map). */
 export type WorkshopMapPoint = {
@@ -93,6 +129,18 @@ export function isAssignedSummary(
 
 export function isFullSummary(summary: DashboardSummary): summary is FullDashboardSummary {
   return "totalTechnicians" in summary;
+}
+
+/** TrainerViewer payload — session counts plus the recentSessions feed.
+ * Neither of the other shapes carries `totalSessions`, so the two checks
+ * cannot false-positive on Full/Executive/Assigned payloads. */
+export function isTrainerSummary(
+  summary: DashboardSummary
+): summary is TrainerDashboardSummary {
+  const candidate = summary as Partial<TrainerDashboardSummary>;
+  return (
+    typeof candidate.totalSessions === "number" && Array.isArray(candidate.recentSessions)
+  );
 }
 
 /** A KPI card definition — labels come from the dictionary, never hardcoded. */

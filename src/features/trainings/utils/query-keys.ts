@@ -19,4 +19,6 @@ export const trainingKeys = {
   photos: (trainingId: string | null) => ["trainings", "photos", trainingId] as const,
   /** Distinct trainers of the caller's sessions — reports' trainer filter options. */
   trainers: () => ["trainings", "trainers"] as const,
+  /** Participant-picker candidates for a search term (min 2 chars). */
+  technicianCandidates: (search: string) => ["trainings", "technician-candidates", search] as const,
 };
