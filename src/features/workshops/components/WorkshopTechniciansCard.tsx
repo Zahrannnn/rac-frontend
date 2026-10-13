@@ -132,7 +132,7 @@ function TechnicianRow({
         </div>
         <p className="mt-0.5 text-xs text-muted-foreground">
           <span className="tabular-nums" dir="ltr">
-            {technician.mobile}
+            {technician.mobile ?? "—"}
           </span>
           {technician.specialty ? ` · ${technician.specialty}` : ""}
           {` · ${t("technicians.yearsShort", { count: technician.yearsOfExperience })}`}

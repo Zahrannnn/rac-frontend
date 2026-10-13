@@ -7,7 +7,9 @@ import {
   RadioCards,
   ChecklistTable,
   LikertTable,
+  RefrigerantMatrix,
   SeasonalMatrix,
+  SignatureImage,
   WorkforceMatrix,
   type EquipmentItemValue,
 } from "./inputs";
@@ -48,11 +50,11 @@ describe("RadioCards (singleChoice renderer)", () => {
   });
 });
 
-describe("FieldRenderer — enum with ui:\"select\" (governorate dropdown)", () => {
+describe("FieldRenderer — enum with ui:\"select\" (pilot governorate dropdown)", () => {
   const basicInfo = SECTIONS.find((candidate) => candidate.key === "basicInfo")!;
   const governorate = basicInfo.fields.find((field) => field.key === "governorate")!;
 
-  it("renders a dropdown with all 27 governorates and a placeholder when unanswered", async () => {
+  it("renders a dropdown with exactly the three pilot governorates and a placeholder when unanswered", async () => {
     renderWithI18n(
       <FieldRenderer section={basicInfo} field={governorate} answers={{}} onChange={vi.fn()} />
     );
@@ -64,9 +66,12 @@ describe("FieldRenderer — enum with ui:\"select\" (governorate dropdown)", () 
 
     fireEvent.click(trigger);
     await waitFor(() => expect(screen.getByRole("listbox")).toBeInTheDocument());
-    expect(screen.getAllByRole("option")).toHaveLength(27);
-    expect(screen.getByRole("option", { name: "كفر الشيخ" })).toBeInTheDocument();
+    expect(screen.getAllByRole("option")).toHaveLength(3);
     expect(screen.getByRole("option", { name: "القاهرة" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "الجيزة" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "القليوبية" })).toBeInTheDocument();
+    // the retired 27-governorate list is gone from the survey enum
+    expect(screen.queryByRole("option", { name: "كفر الشيخ" })).not.toBeInTheDocument();
   });
 
   it("shows a prefilled workshop governorate as the selected option", () => {
@@ -74,13 +79,13 @@ describe("FieldRenderer — enum with ui:\"select\" (governorate dropdown)", () 
       <FieldRenderer
         section={basicInfo}
         field={governorate}
-        answers={{ governorate: "kafr_el_sheikh" }}
+        answers={{ governorate: "giza" }}
         onChange={vi.fn()}
       />
     );
 
     // slugged key prefilled by withWorkshopContext → Arabic survey.opt.* label
-    expect(screen.getByRole("combobox")).toHaveTextContent("كفر الشيخ");
+    expect(screen.getByRole("combobox")).toHaveTextContent("الجيزة");
   });
 
   it("reports the chosen slugged key through onChange", async () => {
@@ -119,7 +124,7 @@ describe("ChecklistTable (observation checklist renderer)", () => {
     );
 
     expect(screen.getByText("مضخة تفريغ")).toBeInTheDocument();
-    expect(screen.getByText("كاشف تسريب")).toBeInTheDocument();
+    expect(screen.getByText("جهاز كشف تسرب")).toBeInTheDocument();
     const groups = screen.getAllByRole("radiogroup");
     groups.forEach((group) => {
       expect(group.querySelectorAll("[role='radio']")).toHaveLength(3);
@@ -136,7 +141,7 @@ describe("ChecklistTable (observation checklist renderer)", () => {
         onChange={onChange}
       />
     );
-    fireEvent.click(screen.getByRole("radio", { name: "متاح" }));
+    fireEvent.click(screen.getByRole("radio", { name: "متوافر" }));
     expect(onChange).toHaveBeenCalledWith({ vacuumPump: "available" });
   });
 });
@@ -229,46 +234,133 @@ describe("WorkforceMatrix (3×3 with derived/editable total)", () => {
   it("computes total = male + female automatically", () => {
     renderWithI18n(<Harness />);
 
-    const male = screen.getByLabelText(/مهندسون — ذكور/);
-    const female = screen.getByLabelText(/مهندسون — إناث/);
+    const male = screen.getByLabelText(/عدد المهندسين — ذكور/);
+    const female = screen.getByLabelText(/عدد المهندسين — اناث/);
     fireEvent.change(male, { target: { value: "2" } });
     fireEvent.change(female, { target: { value: "3" } });
 
-    expect(screen.getByLabelText(/مهندسون — الإجمالي/)).toHaveValue("5");
+    expect(screen.getByLabelText(/عدد المهندسين — إجمالي/)).toHaveValue("5");
   });
 
   it("accepts a direct total edit without touching the split", () => {
     renderWithI18n(<Harness />);
 
-    fireEvent.change(screen.getByLabelText(/مهندسون — إناث/), {
+    fireEvent.change(screen.getByLabelText(/عدد المهندسين — اناث/), {
       target: { value: "4" },
     });
-    fireEvent.change(screen.getByLabelText(/مهندسون — الإجمالي/), { target: { value: "9" } });
+    fireEvent.change(screen.getByLabelText(/عدد المهندسين — إجمالي/), { target: { value: "9" } });
 
-    expect(screen.getByLabelText(/مهندسون — الإجمالي/)).toHaveValue("9");
-    expect(screen.getByLabelText(/مهندسون — إناث/)).toHaveValue("4");
-    expect(screen.getByLabelText(/مهندسون — ذكور/)).toHaveValue("");
+    expect(screen.getByLabelText(/عدد المهندسين — إجمالي/)).toHaveValue("9");
+    expect(screen.getByLabelText(/عدد المهندسين — اناث/)).toHaveValue("4");
+    expect(screen.getByLabelText(/عدد المهندسين — ذكور/)).toHaveValue("");
   });
 });
 
-describe("SeasonalMatrix (backend-pinned 4 volume bands)", () => {
-  it("renders exactly the four new bands and none of the retired ones", () => {
+describe("SeasonalMatrix (questionnaire Ver3 — 5 volume bands)", () => {
+  it("renders exactly the five Ver3 bands and none of the retired ones", () => {
     renderWithI18n(
       <SeasonalMatrix
-        label="متوسط السيارات المخدومة شهريًا"
+        label="متوسط عدد السيارات التي تخدمها الورشة شهريًا"
         rows={["peakSeason_may_sep"]}
         value={{}}
         onChange={vi.fn()}
       />
     );
 
-    expect(screen.getByText("أقل من ٣٠")).toBeInTheDocument();
-    expect(screen.getByText("٣٠–٥٠")).toBeInTheDocument();
-    expect(screen.getByText("٥١–١٠٠")).toBeInTheDocument();
-    expect(screen.getByText("أكثر من ١٠٠")).toBeInTheDocument();
-    expect(screen.queryByText("أقل من ٢٠")).not.toBeInTheDocument();
-    // 1 row × 4 bands
+    expect(screen.getByText("أقل من 20")).toBeInTheDocument();
+    expect(screen.getByText("20-49")).toBeInTheDocument();
+    expect(screen.getByText("50-99")).toBeInTheDocument();
+    expect(screen.getByText("100-200")).toBeInTheDocument();
+    expect(screen.getByText("أكثر من 200")).toBeInTheDocument();
+    expect(screen.queryByText("أقل من ٣٠")).not.toBeInTheDocument();
+    // 1 row × 5 bands
+    expect(screen.getAllByRole("radio")).toHaveLength(5);
+  });
+
+  it("labels the seasonal rows verbatim from the questionnaire", () => {
+    renderWithI18n(
+      <SeasonalMatrix
+        label="متوسط عدد السيارات التي تخدمها الورشة شهريًا"
+        rows={["peakSeason_may_sep", "offSeason_oct_apr"]}
+        value={{}}
+        onChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("خلال موسم الذروة (مايو - سبتمبر)")).toBeInTheDocument();
+    expect(screen.getByText("خارج موسم الذروة (اكتوبر - ابريل)")).toBeInTheDocument();
+  });
+});
+
+describe("RefrigerantMatrix (supply difficulty = single لا/نعم mark)", () => {
+  it("renders the two-option supply difficulty per refrigerant row", () => {
+    renderWithI18n(
+      <RefrigerantMatrix
+        label="غازات التبريد المستخدمة"
+        rows={["R-134a"]}
+        value={{}}
+        onChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("صعوبة توفير الغاز")).toBeInTheDocument();
+    expect(screen.getByText("يستخدم")).toBeInTheDocument();
+    expect(screen.getByText("عدد السيارات شهريًا تقريبًا")).toBeInTheDocument();
+    // used (نعم/لا) + supply difficulty (لا/نعم) = 4 radios, no third state
     expect(screen.getAllByRole("radio")).toHaveLength(4);
+    expect(screen.queryByRole("radio", { name: "صعب" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "غير متوافر" })).not.toBeInTheDocument();
+  });
+
+  it("records a yes/no supply difficulty value", () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <RefrigerantMatrix
+        label="غازات التبريد المستخدمة"
+        rows={["R-134a"]}
+        value={{}}
+        onChange={onChange}
+      />
+    );
+
+    // second radiogroup on the card is the supply difficulty (لا then نعم)
+    fireEvent.click(screen.getAllByRole("radio", { name: "نعم" })[1]);
+    expect(onChange).toHaveBeenCalledWith({ "R-134a": { supplyDifficulty: "yes" } });
+  });
+});
+
+describe("SignatureImage (closing signatures captured as images)", () => {
+  it("offers a camera capture input and hint when empty", () => {
+    renderWithI18n(
+      <SignatureImage label="توقيع الباحث" value={null} onChange={vi.fn()} />
+    );
+
+    const input = document.querySelector('input[type="file"]');
+    expect(input).not.toBeNull();
+    expect(input).toHaveAttribute("accept", "image/*");
+    expect(input).toHaveAttribute("capture", "environment");
+    expect(screen.getByRole("button", { name: "التقاط صورة التوقيع" })).toBeInTheDocument();
+    expect(screen.getByText("التقط صورة للتوقيع الورقي على الورق")).toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
+  it("previews the stored signature image with retake and remove actions", () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <SignatureImage
+        label="توقيع الباحث"
+        value="data:image/jpeg;base64,AAAA"
+        onChange={onChange}
+      />
+    );
+
+    expect(screen.getByRole("img", { name: "توقيع الباحث" })).toHaveAttribute(
+      "src",
+      "data:image/jpeg;base64,AAAA"
+    );
+    expect(screen.getByRole("button", { name: "إعادة الالتقاط" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "إزالة التوقيع" }));
+    expect(onChange).toHaveBeenCalledWith(null);
   });
 });
 

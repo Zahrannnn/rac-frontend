@@ -26,7 +26,7 @@ const translate = t as unknown as Parameters<typeof collectStepErrors>[2];
 describe("initialWizardState", () => {
   it("seeds a Draft-step form with empty values and Cairo as default governorate", () => {
     const state = initialWizardState();
-    expect(state.basic.type).toBe("Formal");
+    expect(state.basic.type).toBe("Independent");
     expect(state.location.governorate).toBe("Cairo");
     expect(state.location.latitude).toBeNull();
     expect(state.notes).toBe("");
@@ -143,7 +143,7 @@ describe("buildCreatePayload", () => {
     expect(payload.nameAr).toBe("ورشة النصر");
     expect(payload.notes).toBe("ملاحظة");
     expect(payload.confirmDuplicate).toBe(true);
-    expect(payload.type).toBe("Formal");
+    expect(payload.type).toBe("Independent");
   });
 
   it("submits the manual district text and never the sentinel", () => {

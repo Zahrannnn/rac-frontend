@@ -123,7 +123,6 @@ export function TechnicianForm({
         </FormField>
         <FormField
           label={t("technicians.nationalId")}
-          required={!technician}
           error={errors.nationalId}
           hint={
             technician ? t("technicians.nationalIdImmutable") : t("technicians.nationalIdHint")
@@ -142,9 +141,8 @@ export function TechnicianForm({
         </FormField>
         <FormField
           label={t("profile.contactMobile")}
-          required
           error={errors.mobile}
-          hint={t("wizard.mobileHint")}
+          hint={t("technicians.mobileHint")}
         >
           <Input
             dir="ltr"

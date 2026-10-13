@@ -61,7 +61,7 @@ function TechnicianMobileCard({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <span className="tabular-nums" dir="ltr">
-          {technician.mobile}
+          {technician.mobile ?? "—"}
         </span>
         <span className="tabular-nums">
           {t("technicians.yearsShort", { count: technician.yearsOfExperience })}

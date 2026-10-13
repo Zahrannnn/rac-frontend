@@ -25,8 +25,9 @@ export async function fetchTechnician(id: string): Promise<Technician> {
 export type CreateTechnicianPayload = {
   fullName: string;
   fullNameAr?: string;
-  nationalId: string;
-  mobile: string;
+  /** Optional — blank drafts are omitted (undefined drops at serialization). */
+  nationalId?: string;
+  mobile?: string;
   workshopId: string;
   specialty?: string;
   yearsOfExperience: number;
@@ -41,7 +42,8 @@ export async function createTechnician(payload: CreateTechnicianPayload): Promis
 export type UpdateTechnicianPayload = {
   fullName?: string;
   fullNameAr?: string | null;
-  mobile?: string;
+  /** Nullable — a cleared draft clears the stored value. */
+  mobile?: string | null;
   specialty?: string | null;
   yearsOfExperience?: number;
   status?: TechnicianStatus;

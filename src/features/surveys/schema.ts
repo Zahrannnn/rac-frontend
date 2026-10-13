@@ -1,9 +1,12 @@
-import { SURVEY_GOVERNORATE_OPTIONS } from "@/shared/constants/egypt";
-
-// 1:1 transcription of docs/survey-schema-v2.json — no invented fields.
+// Transcription of the authoritative field questionnaire
+// "UNIDO_MAC_Field_Questionnaire_Final_AR Ver3" — no invented fields.
+// Ver3 shape: 3 pilot governorates (Cairo / Giza / Qalyubia) and a 5-band
+// cars-per-month table (<20 / 20–49 / 50–99 / 100–200 / >200).
 // Axis sections (order 2–9) are Likert tables transcribed from the paper
 // questionnaire (one mark per row); axis 8 also carries a 12-item priority
-// ranking (1–5) and 8 operational challenges (3-level).
+// ranking (1–5) and 8 operational challenges (3-level). Closing signatures are
+// captured as IMAGES (photo of the wet signature), stored as compressed data
+// URLs under the same field keys.
 // Labels live in i18n (survey.field.*, survey.opt.*, survey.row.*, survey.col.*,
 // survey.item.*, survey.statement.*).
 
@@ -23,6 +26,7 @@ export type FieldType =
   | "likert"
   | "checklist"
   | "equipment"
+  /** Image capture (photo of the wet signature) — stored as a compressed data URL. */
   | "signature"
   | "date"
   | "photo";
@@ -56,6 +60,11 @@ export type SectionSpec = {
 };
 
 export const CONSENT_FIELD = "consent.participate" as const;
+
+// Questionnaire Ver3 pilot governorates — the survey's governorate enum offers
+// EXACTLY these three (the 27-governorate registry constant lives in
+// @/shared/constants/egypt for the workshops registry).
+export const PILOT_GOVERNORATE_OPTIONS = ["cairo", "giza", "qalyubia"] as const;
 
 // Axes 1–5, 7, 8 statements (paper columns: لا | الى حد ما | نعم).
 export const AXIS_SCALE = ["no", "somewhat", "yes"] as const;
@@ -132,7 +141,7 @@ export const SECTIONS: readonly SectionSpec[] = [
       { key: "ownerOrManagerName", type: "string", required: true },
       {
         key: "governorate", type: "enum", required: true, ui: "select",
-        options: [...SURVEY_GOVERNORATE_OPTIONS],
+        options: PILOT_GOVERNORATE_OPTIONS,
       },
       { key: "district", type: "string", required: true },
       { key: "address", type: "text", required: true },
@@ -192,13 +201,13 @@ export const SECTIONS: readonly SectionSpec[] = [
       { key: "annualLeakageKg", type: "matrix3col", required: false, options: ["R-134a", "R-1234yf", "other"] },
       { key: "expectedRecoveryKg", type: "matrix3col", required: false, options: ["R-134a", "R-1234yf", "other"] },
       {
-        key: "leakCauses", type: "multi", required: false,
+        key: "leakCauses", type: "multi", required: false, helper: true,
         options: [
           "condenserDamage", "evaporatorDamage", "hoseDamage", "oRingDamage", "badConnections",
           "badCharging", "collisionAccidents", "postRepairInstallErrors", "other",
         ],
       },
-      { key: "mixedGasDetected", type: "enum", required: false, options: ["yes", "no", "unknown"] },
+      { key: "mixedGasDetected", type: "enum", required: false, options: ["yes", "no"] },
       // paper line 157 — workshop owns a refrigerant analyzer/identifier (yes/no)
       { key: "hasGasIdentifier", type: "yesNo", required: false },
     ],
@@ -340,11 +349,13 @@ export const SECTIONS: readonly SectionSpec[] = [
 export const WIZARD_STEPS: readonly SectionSpec[] = [CONSENT_SECTION, ...SECTIONS];
 
 export const WORKFORCE_COLS = ["male", "female", "total"] as const;
-/** Seasonal volume bands (backend-pinned): <30 / 30–50 / 51–100 / >100 cars/month. */
-export const SEASONAL_COLS = ["lt30", "30_50", "51_100", "gt100"] as const;
+/** Seasonal volume bands (questionnaire Ver3, backend-pinned):
+ * <20 / 20–49 / 50–99 / 100–200 / >200 cars/month. */
+export const SEASONAL_COLS = ["lt20", "20_49", "50_99", "100_200", "gt200"] as const;
 export const MATRIX3COL_COLS = ["lt860", "680_1360", "gt1360"] as const;
 export const REFRIGERANT_COLS = ["used", "supplyDifficulty", "carsPerMonthApprox"] as const;
-export const SUPPLY_DIFFICULTY_OPTIONS = ["available", "difficult", "unavailable"] as const;
+/** Paper: a single صعوبة توفير الغاز mark per refrigerant — yes/no pair. */
+export const SUPPLY_DIFFICULTY_OPTIONS = ["no", "yes"] as const;
 export const CHECKLIST_VALUES = ["available", "unavailable", "notVerified"] as const;
 
 export function sectionByStep(stepIndex: number): SectionSpec {

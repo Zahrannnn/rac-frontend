@@ -18,7 +18,7 @@ export const basicInfoSchema = z.object({
     .regex(TELEPHONE_REGEX)
     .optional()
     .or(z.literal("")),
-  type: z.enum(["Formal", "Informal", "Freelance", "AuthorizedServiceCenter", "Other"]),
+  type: z.enum(["Independent", "AuthorizedServiceCenter", "DealerAffiliated"]),
   activities: z.string().trim().max(500).optional().or(z.literal("")),
   numberOfTechnicians: z.number().int().min(0).max(1000).nullable(),
 });
@@ -67,7 +67,7 @@ export const editWorkshopSchema = z
     ownerName: z.string().trim().min(1).max(128),
     mobile: z.string().trim().refine(isEgyptianMobile),
     telephone: z.string().trim().regex(TELEPHONE_REGEX).optional().or(z.literal("")),
-    type: z.enum(["Formal", "Informal", "Freelance", "AuthorizedServiceCenter", "Other"]),
+    type: z.enum(["Independent", "AuthorizedServiceCenter", "DealerAffiliated"]),
     governorate: z.enum(governorateValues),
     district: z.string().trim().max(64).optional().or(z.literal("")),
     address: z.string().trim().min(1).max(400),

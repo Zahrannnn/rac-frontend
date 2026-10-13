@@ -30,7 +30,7 @@ import {
   RangeMatrix,
   RefrigerantMatrix,
   SeasonalMatrix,
-  SignaturePad,
+  SignatureImage,
   WorkforceMatrix,
   YesNoToggle,
 } from "./inputs";
@@ -106,6 +106,11 @@ export function FieldRenderer({
         <CheckGroup
           label={label}
           hideLabel={hideLabel}
+          helper={
+            field.helper
+              ? t(`survey.helper.${section.key}.${field.key}` as never)
+              : undefined
+          }
           values={Array.isArray(value) ? value.map(String) : []}
           options={field.options ?? []}
           onToggle={(option) => {
@@ -310,7 +315,7 @@ export function ComplexFieldRenderer({
       );
     case "signature":
       return (
-        <SignaturePad
+        <SignatureImage
           label={label}
           hideLabel={hideLabel}
           value={typeof answers[field.key] === "string" ? (answers[field.key] as string) : null}

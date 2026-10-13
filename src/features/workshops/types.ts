@@ -2,7 +2,7 @@
 
 export type WorkshopStatus = "Draft" | "Submitted" | "Complete" | "Incomplete";
 
-export type WorkshopType = "Formal" | "Informal" | "Freelance" | "AuthorizedServiceCenter" | "Other";
+export type WorkshopType = "Independent" | "AuthorizedServiceCenter" | "DealerAffiliated";
 
 export type WorkshopFlags = "None" | "DuplicateSuspected" | "NotRelevant";
 

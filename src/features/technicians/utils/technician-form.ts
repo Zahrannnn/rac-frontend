@@ -121,13 +121,14 @@ export function parseTechnicianSubmission(
   return { data: parsed.data };
 }
 
-/** POST /technicians body — blank optionals are omitted (undefined drops at serialization). */
+/** POST /technicians body — blank optionals (incl. nationalId/mobile) are omitted
+ *  (undefined drops at serialization), matching the nullable backend contract. */
 export function toTechnicianCreatePayload(data: TechnicianFormValues): CreateTechnicianPayload {
   return {
     fullName: data.fullName,
     fullNameAr: data.fullNameAr || undefined,
-    nationalId: data.nationalId,
-    mobile: data.mobile,
+    nationalId: data.nationalId || undefined,
+    mobile: data.mobile || undefined,
     workshopId: data.workshopId,
     specialty: data.specialty || undefined,
     // Create requires the number (parse rejects the "" draft in create mode).
@@ -136,12 +137,13 @@ export function toTechnicianCreatePayload(data: TechnicianFormValues): CreateTec
   };
 }
 
-/** PATCH /technicians/{id} body — nationalId/workshopId are immutable per contract; blanks go as null. */
+/** PATCH /technicians/{id} body — nationalId/workshopId are immutable per contract;
+ *  a cleared mobile goes as null (the backend column is nullable). */
 export function toTechnicianUpdatePayload(data: TechnicianFormValues): UpdateTechnicianPayload {
   return {
     fullName: data.fullName,
     fullNameAr: data.fullNameAr || null,
-    mobile: data.mobile,
+    mobile: data.mobile || null,
     specialty: data.specialty || null,
     // Cleared draft → key omitted → the stored value is left unchanged (PATCH semantics).
     ...(typeof data.yearsOfExperience === "number"

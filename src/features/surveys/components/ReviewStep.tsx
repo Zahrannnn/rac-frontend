@@ -7,9 +7,17 @@ import { isSectionComplete, type SectionAnswers } from "../utils/answers";
 
 /**
  * Review step: every questionnaire section in walk order with its
- * done / needs-work state, deep-linking back into the step; the GPS evidence
- * row and the no-consent submission warning sit below the list.
+ * done / needs-work state, deep-linking back into the step; captured signature
+ * images render as thumbnails below the list, alongside the GPS evidence row
+ * and the no-consent submission warning.
  */
+
+/** Closing signature keys whose captured images render as review thumbnails. */
+const SIGNATURE_FIELDS = [
+  { key: "surveyorSignature", labelKey: "survey.field.closing.surveyorSignature" },
+  { key: "ownerSignature", labelKey: "survey.field.closing.ownerSignature" },
+] as const;
+
 export function ReviewStep({
   answers,
   gpsRecorded,
@@ -22,6 +30,13 @@ export function ReviewStep({
   onJumpToStep: (step: number) => void;
 }) {
   const t = useT();
+  const closing = answers.closing ?? {};
+  const signatureImages = SIGNATURE_FIELDS.flatMap(({ key, labelKey }) => {
+    const value = closing[key];
+    return typeof value === "string" && value.length > 0
+      ? [{ key, label: t(labelKey as never), value }]
+      : [];
+  });
 
   return (
     <div className="flex flex-col gap-4">
@@ -60,6 +75,23 @@ export function ReviewStep({
           </span>
         </li>
       </ul>
+
+      {signatureImages.length > 0 ? (
+        <div className="flex flex-wrap gap-4 rounded-lg border p-4">
+          {signatureImages.map((entry) => (
+            <figure key={entry.key} className="flex flex-col gap-1">
+              {/* eslint-disable-next-line @next/next/no-img-element -- inline
+                  data-URL preview that next/image loaders cannot optimize */}
+              <img
+                src={entry.value}
+                alt={entry.label}
+                className="h-14 w-36 rounded-md border bg-white object-contain"
+              />
+              <figcaption className="text-xs text-muted-foreground">{entry.label}</figcaption>
+            </figure>
+          ))}
+        </div>
+      ) : null}
 
       {consent === "no" ? (
         <p className="rounded-md bg-[var(--warning)]/10 p-3 text-sm text-[#8a5a14]">

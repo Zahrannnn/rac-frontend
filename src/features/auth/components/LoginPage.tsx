@@ -8,6 +8,7 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LanguageToggle } from "@/shared/components/layout/language-toggle";
+import { BrandLogo } from "@/shared/components/brand/BrandLogo";
 import { useI18n, useT } from "@/shared/i18n";
 import { routes } from "@/shared/constants/routes";
 import { readSession, resumeSession } from "../api/session-adapter";
@@ -179,14 +180,7 @@ export function LoginPage() {
 
         <div className="relative z-10 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Image
-              src="/brand/rac-damp-logo.png"
-              alt=""
-              width={40}
-              height={40}
-              className="size-10 rounded-lg shadow-sm ring-1 ring-white/20"
-              priority
-            />
+            <BrandLogo size={15} withWordmark={false} className="text-white" />
             <p className="text-xs font-semibold tracking-[0.14em] text-white/55 uppercase">
               {t("app.partners")}
             </p>
@@ -221,14 +215,7 @@ export function LoginPage() {
 
         <div className="w-full max-w-sm">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <Image
-              src="/brand/rac-damp-logo.png"
-              alt=""
-              width={36}
-              height={36}
-              className="size-9 rounded-md ring-1 ring-border"
-              priority
-            />
+            <BrandLogo size={13} withWordmark={false} />
             <span className="text-sm font-semibold text-foreground">{t("app.name")}</span>
           </div>
 

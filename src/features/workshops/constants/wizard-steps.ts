@@ -16,9 +16,7 @@ export const WIZARD_STEP_DESCRIPTIONS = [
 ] as const;
 
 export const WORKSHOP_TYPES: WorkshopType[] = [
-  "Formal",
-  "Informal",
-  "Freelance",
+  "Independent",
   "AuthorizedServiceCenter",
-  "Other",
+  "DealerAffiliated",
 ];

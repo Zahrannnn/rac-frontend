@@ -4,13 +4,13 @@ import {
   withWorkshopContext,
   type WorkshopSurveyContext,
 } from "./workshop-prefill";
-import { SURVEY_GOVERNORATE_OPTIONS } from "@/shared/constants/egypt";
+import { PILOT_GOVERNORATE_OPTIONS } from "../schema";
 
 const FULL_WORKSHOP: WorkshopSurveyContext = {
   code: "MAC-CAR-000125",
   name: "ورشة النور",
   ownerName: "محمد عبدالله",
-  governorate: "Kafr El Sheikh",
+  governorate: "Cairo",
   district: "مركز سيدي سالم",
   address: "شارع البحر، أمام المسجد",
   mobile: "201012345678",
@@ -39,16 +39,24 @@ describe("withWorkshopContext", () => {
       projectCode: "MAC-CAR-000125",
       workshopName: "ورشة النور",
       ownerOrManagerName: "محمد عبدالله",
-      governorate: "kafr_el_sheikh",
+      governorate: "cairo",
       district: "مركز سيدي سالم",
       address: "شارع البحر، أمام المسجد",
       phoneWhatsapp: "01012345678",
     });
   });
 
-  it("maps the governorate onto an option the enum actually offers", () => {
+  it("maps the governorate onto an option the survey enum actually offers", () => {
     const seeded = withWorkshopContext(undefined, FULL_WORKSHOP);
-    expect(SURVEY_GOVERNORATE_OPTIONS).toContain(seeded.governorate);
+    expect(PILOT_GOVERNORATE_OPTIONS).toContain(seeded.governorate);
+  });
+
+  it("skips governorates outside the three pilot options (invalid enum would flag the section)", () => {
+    const seeded = withWorkshopContext(undefined, {
+      ...FULL_WORKSHOP,
+      governorate: "Kafr El Sheikh",
+    });
+    expect(seeded.governorate).toBeUndefined();
   });
 
   it("never overwrites answers the surveyor already gave", () => {

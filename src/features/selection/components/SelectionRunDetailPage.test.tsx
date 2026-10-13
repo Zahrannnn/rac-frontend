@@ -67,12 +67,12 @@ const runDetail: SelectionRunDetail = {
   runByUserId: null,
   runByUsername: "admin",
   kind: "participation",
-  rubricVersion: "participation-v1",
+  rubricVersion: "participation-v2",
   rankedCount: 3,
   recommendedCount: 2,
   reserveCount: 1,
   notes: null,
-  rubric: { version: "participation-v1", kind: "Participation", maxTotal: 100, criteria: [] },
+  rubric: { version: "participation-v2", kind: "Participation", maxTotal: 100, criteria: [] },
   recommended: [first, second],
   reserve: [reserveRow],
   ranked: [first, second, reserveRow],
@@ -123,7 +123,7 @@ describe("SelectionRunDetailPage (ranked list of one run snapshot)", () => {
     expect(within(section).getByText("مشاركة")).toBeInTheDocument(); // kind chip
     expect(within(section).getByText("بواسطة admin")).toBeInTheDocument();
     expect(within(section).getByText("3 مُرتّبة · 2 موصى بها · 1 احتياطي")).toBeInTheDocument();
-    expect(within(section).getByText("إصدار سلّم التقييم: participation-v1")).toBeInTheDocument();
+    expect(within(section).getByText("إصدار سلّم التقييم: participation-v2")).toBeInTheDocument();
     expect(within(section).getByText(/بانتظار قرار البرنامج/)).toBeInTheDocument(); // off-platform hint
   });
 

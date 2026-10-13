@@ -31,6 +31,7 @@ import {
 import { filterNavItems, navItems } from "@/shared/constants/nav";
 import { routes } from "@/shared/constants/routes";
 import { useI18n, useT, type Locale } from "@/shared/i18n";
+import { BrandLogo } from "@/shared/components/brand/BrandLogo";
 import { useAuth } from "@/features/auth";
 import { cn } from "@/shared/utils/cn";
 
@@ -61,8 +62,8 @@ function AppSidebar() {
               tooltip={{ children: t("app.name"), side: tooltipSide }}
             >
               <Link href={routes.dashboard}>
-                <span className="flex size-8 items-center justify-center rounded-md bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
-                  MAC
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary/10 ring-1 ring-sidebar-border">
+                  <BrandLogo size={11} withWordmark={false} />
                 </span>
                 <span className="grid flex-1 text-start text-sm leading-tight">
                   <span className="truncate font-semibold text-sidebar-foreground">

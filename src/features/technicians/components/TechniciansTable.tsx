@@ -73,10 +73,10 @@ export function TechniciansTable({
                 ) : null}
               </TableCell>
               <TableCell className="font-mono text-xs tabular-nums" dir="ltr">
-                {technician.nationalId}
+                {technician.nationalId ?? "—"}
               </TableCell>
               <TableCell className="tabular-nums" dir="ltr">
-                {technician.mobile}
+                {technician.mobile ?? "—"}
               </TableCell>
               <TableCell className="font-mono text-xs font-semibold text-primary">
                 {technician.workshopCode}

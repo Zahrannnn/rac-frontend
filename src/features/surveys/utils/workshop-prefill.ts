@@ -1,4 +1,5 @@
 import { GOVERNORATES, governorateSurveyKey } from "@/shared/constants/egypt";
+import { PILOT_GOVERNORATE_OPTIONS } from "../schema";
 import type { SectionAnswers } from "./answers";
 
 /** Workshop-record fields the survey's basicInfo section can inherit. */
@@ -63,7 +64,11 @@ export function withWorkshopContext(
   fillIfEmpty(next, "workshopName", workshop.name);
   fillIfEmpty(next, "ownerOrManagerName", workshop.ownerName);
   if (workshop.governorate && (GOVERNORATES as readonly string[]).includes(workshop.governorate)) {
-    fillIfEmpty(next, "governorate", governorateSurveyKey(workshop.governorate));
+    // seed only governorates the survey enum actually offers (Ver3 pilot: three)
+    const slug = governorateSurveyKey(workshop.governorate);
+    if ((PILOT_GOVERNORATE_OPTIONS as readonly string[]).includes(slug)) {
+      fillIfEmpty(next, "governorate", slug);
+    }
   }
   fillIfEmpty(next, "district", workshop.district);
   fillIfEmpty(next, "address", workshop.address);

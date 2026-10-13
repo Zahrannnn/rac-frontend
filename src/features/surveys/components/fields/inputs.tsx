@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Eraser } from "lucide-react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
+import { Camera, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,7 @@ import {
   SUPPLY_DIFFICULTY_OPTIONS,
   WORKFORCE_COLS,
 } from "../../schema";
+import { compressSignatureImage } from "../../utils/signature-image";
 import { computeWorkforceCell, type WorkforceCol, type WorkforceRow } from "../../utils/answers";
 
 // Shared matrix-table header cells (uppercase corner / centered range-scale column).
@@ -147,12 +149,15 @@ export function RadioCards({
 export function CheckGroup({
   label,
   hideLabel = false,
+  helper,
   values,
   options,
   onToggle,
 }: {
   label: string;
   hideLabel?: boolean;
+  /** Optional instruction line under the label (e.g. the leakCauses multi-mark note). */
+  helper?: string;
   values: readonly string[];
   options: readonly string[];
   onToggle: (option: string) => void;
@@ -162,6 +167,7 @@ export function CheckGroup({
   return (
     <div className="flex flex-col gap-2" role="group" aria-label={hideLabel ? label : undefined}>
       {hideLabel ? null : <Label className="text-sm font-medium">{label}</Label>}
+      {helper ? <p className="text-xs text-muted-foreground">{helper}</p> : null}
       <div className="flex flex-wrap gap-2">
         {options.map((option) => {
           const active = values.includes(option);
@@ -741,8 +747,14 @@ export function EquipmentChecklist({
   );
 }
 
-/** Minimal canvas signature pad (pointer events, no dependencies). */
-export function SignaturePad({
+/**
+ * Signature capture as an IMAGE (questionnaire Ver3): the surveyor photographs
+ * the wet signature on paper (camera `capture="environment"` on mobile, file
+ * pick on desktop); the browser downscales/compresses it to ≤512KB and the
+ * data URL is stored under the field key — same required/optional shape as the
+ * old drawn pad.
+ */
+export function SignatureImage({
   label,
   hideLabel = false,
   value,
@@ -754,97 +766,82 @@ export function SignaturePad({
   onChange: (dataUrl: string | null) => void;
 }) {
   const t = useT();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drawing = useRef(false);
-  const [dirty, setDirty] = useState(Boolean(value));
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [processing, setProcessing] = useState(false);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) {
+  async function handleFile(file: File | undefined) {
+    if (!file) {
       return;
     }
-    const context = canvas.getContext("2d");
-    if (!context) {
-      return;
+    setProcessing(true);
+    try {
+      onChange(await compressSignatureImage(file));
+    } catch {
+      toast.error(t("survey.signatureCapture.error"));
+    } finally {
+      setProcessing(false);
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
     }
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    if (value && dirty) {
-      const image = new Image();
-      image.onload = () => context.drawImage(image, 0, 0);
-      image.src = value;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function position(event: React.PointerEvent<HTMLCanvasElement>): { x: number; y: number } {
-    const canvas = canvasRef.current!;
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: ((event.clientX - rect.left) / rect.width) * canvas.width,
-      y: ((event.clientY - rect.top) / rect.height) * canvas.height,
-    };
   }
 
   return (
-    <div className="flex flex-col gap-1" role="group" aria-label={hideLabel ? label : undefined}>
+    <div className="flex flex-col gap-2" role="group" aria-label={hideLabel ? label : undefined}>
       {hideLabel ? null : <Label>{label}</Label>}
-      <canvas
-        ref={canvasRef}
-        width={480}
-        height={140}
-        dir="ltr"
-        className="w-full touch-none rounded-lg border bg-white"
-        aria-label={label}
-        onPointerDown={(event) => {
-          event.currentTarget.setPointerCapture(event.pointerId);
-          const context = canvasRef.current!.getContext("2d")!;
-          const { x, y } = position(event);
-          context.beginPath();
-          context.moveTo(x, y);
-          context.lineWidth = 2.5;
-          context.lineCap = "round";
-          drawing.current = true;
-          setDirty(true);
-        }}
-        onPointerMove={(event) => {
-          if (!drawing.current) {
-            return;
-          }
-          const context = canvasRef.current!.getContext("2d")!;
-          const { x, y } = position(event);
-          context.lineTo(x, y);
-          context.stroke();
-        }}
-        onPointerUp={() => {
-          if (!drawing.current) {
-            return;
-          }
-          drawing.current = false;
-          onChange(canvasRef.current!.toDataURL("image/png"));
-        }}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        aria-hidden
+        tabIndex={-1}
+        onChange={(event) => void handleFile(event.target.files?.[0])}
       />
-      <div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            const canvas = canvasRef.current;
-            const context = canvas?.getContext("2d");
-            if (canvas && context) {
-              context.fillStyle = "#ffffff";
-              context.fillRect(0, 0, canvas.width, canvas.height);
-            }
-            setDirty(false);
-            onChange(null);
-          }}
-        >
-          <Eraser data-icon="inline-start" className="h-4 w-4" />
-          {t("survey.signatureClear")}
-        </Button>
-      </div>
+      {value ? (
+        <div className="flex flex-wrap items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element -- inline data URL
+              preview that next/image loaders cannot optimize */}
+          <img
+            src={value}
+            alt={label}
+            className="h-16 w-40 rounded-md border bg-white object-contain"
+          />
+          <div className="flex flex-col gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={processing}
+              onClick={() => inputRef.current?.click()}
+            >
+              <Camera data-icon="inline-start" className="h-4 w-4" />
+              {processing ? t("survey.signatureCapture.processing") : t("survey.signatureCapture.retake")}
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => onChange(null)}>
+              <Trash2 data-icon="inline-start" className="h-4 w-4" />
+              {t("survey.signatureCapture.remove")}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1">
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={processing}
+              onClick={() => inputRef.current?.click()}
+            >
+              <Camera data-icon="inline-start" className="h-4 w-4" />
+              {processing ? t("survey.signatureCapture.processing") : t("survey.signatureCapture.add")}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">{t("survey.signatureCapture.hint")}</p>
+        </div>
+      )}
     </div>
   );
 }

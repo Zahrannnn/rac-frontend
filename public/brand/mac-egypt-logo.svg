@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 224" role="img" aria-label="MAC-Egypt">
+  <!-- MAC-Egypt brand lockup: snowflake above the wordmark, car below it.
+       Static mirror of src/shared/components/brand/BrandLogo.tsx — UNIDO blue #0072A8. -->
+  <defs>
+    <!-- One snowflake arm: main spoke plus two tip branches, rotated in 60-degree steps below. -->
+    <g id="mac-egypt-arm">
+      <line x1="120" y1="44" x2="120" y2="14"/>
+      <line x1="120" y1="24" x2="110" y2="14"/>
+      <line x1="120" y1="24" x2="130" y2="14"/>
+    </g>
+  </defs>
+  <g fill="none" stroke="#0072A8" stroke-width="6" stroke-linecap="round">
+    <use href="#mac-egypt-arm"/>
+    <use href="#mac-egypt-arm" transform="rotate(60 120 44)"/>
+    <use href="#mac-egypt-arm" transform="rotate(120 120 44)"/>
+    <use href="#mac-egypt-arm" transform="rotate(180 120 44)"/>
+    <use href="#mac-egypt-arm" transform="rotate(240 120 44)"/>
+    <use href="#mac-egypt-arm" transform="rotate(300 120 44)"/>
+  </g>
+  <text x="120" y="136" text-anchor="middle" dir="ltr"
+        font-family="Cairo, 'Segoe UI', Tahoma, Arial, sans-serif"
+        font-size="40" font-weight="700" letter-spacing="0.5"
+        fill="#0072A8">MAC-Egypt</text>
+  <g fill="none" stroke="#0072A8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Side-view car: body outline plus two wheels -->
+    <path d="M62 190v-12a10 10 0 0 1 10-10h10l14-16a12 12 0 0 1 9-4h18a12 12 0 0 1 9 4l14 16h12a10 10 0 0 1 10 10v12"/>
+    <circle cx="90" cy="190" r="9"/>
+    <circle cx="150" cy="190" r="9"/>
+  </g>
+</svg>

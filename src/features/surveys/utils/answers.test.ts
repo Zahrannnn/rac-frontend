@@ -100,7 +100,8 @@ describe("isFieldValid", () => {
       (field) => field.key === "governorate"
     )!;
     expect(isFieldValid(governorate, "cairo")).toBe(true);
-    expect(isFieldValid(governorate, "kafr_el_sheikh")).toBe(true); // all 27 governorates are options
+    expect(isFieldValid(governorate, "qalyubia")).toBe(true); // the three pilot governorates
+    expect(isFieldValid(governorate, "kafr_el_sheikh")).toBe(false); // outside the Ver3 pilot three
     expect(isFieldValid(governorate, "atlantis")).toBe(false);
   });
 

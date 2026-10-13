@@ -34,7 +34,7 @@ const workshop: Workshop = {
   address: "1 Tahrir Sq",
   governorate: "Cairo",
   district: null,
-  type: "Formal",
+  type: "Independent",
   status: "Draft",
   flags: "None",
   activities: null,

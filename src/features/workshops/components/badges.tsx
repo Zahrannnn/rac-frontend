@@ -23,7 +23,7 @@ export function StatusBadge({ status }: { status: WorkshopStatus }) {
   );
 }
 
-/** Type badge — "غير رسمية" renders proudly in the standard tint, never warning amber. */
+/** Type badge — every workshop type renders in the standard tint, never warning amber. */
 export function TypeBadge({ type }: { type: WorkshopType }) {
   const t = useT();
 

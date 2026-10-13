@@ -17,6 +17,8 @@ export type SectionStageProps = {
   howToFill: string;
   /** Required when the section carries photo fields. */
   surveyId?: string;
+  /** Static intro card rendered above the fields (consent questionnaire preamble). */
+  intro?: React.ReactNode;
   /** Full-width extras appended after the fields (closing GPS + docs photos). */
   children?: React.ReactNode;
 };
@@ -34,6 +36,7 @@ export function SectionStage({
   touchedFields,
   howToFill,
   surveyId,
+  intro,
   children,
 }: SectionStageProps) {
   const t = useT();
@@ -55,6 +58,7 @@ export function SectionStage({
 
   return (
     <div className="flex min-w-0 flex-col gap-4 py-2">
+      {intro}
       <p className="text-sm text-muted-foreground">{howToFill}</p>
 
       <div className="min-w-0 grid grid-cols-1 items-start gap-4 md:grid-cols-2">

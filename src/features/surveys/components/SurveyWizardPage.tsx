@@ -574,6 +574,19 @@ export function SurveyWizardPage({
           touchedFields={touchedBySection[currentSection.key] ?? []}
           howToFill={howToFill}
           surveyId={survey.id}
+          intro={
+            currentSection.key === "consent" ? (
+              /* Questionnaire Ver3 opening paragraph + title, above the consent mark */
+              <div className="rounded-lg border bg-card p-4">
+                <h3 className="text-base font-semibold text-[var(--navy)]">
+                  {t("survey.intro.title")}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {t("survey.intro.body")}
+                </p>
+              </div>
+            ) : undefined
+          }
         >
           {currentSection.key === "closing" ? (
             <div className="mt-2 flex flex-col gap-4 rounded-lg border bg-card p-4">

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const publicEnvSchema = z.object({
-  NEXT_PUBLIC_APP_NAME: z.string().default("MAC-DAMP"),
+  NEXT_PUBLIC_APP_NAME: z.string().default("MAC-Egypt"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   NEXT_PUBLIC_SHOW_HEALTH_URLS: z
     .enum(["true", "false"])

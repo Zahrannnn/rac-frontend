@@ -106,6 +106,12 @@ describe("SurveyWizardPage section-page navigation", () => {
     expect(screen.getByRole("heading", { name: "الموافقة على المشاركة" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "التالي" })).toBeDisabled();
 
+    // questionnaire Ver3 preamble: title + intro paragraph above the consent mark
+    expect(screen.getByRole("heading", { name: "استبيان المسح الميداني" })).toBeInTheDocument();
+    expect(
+      screen.getByText(/يهدف هذا الاستبيان إلى التعرف على واقع قطاع صيانة تكييف هواء السيارات/)
+    ).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole("radio", { name: "نعم" }));
     expect(screen.getByRole("button", { name: "التالي" })).toBeEnabled();
   });
@@ -121,14 +127,14 @@ describe("SurveyWizardPage section-page navigation", () => {
 
     // the whole basicInfo page renders at once — label + control on one page
     expect(screen.getByText("المحافظة")).toBeInTheDocument();
-    expect(screen.getByText("المركز/الحي")).toBeInTheDocument();
+    expect(screen.getByText("الحي أو المركز")).toBeInTheDocument();
   });
 
   it("keeps entered answers when jumping between sections from the TOC", async () => {
     renderWizard();
     await openBasicInfo();
 
-    fireEvent.change(screen.getByLabelText("المركز/الحي"), { target: { value: "المعادي" } });
+    fireEvent.change(screen.getByLabelText("الحي أو المركز"), { target: { value: "المعادي" } });
 
     // jump to workforce via the TOC drawer
     openToc();
@@ -142,7 +148,7 @@ describe("SurveyWizardPage section-page navigation", () => {
     fireEvent.click(
       screen.getByRole("button", { name: /^البيانات الأساسية للورشة —/ })
     );
-    expect(await screen.findByLabelText("المركز/الحي")).toHaveValue("المعادي");
+    expect(await screen.findByLabelText("الحي أو المركز")).toHaveValue("المعادي");
   });
 
   it("keeps the consent decline gate: only way forward is review", async () => {
@@ -311,7 +317,7 @@ describe("SurveyWizardPage TOC completion states", () => {
     await openBasicInfo();
 
     // 3 context fields (code/name/owner) are seeded + district = 4 of 14 countable
-    fireEvent.change(screen.getByLabelText("المركز/الحي"), { target: { value: "المعادي" } });
+    fireEvent.change(screen.getByLabelText("الحي أو المركز"), { target: { value: "المعادي" } });
 
     openToc();
     expect(screen.getByText("4/14")).toBeInTheDocument();

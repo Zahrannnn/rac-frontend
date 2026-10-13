@@ -60,7 +60,7 @@ export default function NotFound() {
         </div>
 
         <p className="mt-10 text-xs text-white/50" dir="ltr">
-          MAC-DAMP · 404
+          MAC-Egypt · 404
         </p>
       </div>
     </main>

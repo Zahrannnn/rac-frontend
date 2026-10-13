@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="public/brand/rac-damp-logo.png" alt="MAC-DAMP" width="88" height="88" />
+<img src="public/brand/mac-egypt-logo.svg" alt="MAC-Egypt" width="88" height="88" />
 
-# MAC-DAMP Frontend
+# MAC-Egypt Frontend
 
 **Bilingual (Arabic-first RTL / English) M&E web platform for Egypt's mobile air-conditioning servicing sector.**
 
@@ -18,7 +18,7 @@ Next.js 16 · React 19 · Tailwind v4 · shadcn/ui
 </div>
 
 > [!NOTE]
-> MAC-DAMP (Mobile Air Conditioning — Digital Assessment & Monitoring Platform) digitizes the
+> MAC-Egypt (Mobile Air Conditioning — Digital Assessment & Monitoring Platform) digitizes the
 > full program lifecycle for a UNIDO / NOU / EED initiative: workshop identification → survey →
 > validation & selection → training → equipment handover → reports. This repo is the web client;
 > it consumes the [ASP.NET Core 8 API](https://github.com/Zahrannnn/rac-backend) under `/api/v1`.
@@ -180,7 +180,7 @@ API URL change **without rebuilding**.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_APP_NAME` | `MAC-DAMP` | Brand name across the shell |
+| `NEXT_PUBLIC_APP_NAME` | `MAC-Egypt` | Brand name across the shell |
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | Canonical site URL (metadata, sitemap) |
 | `NEXT_PUBLIC_RAC_API_BASE_URL` | *(empty)* | API base, e.g. `http://localhost:5161/api/v1` |
 | `NEXT_PUBLIC_SHOW_HEALTH_URLS` | `false` | Expose backend health URLs on `/health` |

@@ -4,8 +4,8 @@ export type Technician = {
   id: string;
   fullName: string;
   fullNameAr: string | null;
-  nationalId: string;
-  mobile: string;
+  nationalId: string | null;
+  mobile: string | null;
   workshopId: string;
   workshopCode: string;
   specialty: string | null;

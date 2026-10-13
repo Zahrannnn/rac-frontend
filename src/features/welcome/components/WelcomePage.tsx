@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { routes } from "@/shared/constants/routes";
+import { BrandLogo } from "@/shared/components/brand/BrandLogo";
 import {
   agentReadyUpdates,
   architectureRules,
@@ -42,9 +43,10 @@ export function WelcomePage({ cachedDemo, dynamicDemo }: WelcomePageProps) {
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 md:px-6">
         <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="space-y-5">
+            <BrandLogo size={30} />
             <div className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-1 text-sm text-muted-foreground">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              Agent-ready MAC-DAMP frontend
+              Agent-ready MAC-Egypt frontend
             </div>
             <div className="space-y-3">
               <h1 className="max-w-3xl text-4xl font-semibold tracking-normal text-balance md:text-5xl">

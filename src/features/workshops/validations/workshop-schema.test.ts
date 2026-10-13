@@ -13,7 +13,7 @@ const validBasic = {
   ownerName: "Hassan Ali",
   mobile: "01012345678",
   telephone: "",
-  type: "Formal",
+  type: "Independent",
   activities: "",
   numberOfTechnicians: 4,
 };
@@ -104,7 +104,7 @@ describe("editWorkshopSchema GPS", () => {
     ownerName: "Hassan Ali",
     mobile: "01012345678",
     telephone: "",
-    type: "Formal" as const,
+    type: "Independent" as const,
     governorate: "Cairo",
     district: "",
     address: "12 Ramses St",

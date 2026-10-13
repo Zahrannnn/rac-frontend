@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { I18nProvider } from "@/shared/i18n";
-import { SECTIONS } from "../schema";
+import { CONSENT_SECTION, SECTIONS } from "../schema";
 import { SectionStage } from "./SectionStage";
 
 function renderWithI18n(ui: React.ReactElement) {
@@ -44,10 +44,32 @@ describe("SectionStage (one scrollable section page)", () => {
 
     // complex blocks present (workforce matrix + seasonal volume + refrigerants + 3col ranges)
     expect(screen.getByText("القوى العاملة (عدد الأفراد)")).toBeInTheDocument();
-    expect(screen.getByText("متوسط السيارات المخدومة شهريًا")).toBeInTheDocument();
+    expect(
+      screen.getByText("متوسط عدد السيارات التي تخدمها الورشة شهريًا")
+    ).toBeInTheDocument();
     // simple field cards present on the same page
     expect(screen.getByText("متوسط خبرة الفنيين")).toBeInTheDocument();
-    expect(screen.getByText("هل رُصد غاز مختلط؟")).toBeInTheDocument();
+    expect(
+      screen.getByText("سبق اكتشاف غاز مختلط أو غير مطابق أو مجهول داخل مركبة؟")
+    ).toBeInTheDocument();
+  });
+
+  it("renders the consent intro card above the fields when provided", () => {
+    renderWithI18n(
+      <SectionStage
+        section={CONSENT_SECTION}
+        answers={{}}
+        onChange={vi.fn()}
+        touchedFields={[]}
+        howToFill="حدّد إجابة واحدة في كل صف"
+        intro={<p>يهدف هذا الاستبيان إلى التعرف على واقع قطاع صيانة تكييف هواء السيارات</p>}
+      />
+    );
+
+    expect(
+      screen.getByText("يهدف هذا الاستبيان إلى التعرف على واقع قطاع صيانة تكييف هواء السيارات")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "نعم" })).toBeInTheDocument();
   });
 
   it("shows an inline error for a touched invalid required field only", () => {

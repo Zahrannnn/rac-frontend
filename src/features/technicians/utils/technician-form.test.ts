@@ -83,6 +83,29 @@ describe("parseTechnicianSubmission", () => {
       ar["technicians.yearsInvalid"]
     );
   });
+
+  it("accepts blank nationalId and mobile (both optional) in create mode", () => {
+    const submission = parseTechnicianSubmission(
+      { ...validValues, nationalId: "", mobile: "" },
+      t,
+      "create"
+    );
+    expect(submission).toEqual({
+      data: { ...validValues, nationalId: "", mobile: "" },
+    });
+  });
+
+  it("still rejects a malformed non-blank nationalId or mobile", () => {
+    const submission = parseTechnicianSubmission(
+      { ...validValues, nationalId: "123", mobile: "01312345678" },
+      t,
+      "create"
+    );
+    expect("errors" in submission && submission.errors).toEqual({
+      nationalId: ar["technicians.nationalIdInvalid"],
+      mobile: ar["wizard.mobileInvalid"],
+    });
+  });
 });
 
 describe("toTechnicianCreatePayload", () => {
@@ -97,6 +120,14 @@ describe("toTechnicianCreatePayload", () => {
       yearsOfExperience: 5,
       notes: undefined,
     });
+  });
+
+  it("sends blank nationalId/mobile as undefined (dropped at serialization)", () => {
+    const payload = toTechnicianCreatePayload({ ...validValues, nationalId: "", mobile: "" });
+    expect(payload.nationalId).toBeUndefined();
+    expect(payload.mobile).toBeUndefined();
+    expect(JSON.stringify(payload)).not.toContain("nationalId");
+    expect(JSON.stringify(payload)).not.toContain("mobile");
   });
 });
 
@@ -118,6 +149,11 @@ describe("toTechnicianUpdatePayload", () => {
   it("omits a cleared years draft so the stored value is left unchanged", () => {
     const payload = toTechnicianUpdatePayload({ ...validValues, yearsOfExperience: "" });
     expect(payload).not.toHaveProperty("yearsOfExperience");
+  });
+
+  it("sends a cleared mobile as null (nullable column), never an empty string", () => {
+    const payload = toTechnicianUpdatePayload({ ...validValues, mobile: "" });
+    expect(payload.mobile).toBeNull();
   });
 });
 

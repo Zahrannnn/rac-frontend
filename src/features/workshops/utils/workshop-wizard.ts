@@ -28,7 +28,7 @@ export function initialWizardState(): WizardState {
       ownerName: "",
       mobile: "",
       telephone: "",
-      type: "Formal",
+      type: "Independent",
       activities: "",
       numberOfTechnicians: null,
     },

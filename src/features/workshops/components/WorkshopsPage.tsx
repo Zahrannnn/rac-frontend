@@ -31,7 +31,7 @@ import { ListPagination } from "@/shared/components/list-pagination";
 import { GOVERNORATES } from "@/shared/constants/egypt";
 import { useI18n, useT } from "@/shared/i18n";
 import { cn } from "@/shared/utils/cn";
-import { useAuth } from "@/features/auth";
+import { can, useAuth } from "@/features/auth";
 import { StatusBadge, TypeBadge } from "./badges";
 import { useWorkshops } from "../hooks/use-workshops";
 import { filtersToSearchParams, parseWorkshopFilters } from "../utils/filter-state";
@@ -90,11 +90,9 @@ export function WorkshopsPage() {
   const { locale } = useI18n();
   const { user } = useAuth();
   const mounted = useMounted();
-  const canCreate =
-    mounted &&
-    Boolean(
-      user && (user.permissions.includes("*") || user.permissions.includes("workshops:create"))
-    );
+  // Permission-driven (not role-based): FieldTeams hold workshops:create/edit,
+  // so they get the register entry point; assignment stays workshops:assign-only.
+  const canCreate = mounted && Boolean(user && can(user.permissions, "workshops:create"));
 
   const [filters, setFilters] = useState<WorkshopListFilters>(() =>
     parseWorkshopFilters(new URLSearchParams(searchParams.toString()))
