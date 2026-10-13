@@ -348,12 +348,12 @@ describe("SurveyWizardPage new schema fields", () => {
     expect(area).toBeInTheDocument();
     expect(screen.getByText("لا تقل عن ٢٥ مترًا مربعًا")).toBeInTheDocument();
 
-    // touched + empty → required error
+    // optional now: touched + empty is fine (no required error)
     fireEvent.change(area, { target: { value: "9" } });
     fireEvent.change(area, { target: { value: "" } });
-    expect(screen.getByText("هذا الحقل مطلوب")).toBeInTheDocument();
+    expect(screen.queryByText("هذا الحقل مطلوب")).not.toBeInTheDocument();
 
-    // zero violates the min — invalid-value error, cleared by a valid entry
+    // but a PROVIDED zero violates the min — invalid-value error, cleared by a valid entry
     fireEvent.change(area, { target: { value: "0" } });
     expect(screen.getByText("القيمة غير صحيحة")).toBeInTheDocument();
     fireEvent.change(area, { target: { value: "120" } });

@@ -156,8 +156,10 @@ export const SECTIONS: readonly SectionSpec[] = [
         key: "gasSizeClass", type: "enum", required: true,
         options: ["small_lt680", "medium_680_1360", "large_gt1360"],
       },
-      // service-center floor area (m²) — program eligibility guidance ≥ 25 m²
-      { key: "serviceAreaM2", type: "int", required: true, min: 1, helper: true },
+      // service-center floor area (m²) — program guidance ≥ 25 m², optional per product
+      // decision (2026-10-13); the helper stays as guidance and the rubric scores it
+      // only when answered (missing = zero-band, never a submit blocker).
+      { key: "serviceAreaM2", type: "int", required: false, min: 1, helper: true },
       {
         key: "legalStatus", type: "enum", required: true,
         options: ["registered", "underRegistration", "unregistered", "declinesToDisclose"],
