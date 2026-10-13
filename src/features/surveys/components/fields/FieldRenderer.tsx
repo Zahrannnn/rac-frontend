@@ -23,7 +23,6 @@ import {
 import {
   CheckGroup,
   ChecklistTable,
-  EquipmentChecklist,
   LikertTable,
   PhoneField,
   RadioCards,
@@ -300,15 +299,6 @@ export function ComplexFieldRenderer({
           label={label}
           hideLabel={hideLabel}
           items={field.options ?? []}
-          value={value as never}
-          onChange={(next) => onChange(field.key, next)}
-        />
-      );
-    case "equipment":
-      return (
-        <EquipmentChecklist
-          label={label}
-          hideLabel={hideLabel}
           value={value as never}
           onChange={(next) => onChange(field.key, next)}
         />

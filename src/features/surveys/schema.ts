@@ -25,7 +25,6 @@ export type FieldType =
   | "matrix3col"
   | "likert"
   | "checklist"
-  | "equipment"
   /** Image capture (photo of the wet signature) — stored as a compressed data URL. */
   | "signature"
   | "date"
@@ -100,28 +99,6 @@ export const OPERATIONAL_CHALLENGE_ITEMS = [
   "evHybridDifficulty",
   "recoveredGasDisposal",
 ] as const;
-
-/** The 6 equipment items of the toolsEquipment block (backend-pinned keys). */
-export const EQUIPMENT_ITEMS = [
-  "recoveryMachine",
-  "leakDetector",
-  "vacuumPump",
-  "recoveryCylinders",
-  "electronicScale",
-  "manifoldGauges",
-] as const;
-
-/** Per-item spec inputs (rendered only while the item is available). */
-export const EQUIPMENT_SPEC_KEYS: Readonly<
-  Record<(typeof EQUIPMENT_ITEMS)[number], readonly string[]>
-> = {
-  recoveryMachine: [],
-  leakDetector: ["dualGas"],
-  vacuumPump: ["powerHp"],
-  recoveryCylinders: ["capacityKg"],
-  electronicScale: ["precisionG"],
-  manifoldGauges: ["dualGas"],
-};
 
 export const CONSENT_SECTION: SectionSpec = {
   key: "consent",
@@ -267,10 +244,6 @@ export const SECTIONS: readonly SectionSpec[] = [
         key: "statements", type: "likert", required: true, statementRows: true,
         options: ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"],
         scale: AXIS_SCALE,
-      },
-      {
-        key: "equipmentItems", type: "equipment", required: true,
-        options: EQUIPMENT_ITEMS,
       },
     ],
   },

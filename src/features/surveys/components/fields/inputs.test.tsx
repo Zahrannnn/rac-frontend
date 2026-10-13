@@ -3,7 +3,6 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { useState } from "react";
 import { I18nProvider } from "@/shared/i18n";
 import {
-  EquipmentChecklist,
   RadioCards,
   ChecklistTable,
   LikertTable,
@@ -11,7 +10,6 @@ import {
   SeasonalMatrix,
   SignatureImage,
   WorkforceMatrix,
-  type EquipmentItemValue,
 } from "./inputs";
 import { ComplexFieldRenderer, FieldRenderer } from "./FieldRenderer";
 import { SECTIONS } from "../../schema";
@@ -361,97 +359,5 @@ describe("SignatureImage (closing signatures captured as images)", () => {
     expect(screen.getByRole("button", { name: "إعادة الالتقاط" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "إزالة التوقيع" }));
     expect(onChange).toHaveBeenCalledWith(null);
-  });
-});
-
-describe("EquipmentChecklist (toolsEquipment block)", () => {
-  function Harness() {
-    const [value, setValue] = useState<Record<string, EquipmentItemValue>>({});
-    return <EquipmentChecklist label="معدات الخدمة الأساسية" value={value} onChange={setValue} />;
-  }
-
-  it("renders six item cards with availability + condition toggles", () => {
-    renderWithI18n(<Harness />);
-
-    expect(screen.getByText("ماكينة استرجاع وإعادة تدوير وسيط التبريد")).toBeInTheDocument();
-    expect(screen.getByText("عدادات ضغط (Manifold Set)")).toBeInTheDocument();
-    // 6 items × (available yes/no + condition working/inadequate)
-    expect(screen.getAllByRole("radio")).toHaveLength(24);
-    expect(screen.getAllByText("متوفرة لكن غير فعالة")).toHaveLength(6);
-  });
-
-  it("hides spec inputs until the item is available, then shows only that item's specs", () => {
-    renderWithI18n(<Harness />);
-
-    // vacuum pump spec hidden while availability is unanswered
-    expect(
-      screen.queryByLabelText("مضخة تفريغ (Vacuum Pump) — القدرة (حصان)")
-    ).not.toBeInTheDocument();
-
-    const vacuumAvailability = screen.getByRole("radiogroup", {
-      name: "مضخة تفريغ (Vacuum Pump) — متوفرة؟",
-    });
-    fireEvent.click(within(vacuumAvailability).getByRole("radio", { name: "نعم" }));
-    expect(
-      screen.getByLabelText("مضخة تفريغ (Vacuum Pump) — القدرة (حصان)")
-    ).toBeInTheDocument();
-
-    // recovery machine has no specs — stays spec-free even when available
-    const machineAvailability = screen.getByRole("radiogroup", {
-      name: "ماكينة استرجاع وإعادة تدوير وسيط التبريد — متوفرة؟",
-    });
-    fireEvent.click(within(machineAvailability).getByRole("radio", { name: "نعم" }));
-    expect(screen.getAllByText("القدرة (حصان)")).toHaveLength(1);
-    expect(screen.queryByText("السعة (كجم)")).not.toBeInTheDocument();
-  });
-
-  it("records the dual-gas flag for the leak detector", () => {
-    renderWithI18n(<Harness />);
-
-    const availability = screen.getByRole("radiogroup", {
-      name: "جهاز كشف تسرب إلكتروني — متوفرة؟",
-    });
-    fireEvent.click(within(availability).getByRole("radio", { name: "نعم" }));
-    expect(
-      screen.getByLabelText("جهاز كشف تسرب إلكتروني — تدعم R134a و R1234yf")
-    ).toBeInTheDocument();
-    const dualGas = screen.getByRole("radiogroup", {
-      name: "جهاز كشف تسرب إلكتروني — تدعم R134a و R1234yf",
-    });
-    fireEvent.click(within(dualGas).getByRole("radio", { name: "نعم" }));
-  });
-
-  it("feeds availability, condition, and spec values back through onChange", () => {
-    const recorded: Array<Record<string, EquipmentItemValue>> = [];
-    function RecordingHarness() {
-      const [value, setValue] = useState<Record<string, EquipmentItemValue>>({});
-      return (
-        <EquipmentChecklist
-          label="معدات الخدمة الأساسية"
-          value={value}
-          onChange={(next) => {
-            recorded.push(next);
-            setValue(next);
-          }}
-        />
-      );
-    }
-    renderWithI18n(<RecordingHarness />);
-
-    const availability = screen.getByRole("radiogroup", {
-      name: "مضخة تفريغ (Vacuum Pump) — متوفرة؟",
-    });
-    fireEvent.click(within(availability).getByRole("radio", { name: "نعم" }));
-    const condition = screen.getByRole("radiogroup", {
-      name: "مضخة تفريغ (Vacuum Pump) — الحالة",
-    });
-    fireEvent.click(within(condition).getByRole("radio", { name: "تعمل بكفاءة" }));
-    fireEvent.change(screen.getByLabelText("مضخة تفريغ (Vacuum Pump) — القدرة (حصان)"), {
-      target: { value: "2" },
-    });
-
-    // the last onChange carries the full item value
-    const last = recorded[recorded.length - 1];
-    expect(last.vacuumPump).toEqual({ available: "yes", condition: "working", powerHp: 2 });
   });
 });
