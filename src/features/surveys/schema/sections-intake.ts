@@ -25,7 +25,8 @@ export const INTAKE_SECTIONS: readonly SectionSpec[] = [
       { key: "address", type: "text", required: true },
       { key: "phoneWhatsapp", type: "phone", required: true },
       { key: "email", type: "email", required: false },
-      { key: "businessStartYear", type: "int", required: true, min: 1950, max: 2026 },
+      // optional per product decision (2026-10-14); the 1950–2026 range still applies when provided
+      { key: "businessStartYear", type: "int", required: false, min: 1950, max: 2026 },
       {
         key: "workshopType", type: "enum", required: true,
         options: ["independent", "authorizedServiceCenter", "dealerAffiliated"],

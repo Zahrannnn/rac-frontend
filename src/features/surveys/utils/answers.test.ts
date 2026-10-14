@@ -93,6 +93,9 @@ describe("isFieldValid", () => {
     expect(isFieldValid(year, 1990)).toBe(true);
     expect(isFieldValid(year, 1949)).toBe(false);
     expect(isFieldValid(year, 2027)).toBe(false);
+    // optional per product decision: empty is valid, the range still binds provided values
+    expect(isFieldValid(year, null)).toBe(true);
+    expect(isFieldValid(year, "")).toBe(true);
   });
 
   it("enforces enum membership", () => {
