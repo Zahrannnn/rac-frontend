@@ -41,6 +41,7 @@ export const surveys: Record<keyof typeof surveysAr, string> = {
   "survey.sectionSaved": "Section saved",
   "survey.sectionDone": "Done",
   "survey.sectionNeedsWork": "Needs work",
+  "survey.gpsOptionalMissing": "Optional — visit location not recorded",
   "survey.incompleteHint": "Jump to a section, fix the item, then resubmit from Review.",
   // ===== Survey wizard (Week 3B) =====
   "survey.wizardTitle": "Field survey questionnaire",

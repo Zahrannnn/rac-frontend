@@ -38,6 +38,7 @@ export const surveys = {
   "survey.sectionSaved": "تم حفظ القسم",
   "survey.sectionDone": "مكتمل",
   "survey.sectionNeedsWork": "يحتاج إكمالًا",
+  "survey.gpsOptionalMissing": "اختياري — لم يُسجَّل موقع الزيارة",
   "survey.incompleteHint": "انتقل إلى القسم، أصلح البند، ثم أعد الإرسال من المراجعة.",
   // ===== Survey wizard (Week 3B) =====
   "survey.wizardTitle": "استبيان المسح الميداني",

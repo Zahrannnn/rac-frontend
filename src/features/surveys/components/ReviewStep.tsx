@@ -56,10 +56,10 @@ export function ReviewStep({
           <span
             className={cn(
               "text-xs font-semibold",
-              gpsRecorded ? "text-[var(--success)]" : "text-[#8a5a14]"
+              gpsRecorded ? "text-[var(--success)]" : "text-muted-foreground"
             )}
           >
-            {gpsRecorded ? t("survey.sectionDone") : t("survey.sectionNeedsWork")}
+            {gpsRecorded ? t("survey.sectionDone") : t("survey.gpsOptionalMissing")}
           </span>
         </li>
       </ul>
