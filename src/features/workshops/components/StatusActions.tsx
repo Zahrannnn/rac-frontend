@@ -7,6 +7,8 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useT, type TranslationKey } from "@/shared/i18n";
@@ -80,25 +82,27 @@ export function StatusActions({ workshop }: { workshop: Workshop }) {
       ))}
 
       <Dialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
-        <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
-          <DialogTitle>
-            {t("profile.transitionConfirm", {
-              status: pending ? t(`status.${pending}` as TranslationKey) : "",
-            })}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            {t("profile.transitionConfirm", {
-              status: pending ? t(`status.${pending}` as TranslationKey) : "",
-            })}
-          </DialogDescription>
-          <div className="mt-4 flex justify-end gap-2">
+        <DialogContent size="sm" aria-describedby={undefined}>
+          <DialogHeader className="pb-6">
+            <DialogTitle>
+              {t("profile.transitionConfirm", {
+                status: pending ? t(`status.${pending}` as TranslationKey) : "",
+              })}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {t("profile.transitionConfirm", {
+                status: pending ? t(`status.${pending}` as TranslationKey) : "",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setPending(null)}>
               {t("profile.cancel")}
             </Button>
             <Button type="button" onClick={() => pending && confirmTransition(pending)}>
               {t("profile.save")}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -106,10 +110,12 @@ export function StatusActions({ workshop }: { workshop: Workshop }) {
         open={duplicateRetry !== null}
         onOpenChange={(open) => !open && setDuplicateRetry(null)}
       >
-        <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
-          <DialogTitle>{t("duplicate.conflictRetry")}</DialogTitle>
-          <DialogDescription className="sr-only">{t("duplicate.conflictRetry")}</DialogDescription>
-          <div className="mt-4 flex justify-end gap-2">
+        <DialogContent size="sm" aria-describedby={undefined}>
+          <DialogHeader className="pb-6">
+            <DialogTitle>{t("duplicate.conflictRetry")}</DialogTitle>
+            <DialogDescription className="sr-only">{t("duplicate.conflictRetry")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setDuplicateRetry(null)}>
               {t("profile.cancel")}
             </Button>
@@ -120,7 +126,7 @@ export function StatusActions({ workshop }: { workshop: Workshop }) {
             >
               {t("duplicate.continueNew")}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

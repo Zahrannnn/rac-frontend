@@ -6,8 +6,12 @@ import { Button } from "@/components/ui/button";
 import { DateTimePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogSection,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -117,133 +121,129 @@ export function TrainingFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-3xl flex-col gap-5 overflow-y-auto">
-        <div>
+      <DialogContent size="lg">
+        <DialogHeader>
           <DialogTitle>
             {editing ? t("trainings.editTitle") : t("trainings.createTitle")}
           </DialogTitle>
           <DialogDescription>{t("trainings.formHint")}</DialogDescription>
-        </div>
+        </DialogHeader>
 
-        <section className="flex flex-col gap-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {t("trainings.sectionTrainer")}
-          </h3>
-          <div className="grid gap-3 sm:grid-cols-2">
-          <FormField
-            label={t("trainings.trainerName")}
-            required
-            error={submitted ? fieldError(t, errors.trainerName) : undefined}
-          >
-            <Input
-              value={values.trainerName}
-              onChange={(e) => set("trainerName")(e.target.value)}
-              aria-invalid={submitted && Boolean(errors.trainerName)}
-            />
-          </FormField>
-          <FormField
-            label={t("trainings.trainerKey")}
-            error={submitted ? fieldError(t, errors.trainerKey) : undefined}
-          >
-            <Input
-              value={values.trainerKey}
-              onChange={(e) => set("trainerKey")(e.target.value)}
-              placeholder={t("trainings.trainerKeyHint")}
-            />
-          </FormField>
-          </div>
-        </section>
+        <DialogBody>
+          <DialogSection title={t("trainings.sectionTrainer")}>
+            <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              label={t("trainings.trainerName")}
+              required
+              error={submitted ? fieldError(t, errors.trainerName) : undefined}
+            >
+              <Input
+                value={values.trainerName}
+                onChange={(e) => set("trainerName")(e.target.value)}
+                aria-invalid={submitted && Boolean(errors.trainerName)}
+              />
+            </FormField>
+            <FormField
+              label={t("trainings.trainerKey")}
+              error={submitted ? fieldError(t, errors.trainerKey) : undefined}
+            >
+              <Input
+                value={values.trainerKey}
+                onChange={(e) => set("trainerKey")(e.target.value)}
+                placeholder={t("trainings.trainerKeyHint")}
+              />
+            </FormField>
+            </div>
+          </DialogSection>
 
-        <section className="flex flex-col gap-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {t("trainings.sectionSchedule")}
-          </h3>
-          <div className="grid gap-3 sm:grid-cols-2">
-          <FormField
-            className="sm:col-span-2"
-            label={t("trainings.sessionTitle")}
-            error={submitted ? fieldError(t, errors.title) : undefined}
-          >
-            <Input value={values.title} onChange={(e) => set("title")(e.target.value)} />
-          </FormField>
-          <FormField
-            className="sm:col-span-2"
-            label={t("trainings.venue")}
-            required
-            error={submitted ? fieldError(t, errors.venue) : undefined}
-          >
-            <Input
-              value={values.venue}
-              onChange={(e) => set("venue")(e.target.value)}
-              aria-invalid={submitted && Boolean(errors.venue)}
-            />
-          </FormField>
-          <div className="flex flex-col gap-1.5">
-            <Label>
-              {t("trainings.governorate")}
-              <span className="text-destructive"> *</span>
-            </Label>
-            <Select value={values.governorate || undefined} onValueChange={set("governorate")}>
-              <SelectTrigger aria-invalid={submitted && Boolean(errors.governorate)}>
-                <SelectValue placeholder={t("trainings.governorate")} />
-              </SelectTrigger>
-              <SelectContent>
-                {GOVERNORATES.map((g) => (
-                  <SelectItem key={g} value={g}>
-                    {governorateLabel(g, locale)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {submitted && errors.governorate ? (
-              <p className="text-xs text-destructive">{fieldError(t, errors.governorate)}</p>
-            ) : null}
-          </div>
-          <div className="hidden sm:block" />
-          <FormField
-            label={t("trainings.startAt")}
-            required
-            error={submitted ? fieldError(t, errors.startAtUtc) : undefined}
-          >
-            <DateTimePicker
-              value={values.startAtUtc}
-              onChange={set("startAtUtc")}
-              aria-invalid={submitted && Boolean(errors.startAtUtc)}
-            />
-          </FormField>
-          <FormField
-            label={t("trainings.endAt")}
-            required
-            error={submitted ? fieldError(t, errors.endAtUtc) : undefined}
-          >
-            <DateTimePicker
-              value={values.endAtUtc}
-              onChange={set("endAtUtc")}
-              aria-invalid={submitted && Boolean(errors.endAtUtc)}
-            />
-          </FormField>
-          <FormField
-            className="sm:col-span-2"
-            label={t("trainings.notes")}
-            error={submitted ? fieldError(t, errors.notes) : undefined}
-          >
-            <Textarea
-              value={values.notes}
-              onChange={(e) => set("notes")(e.target.value)}
-              rows={3}
-            />
-          </FormField>
-          </div>
-        </section>
+          <DialogSection title={t("trainings.sectionSchedule")}>
+            <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              className="sm:col-span-2"
+              label={t("trainings.sessionTitle")}
+              error={submitted ? fieldError(t, errors.title) : undefined}
+            >
+              <Input value={values.title} onChange={(e) => set("title")(e.target.value)} />
+            </FormField>
+            <FormField
+              className="sm:col-span-2"
+              label={t("trainings.venue")}
+              required
+              error={submitted ? fieldError(t, errors.venue) : undefined}
+            >
+              <Input
+                value={values.venue}
+                onChange={(e) => set("venue")(e.target.value)}
+                aria-invalid={submitted && Boolean(errors.venue)}
+              />
+            </FormField>
+            <div className="flex flex-col gap-1.5">
+              <Label>
+                {t("trainings.governorate")}
+                <span className="text-destructive"> *</span>
+              </Label>
+              <Select value={values.governorate || undefined} onValueChange={set("governorate")}>
+                <SelectTrigger aria-invalid={submitted && Boolean(errors.governorate)}>
+                  <SelectValue placeholder={t("trainings.governorate")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {GOVERNORATES.map((g) => (
+                    <SelectItem key={g} value={g}>
+                      {governorateLabel(g, locale)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {submitted && errors.governorate ? (
+                <p className="text-xs text-destructive">{fieldError(t, errors.governorate)}</p>
+              ) : null}
+            </div>
+            <div className="hidden sm:block" />
+            <FormField
+              label={t("trainings.startAt")}
+              required
+              error={submitted ? fieldError(t, errors.startAtUtc) : undefined}
+            >
+              <DateTimePicker
+                value={values.startAtUtc}
+                onChange={set("startAtUtc")}
+                aria-invalid={submitted && Boolean(errors.startAtUtc)}
+              />
+            </FormField>
+            <FormField
+              label={t("trainings.endAt")}
+              required
+              error={submitted ? fieldError(t, errors.endAtUtc) : undefined}
+            >
+              <DateTimePicker
+                value={values.endAtUtc}
+                onChange={set("endAtUtc")}
+                aria-invalid={submitted && Boolean(errors.endAtUtc)}
+              />
+            </FormField>
+            <FormField
+              className="sm:col-span-2"
+              label={t("trainings.notes")}
+              error={submitted ? fieldError(t, errors.notes) : undefined}
+            >
+              <Textarea
+                value={values.notes}
+                onChange={(e) => set("notes")(e.target.value)}
+                rows={3}
+              />
+            </FormField>
+            </div>
+          </DialogSection>
+        </DialogBody>
 
-        <div className="flex flex-wrap justify-end gap-2">
+        <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             {t("common.cancel")}
           </Button>
           <Button type="button" disabled={pending} onClick={save}>
             {pending ? t("common.loading") : t("trainings.save")}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

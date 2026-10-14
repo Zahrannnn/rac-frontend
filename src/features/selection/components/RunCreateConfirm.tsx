@@ -7,6 +7,8 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { isFullSummary, useDashboardSummary } from "@/features/dashboard";
@@ -37,7 +39,7 @@ function ParticipationLiveCount() {
   const fresh = data.attention.awaitingSelectionCount;
 
   return (
-    <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+    <p className="mt-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
       {fresh > 0
         ? t("selection.runs.confirmParticipationCountNew", { total: completed, fresh })
         : t("selection.runs.confirmParticipationCount", { count: completed })}
@@ -60,7 +62,7 @@ function EquipmentLiveCount() {
   }
 
   return (
-    <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+    <p className="mt-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
       {t("selection.runs.confirmEquipmentCount", { count: latest.recommendedCount })}
     </p>
   );
@@ -120,12 +122,14 @@ export function RunCreateConfirm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogTitle>{t(titleKey)}</DialogTitle>
-        <DialogDescription>{t(messageKey, RUN_TARGETS[kind])}</DialogDescription>
-        {open && kind === "participation" ? <ParticipationLiveCount /> : null}
-        {open && kind === "equipment" ? <EquipmentLiveCount /> : null}
-        <div className="mt-2 flex flex-wrap justify-end gap-2">
+      <DialogContent size="sm">
+        <DialogHeader className="gap-2 pb-6">
+          <DialogTitle>{t(titleKey)}</DialogTitle>
+          <DialogDescription>{t(messageKey, RUN_TARGETS[kind])}</DialogDescription>
+          {open && kind === "participation" ? <ParticipationLiveCount /> : null}
+          {open && kind === "equipment" ? <EquipmentLiveCount /> : null}
+        </DialogHeader>
+        <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             {t("common.cancel")}
           </Button>
@@ -133,7 +137,7 @@ export function RunCreateConfirm({
             <Play data-icon="inline-start" />
             {create.isPending ? t("selection.runs.running") : t("selection.runs.confirm")}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -5,6 +5,7 @@ import { Camera, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { saveBlob } from "@/shared/api/file-transfer";
+import { Section } from "@/shared/components/section";
 import { useT } from "@/shared/i18n";
 import { downloadTrainingPhoto } from "../api/trainings-adapter";
 import { useTrainingPhotoMutations } from "../hooks/use-trainings";
@@ -23,12 +24,11 @@ export function PhotosSection({
   const { upload, remove } = useTrainingPhotoMutations(trainingId);
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="photos-heading">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 id="photos-heading" className="text-sm font-semibold text-[var(--navy)]">
-          {t("trainings.photos")} ({photos.length})
-        </h3>
-        {canEdit ? (
+    <Section
+      title={`${t("trainings.photos")} (${photos.length})`}
+      headingId="photos-heading"
+      action={
+        canEdit ? (
           <>
             <input
               ref={fileInput}
@@ -62,8 +62,9 @@ export function PhotosSection({
               {upload.isPending ? t("trainings.photoUploading") : t("trainings.photoAdd")}
             </Button>
           </>
-        ) : null}
-      </div>
+        ) : null
+      }
+    >
 
       {photos.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("trainings.photosEmpty")}</p>
@@ -106,6 +107,6 @@ export function PhotosSection({
           ))}
         </ul>
       )}
-    </section>
+    </Section>
   );
 }

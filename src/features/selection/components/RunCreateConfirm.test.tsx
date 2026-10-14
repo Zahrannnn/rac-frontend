@@ -124,7 +124,7 @@ describe("RunCreateConfirm (kind-aware confirmation)", () => {
 
     expect(
       await screen.findByText(
-        "سيُقيَّم 2 ورشة باستبيان مكتمل — منها 1 جديدة منذ آخر تشغيلة"
+        "سيُقيَّم 2 ورشة باستبيان مكتمل، منها 1 جديدة منذ آخر تشغيلة"
       )
     ).toBeInTheDocument();
   });
@@ -218,7 +218,7 @@ describe("RunCreateConfirm (kind-aware confirmation)", () => {
 
     await waitFor(() =>
       expect(toastErrorMock).toHaveBeenCalledWith(
-        "لا توجد تشغيلة مشاركة بعد — أنشئ تشغيلة مشاركة أولًا."
+        "لا توجد تشغيلة مشاركة بعد. أنشئ تشغيلة مشاركة أولًا."
       )
     );
     // The English-only server detail is never surfaced raw.
@@ -235,7 +235,7 @@ describe("RunCreateConfirm (kind-aware confirmation)", () => {
 
     await waitFor(() =>
       expect(toastErrorMock).toHaveBeenCalledWith(
-        "لا توجد ورش باستبيان مكتمل لتقسيمها — يصبح الاستبيان مكتملًا باجتياز التحقق التلقائي."
+        "لا توجد ورش باستبيان مكتمل لتقسيمها. يصبح الاستبيان مكتملًا باجتياز التحقق التلقائي."
       )
     );
   });

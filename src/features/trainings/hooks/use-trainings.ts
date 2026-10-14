@@ -48,6 +48,9 @@ export function useTraining(id: string | null) {
     queryKey: trainingKeys.detail(id),
     queryFn: () => fetchTraining(id!),
     enabled: Boolean(id),
+    // A 404 (missing, or outside a trainer's scope) is final; don't retry it.
+    retry: (failureCount, error) =>
+      (error as { status?: number }).status !== 404 && failureCount < 1,
   });
 }
 
@@ -113,13 +116,15 @@ export function useAttendeeMutations(trainingId: string) {
 }
 
 /** Participant-picker candidates — the purpose-built endpoint only answers
- * searches of two or more characters, so shorter terms keep the query idle. */
+ * searches of two or more characters, so shorter terms keep the query idle.
+ * Previous results stay visible while a refined term loads (no flicker). */
 export function useTechnicianCandidates(search: string) {
   return useQuery({
     queryKey: trainingKeys.technicianCandidates(search),
     queryFn: () => fetchTechnicianCandidates(search),
     enabled: isCandidateSearchReady(search),
     staleTime: 30_000,
+    placeholderData: (previous) => previous,
   });
 }
 

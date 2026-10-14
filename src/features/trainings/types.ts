@@ -93,7 +93,8 @@ export type UpdateAttendeePayload = {
 export type TechnicianCandidate = {
   id: string;
   fullName: string;
-  mobile: string;
+  fullNameAr?: string | null;
+  mobile?: string | null;
   workshopCode: string;
   workshopName: string;
   governorate: string;

@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -112,22 +115,26 @@ function MatrixRow({
       </TableRow>
 
       <Dialog open={confirming} onOpenChange={setConfirming}>
-        <DialogContent className="max-w-sm">
-          <DialogTitle>{t("admin.matrix.confirmTitle")}</DialogTitle>
-          <DialogDescription className="sr-only">
-            {t("admin.matrix.confirmTitle")}
-          </DialogDescription>
-          <p className="rounded-md bg-[var(--warning)]/15 p-3 text-sm font-medium text-[#8a5a14]">
-            {t("admin.matrix.confirmMessage")}
-          </p>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setConfirming(false)}>
+        <DialogContent size="sm">
+          <DialogHeader>
+            <DialogTitle>{t("admin.matrix.confirmTitle")}</DialogTitle>
+            <DialogDescription className="sr-only">
+              {t("admin.matrix.confirmTitle")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            <p className="rounded-md bg-[var(--warning)]/15 px-4 py-3 text-sm font-medium leading-6 text-[#8a5a14] dark:text-[var(--warning)]">
+              {t("admin.matrix.confirmMessage")}
+            </p>
+          </DialogBody>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setConfirming(false)}>
               {t("profile.cancel")}
             </Button>
             <Button type="button" onClick={confirmSave} disabled={save.isPending}>
               {t("admin.matrix.confirm")}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

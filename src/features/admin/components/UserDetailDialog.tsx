@@ -6,12 +6,17 @@ import { KeyRound, Pencil, Shield, UserCheck, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogSection,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ApiError } from "@/shared/api/http-client";
+import { DetailItem, DetailList } from "@/shared/components/detail-list";
 import { useT } from "@/shared/i18n";
 import { formatDateTimeUtc } from "@/shared/utils/datetime";
 import { usePatchUserStatus, useUser } from "../hooks/use-admin";
@@ -67,124 +72,120 @@ export function UserDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
-          <DialogTitle>{t("admin.users.detailTitle")}</DialogTitle>
-          <DialogDescription className="sr-only">{t("admin.users.detailTitle")}</DialogDescription>
+        <DialogContent size="lg">
+          <DialogHeader>
+            <DialogTitle>{t("admin.users.detailTitle")}</DialogTitle>
+            <DialogDescription className="sr-only">{t("admin.users.detailTitle")}</DialogDescription>
+          </DialogHeader>
 
-          {isPending ? (
-            <div className="flex flex-col gap-2" aria-busy>
-              <Skeleton className="h-8 w-2/3" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          ) : isError || !data ? (
-            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <p>{t("common.error")}</p>
-              <Button type="button" variant="outline" size="sm" onClick={() => refetch()}>
-                {t("common.retry")}
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-lg font-semibold text-[var(--navy)]">{data.fullName}</p>
-                  <p className="font-mono text-sm text-muted-foreground" dir="ltr">
-                    {data.username}
-                  </p>
-                </div>
-                <RoleBadge role={data.role} />
+          <DialogBody>
+            {isPending ? (
+              <div className="flex flex-col gap-3" aria-busy>
+                <Skeleton className="h-12 w-2/3" />
+                <Skeleton className="h-28 w-full" />
               </div>
-
-              <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                <div>
-                  <dt className="text-muted-foreground">{t("admin.users.email")}</dt>
-                  <dd dir="ltr">{data.email}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">{t("admin.users.phone")}</dt>
-                  <dd dir="ltr">{data.phone ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">{t("admin.users.status")}</dt>
-                  <dd>
-                    {t(data.isActive ? "admin.users.active" : "admin.users.inactive")}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">{t("admin.users.lastLogin")}</dt>
-                  <dd dir="ltr">
-                    {data.lastLoginAtUtc ? formatDateTimeUtc(data.lastLoginAtUtc) : "—"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">{t("admin.users.createdAt")}</dt>
-                  <dd dir="ltr">{formatDateTimeUtc(data.createdAtUtc)}</dd>
-                </div>
-                {data.role === "FieldTeams" ? (
-                  <div>
-                    <dt className="text-muted-foreground">{t("admin.users.assignments")}</dt>
-                    <dd>{data.assignedWorkshopCount ?? 0}</dd>
+            ) : isError || !data ? (
+              <div className="flex flex-wrap items-center gap-3 rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground">
+                <p>{t("common.error")}</p>
+                <Button type="button" variant="outline" size="sm" onClick={() => refetch()}>
+                  {t("common.retry")}
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <p className="text-base font-semibold text-foreground">{data.fullName}</p>
+                    <p className="font-mono text-sm text-muted-foreground" dir="ltr">
+                      {data.username}
+                    </p>
                   </div>
-                ) : null}
-              </dl>
+                  <RoleBadge role={data.role} />
+                </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" size="sm" variant="outline" onClick={() => setEditOpen(true)}>
-                  <Pencil data-icon="inline-start" />
-                  {t("admin.users.edit")}
-                </Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => setRoleOpen(true)}>
-                  <Shield data-icon="inline-start" />
-                  {t("admin.users.changeRole")}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={patchStatus.isPending}
-                  onClick={toggleStatus}
-                >
-                  {data.isActive ? (
-                    <UserX data-icon="inline-start" />
+                <DetailList className="border-t pt-5">
+                  <DetailItem label={t("admin.users.email")}>
+                    <span dir="ltr">{data.email}</span>
+                  </DetailItem>
+                  <DetailItem label={t("admin.users.phone")}>
+                    <span dir="ltr" className="tabular-nums">{data.phone ?? "—"}</span>
+                  </DetailItem>
+                  <DetailItem label={t("admin.users.status")}>
+                    {t(data.isActive ? "admin.users.active" : "admin.users.inactive")}
+                  </DetailItem>
+                  <DetailItem label={t("admin.users.lastLogin")}>
+                    <span dir="ltr" className="tabular-nums">
+                      {data.lastLoginAtUtc ? formatDateTimeUtc(data.lastLoginAtUtc) : "—"}
+                    </span>
+                  </DetailItem>
+                  <DetailItem label={t("admin.users.createdAt")}>
+                    <span dir="ltr" className="tabular-nums">
+                      {formatDateTimeUtc(data.createdAtUtc)}
+                    </span>
+                  </DetailItem>
+                  {data.role === "FieldTeams" ? (
+                    <DetailItem label={t("admin.users.assignments")}>
+                      <span className="tabular-nums">{data.assignedWorkshopCount ?? 0}</span>
+                    </DetailItem>
+                  ) : null}
+                </DetailList>
+
+                <DialogSection title={t("admin.users.recentActivity")} className="border-t pt-5">
+                  {data.recentActivity.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">{t("admin.users.noActivity")}</p>
                   ) : (
-                    <UserCheck data-icon="inline-start" />
+                    <ul className="divide-y rounded-md border">
+                      {data.recentActivity.map((item, index) => (
+                        <li
+                          key={`${item.occurredAtUtc}-${index}`}
+                          className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-sm"
+                        >
+                          <span>
+                            <span className="font-semibold">{item.action}</span>
+                            {" · "}
+                            <span className="text-muted-foreground">{item.entity}</span>
+                          </span>
+                          <span className="text-xs tabular-nums text-muted-foreground" dir="ltr">
+                            {formatDateTimeUtc(item.occurredAtUtc)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   )}
-                  {t(data.isActive ? "admin.users.deactivate" : "admin.users.activate")}
-                </Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => setResetOpen(true)}>
-                  <KeyRound data-icon="inline-start" />
-                  {t("admin.users.resetPassword")}
-                </Button>
-              </div>
+                </DialogSection>
+              </>
+            )}
+          </DialogBody>
 
-              <section className="flex flex-col gap-2">
-                <h3 className="text-sm font-semibold text-[var(--navy)]">
-                  {t("admin.users.recentActivity")}
-                </h3>
-                {data.recentActivity.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{t("admin.users.noActivity")}</p>
+          {data && !isPending && !isError ? (
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditOpen(true)}>
+                <Pencil data-icon="inline-start" />
+                {t("admin.users.edit")}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setRoleOpen(true)}>
+                <Shield data-icon="inline-start" />
+                {t("admin.users.changeRole")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={patchStatus.isPending}
+                onClick={toggleStatus}
+              >
+                {data.isActive ? (
+                  <UserX data-icon="inline-start" />
                 ) : (
-                  <ul className="max-h-48 overflow-y-auto rounded-md border divide-y">
-                    {data.recentActivity.map((item, index) => (
-                      <li
-                        key={`${item.occurredAtUtc}-${index}`}
-                        className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-xs"
-                      >
-                        <span>
-                          <span className="font-semibold">{item.action}</span>
-                          {" · "}
-                          <span className="text-muted-foreground">{item.entity}</span>
-                        </span>
-                        <span className="tabular-nums text-muted-foreground" dir="ltr">
-                          {formatDateTimeUtc(item.occurredAtUtc)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  <UserCheck data-icon="inline-start" />
                 )}
-              </section>
-            </div>
-          )}
+                {t(data.isActive ? "admin.users.deactivate" : "admin.users.activate")}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setResetOpen(true)}>
+                <KeyRound data-icon="inline-start" />
+                {t("admin.users.resetPassword")}
+              </Button>
+            </DialogFooter>
+          ) : null}
         </DialogContent>
       </Dialog>
 

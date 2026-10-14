@@ -3,6 +3,7 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
+import { useT } from "@/shared/i18n";
 import { cn } from "@/shared/utils/cn";
 
 export const Sheet = DialogPrimitive.Root;
@@ -10,7 +11,7 @@ export const SheetTrigger = DialogPrimitive.Trigger;
 export const SheetClose = DialogPrimitive.Close;
 
 export function SheetHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex flex-col gap-1.5 p-4", className)} {...props} />;
+  return <div className={cn("flex flex-col gap-1.5 ps-5 pe-14 pt-5 pb-4", className)} {...props} />;
 }
 
 export const SheetTitle = DialogPrimitive.Title;
@@ -20,13 +21,17 @@ export function SheetContent({
   className,
   children,
   side = "left",
+  closeLabel,
   ...props
 }: ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
   side?: "top" | "bottom" | "left" | "right";
+  /** Accessible name of the close button; defaults to `common.close`. */
+  closeLabel?: string;
 }) {
+  const t = useT();
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/45" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[rgb(0_30_48/0.42)] motion-safe:animate-[dialog-fade_160ms_ease-out]" />
       <DialogPrimitive.Content
         className={cn(
           "fixed z-50 gap-4 bg-popover text-popover-foreground shadow-lg transition ease-in-out",
@@ -39,9 +44,9 @@ export function SheetContent({
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute end-3 top-3 rounded-md p-1 text-muted-foreground hover:text-foreground focus-visible:outline-2">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+        <DialogPrimitive.Close className="absolute end-3 top-3.5 inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2">
+          <X className="h-4 w-4" aria-hidden />
+          <span className="sr-only">{closeLabel ?? t("common.close")}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/shared/components/form/form-field";
 import {
@@ -106,164 +107,166 @@ export function TechnicianForm({
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="mt-2 grid gap-4 sm:grid-cols-2">
-        <FormField label={t("technicians.fullName")} required error={errors.fullName}>
-          <Input
-            value={values.fullName}
-            onChange={(event) => patch({ fullName: event.target.value })}
-            autoComplete="name"
-          />
-        </FormField>
-        <FormField label={t("technicians.fullNameAr")} hint={t("wizard.optionalHint")}>
-          <Input
-            value={values.fullNameAr ?? ""}
-            onChange={(event) => patch({ fullNameAr: event.target.value })}
-          />
-        </FormField>
-        <FormField
-          label={t("technicians.nationalId")}
-          error={errors.nationalId}
-          hint={
-            technician ? t("technicians.nationalIdImmutable") : t("technicians.nationalIdHint")
-          }
-        >
-          <Input
-            dir="ltr"
-            inputMode="numeric"
-            className="tabular-nums"
-            value={values.nationalId}
-            disabled={Boolean(technician)}
-            onChange={(event) =>
-              patch({ nationalId: event.target.value.replace(/\D/g, "").slice(0, 14) })
-            }
-          />
-        </FormField>
-        <FormField
-          label={t("profile.contactMobile")}
-          error={errors.mobile}
-          hint={t("technicians.mobileHint")}
-        >
-          <Input
-            dir="ltr"
-            inputMode="tel"
-            className="tabular-nums"
-            value={values.mobile}
-            placeholder="01XXXXXXXXX"
-            onChange={(event) =>
-              patch({ mobile: event.target.value.replace(/\D/g, "").slice(0, 11) })
-            }
-          />
-        </FormField>
-        <FormField
-          label={t("technicians.workshop")}
-          required={!workshopLocked}
-          error={errors.workshopId}
-          className="sm:col-span-2"
-          hint={workshopLocked ? t("technicians.workshopImmutable") : undefined}
-        >
-          {workshopLocked ? (
+    <>
+      <DialogBody>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField label={t("technicians.fullName")} required error={errors.fullName}>
             <Input
-              readOnly
-              value={
-                lockedWorkshopLabel ??
-                technician?.workshopCode ??
-                values.workshopId
-              }
-              className="bg-muted"
+              value={values.fullName}
+              onChange={(event) => patch({ fullName: event.target.value })}
+              autoComplete="name"
             />
-          ) : (
-            <Select
-              value={values.workshopId || undefined}
-              onValueChange={(value) => patch({ workshopId: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t("technicians.pickWorkshop")} />
-              </SelectTrigger>
-              <SelectContent>
-                {(workshops ?? []).map((workshop) => (
-                  <SelectItem key={workshop.id} value={workshop.id}>
-                    {workshop.code} — {workshop.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </FormField>
-        <FormField label={t("technicians.specialty")} hint={t("wizard.optionalHint")}>
-          <div className="flex flex-col gap-2">
-            <Select
-              value={specialtySelectValue(values.specialty)}
-              onValueChange={(value) => patch({ specialty: specialtyFromSelectValue(value) })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t("technicians.specialtySelect")} />
-              </SelectTrigger>
-              <SelectContent>
-                {SPECIALIZATION_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-                <SelectItem value={SPECIALTY_OTHER_SENTINEL}>
-                  {t("technicians.specialtyOther")}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            {isCustomSpecialty(values.specialty) ? (
-              <Input
-                value={values.specialty}
-                onChange={(event) => patch({ specialty: event.target.value })}
-                placeholder={t("technicians.specialtyCustom")}
-                aria-label={t("technicians.specialtyCustom")}
-              />
-            ) : null}
-          </div>
-        </FormField>
-        <FormField label={t("technicians.years")} error={errors.yearsOfExperience}>
-          <Input
-            type="number"
-            min={0}
-            max={60}
-            className="tabular-nums"
-            value={values.yearsOfExperience}
-            onChange={(event) =>
-              patch({
-                yearsOfExperience: event.target.value === "" ? "" : Number(event.target.value),
-              })
-            }
-          />
-        </FormField>
-        {technician && canEdit ? (
-          <FormField label={t("technicians.status")} className="sm:col-span-2">
-            <Select
-              value={technician.status}
-              onValueChange={(value) =>
-                update.mutate(
-                  { status: value as TechnicianStatus },
-                  { onSuccess: () => toast.success(t("profile.saved")) }
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Active">{t("technicians.statusActive")}</SelectItem>
-                <SelectItem value="Inactive">{t("technicians.statusInactive")}</SelectItem>
-              </SelectContent>
-            </Select>
           </FormField>
-        ) : null}
-        <FormField label={t("profile.notes")} className="sm:col-span-2" hint={t("wizard.optionalHint")}>
-          <Input
-            value={values.notes ?? ""}
-            onChange={(event) => patch({ notes: event.target.value })}
-          />
-        </FormField>
-      </div>
+          <FormField label={t("technicians.fullNameAr")} hint={t("wizard.optionalHint")}>
+            <Input
+              value={values.fullNameAr ?? ""}
+              onChange={(event) => patch({ fullNameAr: event.target.value })}
+            />
+          </FormField>
+          <FormField
+            label={t("technicians.nationalId")}
+            error={errors.nationalId}
+            hint={
+              technician ? t("technicians.nationalIdImmutable") : t("technicians.nationalIdHint")
+            }
+          >
+            <Input
+              dir="ltr"
+              inputMode="numeric"
+              className="tabular-nums"
+              value={values.nationalId}
+              disabled={Boolean(technician)}
+              onChange={(event) =>
+                patch({ nationalId: event.target.value.replace(/\D/g, "").slice(0, 14) })
+              }
+            />
+          </FormField>
+          <FormField
+            label={t("profile.contactMobile")}
+            error={errors.mobile}
+            hint={t("technicians.mobileHint")}
+          >
+            <Input
+              dir="ltr"
+              inputMode="tel"
+              className="tabular-nums"
+              value={values.mobile}
+              placeholder="01XXXXXXXXX"
+              onChange={(event) =>
+                patch({ mobile: event.target.value.replace(/\D/g, "").slice(0, 11) })
+              }
+            />
+          </FormField>
+          <FormField
+            label={t("technicians.workshop")}
+            required={!workshopLocked}
+            error={errors.workshopId}
+            className="sm:col-span-2"
+            hint={workshopLocked ? t("technicians.workshopImmutable") : undefined}
+          >
+            {workshopLocked ? (
+              <Input
+                readOnly
+                value={
+                  lockedWorkshopLabel ??
+                  technician?.workshopCode ??
+                  values.workshopId
+                }
+                className="bg-muted"
+              />
+            ) : (
+              <Select
+                value={values.workshopId || undefined}
+                onValueChange={(value) => patch({ workshopId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("technicians.pickWorkshop")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(workshops ?? []).map((workshop) => (
+                    <SelectItem key={workshop.id} value={workshop.id}>
+                      {workshop.code} — {workshop.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </FormField>
+          <FormField label={t("technicians.specialty")} hint={t("wizard.optionalHint")}>
+            <div className="flex flex-col gap-2">
+              <Select
+                value={specialtySelectValue(values.specialty)}
+                onValueChange={(value) => patch({ specialty: specialtyFromSelectValue(value) })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("technicians.specialtySelect")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {SPECIALIZATION_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value={SPECIALTY_OTHER_SENTINEL}>
+                    {t("technicians.specialtyOther")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {isCustomSpecialty(values.specialty) ? (
+                <Input
+                  value={values.specialty}
+                  onChange={(event) => patch({ specialty: event.target.value })}
+                  placeholder={t("technicians.specialtyCustom")}
+                  aria-label={t("technicians.specialtyCustom")}
+                />
+              ) : null}
+            </div>
+          </FormField>
+          <FormField label={t("technicians.years")} error={errors.yearsOfExperience}>
+            <Input
+              type="number"
+              min={0}
+              max={60}
+              className="tabular-nums"
+              value={values.yearsOfExperience}
+              onChange={(event) =>
+                patch({
+                  yearsOfExperience: event.target.value === "" ? "" : Number(event.target.value),
+                })
+              }
+            />
+          </FormField>
+          {technician && canEdit ? (
+            <FormField label={t("technicians.status")} className="sm:col-span-2">
+              <Select
+                value={technician.status}
+                onValueChange={(value) =>
+                  update.mutate(
+                    { status: value as TechnicianStatus },
+                    { onSuccess: () => toast.success(t("profile.saved")) }
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Active">{t("technicians.statusActive")}</SelectItem>
+                  <SelectItem value="Inactive">{t("technicians.statusInactive")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormField>
+          ) : null}
+          <FormField label={t("profile.notes")} className="sm:col-span-2" hint={t("wizard.optionalHint")}>
+            <Input
+              value={values.notes ?? ""}
+              onChange={(event) => patch({ notes: event.target.value })}
+            />
+          </FormField>
+        </div>
+      </DialogBody>
 
-      <div className="mt-4 flex justify-end gap-2 border-t pt-4">
+      <DialogFooter>
         <Button type="button" variant="outline" onClick={() => onDone()}>
           {t("profile.cancel")}
         </Button>
@@ -274,7 +277,7 @@ export function TechnicianForm({
         >
           {create.isPending || update.isPending ? t("profile.saving") : t("profile.save")}
         </Button>
-      </div>
-    </div>
+      </DialogFooter>
+    </>
   );
 }

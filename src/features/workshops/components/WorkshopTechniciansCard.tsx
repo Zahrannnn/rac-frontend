@@ -9,6 +9,8 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -193,15 +195,17 @@ function DeactivateConfirmDialog({
 
   return (
     <Dialog open={technician !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
-        <DialogTitle>{t("workshopTechnicians.deactivateConfirm", { name })}</DialogTitle>
-        <DialogDescription className="sr-only">
-          {t("workshopTechnicians.deactivate")}
-        </DialogDescription>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {t("workshopTechnicians.deactivateHint")}
-        </p>
-        <div className="mt-4 flex justify-end gap-2">
+      <DialogContent size="sm" aria-describedby={undefined}>
+        <DialogHeader className="pb-6">
+          <DialogTitle>{t("workshopTechnicians.deactivateConfirm", { name })}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {t("workshopTechnicians.deactivate")}
+          </DialogDescription>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {t("workshopTechnicians.deactivateHint")}
+          </p>
+        </DialogHeader>
+        <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>
             {t("profile.cancel")}
           </Button>
@@ -228,7 +232,7 @@ function DeactivateConfirmDialog({
           >
             {t("workshopTechnicians.deactivate")}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

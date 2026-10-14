@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useT } from "@/shared/i18n";
@@ -31,13 +32,15 @@ export function TechnicianDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {open ? (
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
-          <DialogTitle>
-            {technician ? t("technicians.editTitle") : t("technicians.createTitle")}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            {technician ? t("technicians.editTitle") : t("technicians.createTitle")}
-          </DialogDescription>
+        <DialogContent size="lg">
+          <DialogHeader>
+            <DialogTitle>
+              {technician ? t("technicians.editTitle") : t("technicians.createTitle")}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {technician ? t("technicians.editTitle") : t("technicians.createTitle")}
+            </DialogDescription>
+          </DialogHeader>
           <TechnicianForm
             key={formKey}
             technician={technician}

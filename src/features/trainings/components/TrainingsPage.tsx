@@ -2,6 +2,8 @@
 
 import { totalPagesOf } from "@/shared/utils/pagination";
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { GraduationCap, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -26,13 +28,13 @@ import {
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { ListPagination } from "@/shared/components/list-pagination";
 import { GOVERNORATES, governorateLabel } from "@/shared/constants/egypt";
+import { trainingDetail } from "@/shared/constants/routes";
 import { useI18n, useT } from "@/shared/i18n";
 import { formatDateTimeUtc, utcDayBounds } from "@/shared/utils/datetime";
 import { can, useAuth } from "@/features/auth";
 import { useDeleteTraining, useTrainings } from "../hooks/use-trainings";
 import type { TrainingDetails, TrainingListFilters, TrainingListItem } from "../types";
 import { TrainingDeleteDialog } from "./TrainingDeleteDialog";
-import { TrainingDetailDialog } from "./TrainingDetailDialog";
 import { TrainingFormDialog } from "./TrainingFormDialog";
 
 const DEFAULT_FILTERS: TrainingListFilters = { page: 1 };
@@ -42,6 +44,7 @@ const TABLE_HEAD_CLASS = "h-11 bg-[var(--navy-shell)] text-xs text-white";
 
 export function TrainingsPage() {
   const t = useT();
+  const router = useRouter();
   const { locale } = useI18n();
   const { user } = useAuth();
   const canCreate = Boolean(user && can(user.permissions, "trainings:create"));
@@ -53,7 +56,6 @@ export function TrainingsPage() {
   const [dateTo, setDateTo] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TrainingDetails | null>(null);
-  const [detailId, setDetailId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<TrainingListItem | null>(null);
 
   const { data, isPending, isError, refetch, isPlaceholderData } = useTrainings(filters);
@@ -189,12 +191,16 @@ export function TrainingsPage() {
                   <TableRow
                     key={row.id}
                     className="h-12 cursor-pointer"
-                    onClick={() => setDetailId(row.id)}
+                    onClick={() => router.push(trainingDetail(row.id))}
                   >
                     <TableCell>
-                      <span className="block truncate font-medium text-[var(--navy)]">
+                      <Link
+                        href={trainingDetail(row.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="block truncate font-medium text-[var(--navy)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                      >
                         {row.title || row.venue}
-                      </span>
+                      </Link>
                       <span className="block text-xs text-muted-foreground">{row.venue}</span>
                     </TableCell>
                     <TableCell className="text-sm">{row.trainerName}</TableCell>
@@ -211,13 +217,8 @@ export function TrainingsPage() {
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-1">
                           {canEdit ? (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setDetailId(row.id)}
-                            >
-                              {t("trainings.open")}
+                            <Button asChild variant="ghost" size="sm">
+                              <Link href={trainingDetail(row.id)}>{t("trainings.open")}</Link>
                             </Button>
                           ) : null}
                           {canDelete ? (
@@ -270,11 +271,6 @@ export function TrainingsPage() {
         open={formOpen}
         onOpenChange={setFormOpen}
         editing={editing}
-      />
-      <TrainingDetailDialog
-        trainingId={detailId}
-        onOpenChange={(open) => !open && setDetailId(null)}
-        canEdit={canEdit}
       />
     </div>
   );

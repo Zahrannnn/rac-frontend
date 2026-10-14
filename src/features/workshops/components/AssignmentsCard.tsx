@@ -8,6 +8,8 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -164,12 +166,14 @@ export function AssignmentsCard({
       )}
 
       <Dialog open={confirmTarget !== null} onOpenChange={(open) => !open && setConfirmTarget(null)}>
-        <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
-          <DialogTitle>
-            {t("assignments.unassignConfirm", { user: confirmTarget?.username ?? "" })}
-          </DialogTitle>
-          <DialogDescription className="sr-only">{t("assignments.unassign")}</DialogDescription>
-          <div className="mt-4 flex justify-end gap-2">
+        <DialogContent size="sm" aria-describedby={undefined}>
+          <DialogHeader className="pb-6">
+            <DialogTitle>
+              {t("assignments.unassignConfirm", { user: confirmTarget?.username ?? "" })}
+            </DialogTitle>
+            <DialogDescription className="sr-only">{t("assignments.unassign")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setConfirmTarget(null)}>
               {t("profile.cancel")}
             </Button>
@@ -194,7 +198,7 @@ export function AssignmentsCard({
             >
               {t("assignments.unassign")}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </section>

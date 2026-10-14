@@ -6,12 +6,17 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogSection,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { saveBlob } from "@/shared/api/file-transfer";
+import { DetailItem, DetailList } from "@/shared/components/detail-list";
 import { useT } from "@/shared/i18n";
 import { formatDateTimeUtc } from "@/shared/utils/datetime";
 import { downloadDeliveryPhoto } from "../api/equipment-adapter";
@@ -40,152 +45,165 @@ export function DeliveryDetailDialog({
 
   return (
     <Dialog open={Boolean(deliveryId)} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-lg flex-col gap-4 overflow-y-auto sm:max-w-lg">
-        <div>
+      <DialogContent size="lg">
+        <DialogHeader>
           <DialogTitle>{t("equipment.detailTitle")}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="tabular-nums">
             {data
               ? `${data.workshopCode} · ${formatDateTimeUtc(data.deliveredAtUtc)} UTC`
               : t("common.loading")}
           </DialogDescription>
-        </div>
+        </DialogHeader>
 
-        {isPending ? (
-          <Skeleton className="h-32 w-full" />
-        ) : isError || !data ? (
-          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <p>{t("common.error")}</p>
-            <Button type="button" variant="outline" size="sm" onClick={() => refetch()}>
-              {t("common.retry")}
-            </Button>
-          </div>
-        ) : (
-          <>
-            <dl className="grid gap-2 text-sm">
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("equipment.workshop")}</dt>
-                <dd className="font-medium">
-                  {data.workshopCode} · {data.workshopName}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("equipment.description")}</dt>
-                <dd className="whitespace-pre-wrap">{data.equipmentDescription}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("equipment.recipientName")}</dt>
-                <dd>
+        <DialogBody>
+          {isPending ? (
+            <div className="flex flex-col gap-3" aria-busy>
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          ) : isError || !data ? (
+            <div className="flex flex-wrap items-center gap-3 rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground">
+              <p>{t("common.error")}</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => refetch()}>
+                {t("common.retry")}
+              </Button>
+            </div>
+          ) : (
+            <>
+              <DetailList>
+                <DetailItem label={t("equipment.workshop")} wide>
+                  <span className="font-medium">
+                    {data.workshopCode} · {data.workshopName}
+                  </span>
+                </DetailItem>
+                <DetailItem label={t("equipment.recipientName")}>
                   {data.recipientName}
-                  {data.recipientPhone ? ` · ${data.recipientPhone}` : ""}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">{t("equipment.deliveredAt")}</dt>
-                <dd className="tabular-nums">{formatDateTimeUtc(data.deliveredAtUtc)} UTC</dd>
-              </div>
-              {data.notes ? (
-                <div>
-                  <dt className="text-xs text-muted-foreground">{t("equipment.notes")}</dt>
-                  <dd className="whitespace-pre-wrap">{data.notes}</dd>
-                </div>
-              ) : null}
-            </dl>
-
-            <section className="flex flex-col gap-2" aria-labelledby="eq-photos">
-              <div className="flex items-center justify-between gap-2">
-                <h3 id="eq-photos" className="text-sm font-semibold text-[var(--navy)]">
-                  {t("equipment.photos")} ({photos?.length ?? data.photoCount})
-                </h3>
-                {canEdit && deliveryId ? (
-                  <>
-                    <input
-                      ref={fileInput}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(event) => {
-                        const file = event.target.files?.[0];
-                        if (file) {
-                          mutations.upload.mutate(file, {
-                            onSuccess: () => toast.success(t("equipment.photoUploaded")),
-                            onError: (error) => {
-                              const status = (error as { status?: number }).status;
-                              toast.error(
-                                status === 400
-                                  ? t("equipment.photoInvalid")
-                                  : t("equipment.photoFailed")
-                              );
-                            },
-                          });
-                        }
-                        event.target.value = "";
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={mutations.upload.isPending}
-                      onClick={() => fileInput.current?.click()}
-                    >
-                      <Camera data-icon="inline-start" />
-                      {t("equipment.photoAdd")}
-                    </Button>
-                  </>
+                  {data.recipientPhone ? (
+                    <span className="block text-muted-foreground">
+                      <span className="tabular-nums" dir="ltr">
+                        {data.recipientPhone}
+                      </span>
+                    </span>
+                  ) : null}
+                </DetailItem>
+                <DetailItem label={t("equipment.deliveredAt")}>
+                  <span className="tabular-nums">
+                    {formatDateTimeUtc(data.deliveredAtUtc)} UTC
+                  </span>
+                </DetailItem>
+                <DetailItem label={t("equipment.description")} wide>
+                  <span className="whitespace-pre-wrap">{data.equipmentDescription}</span>
+                </DetailItem>
+                {data.notes ? (
+                  <DetailItem label={t("equipment.notes")} wide>
+                    <span className="whitespace-pre-wrap">{data.notes}</span>
+                  </DetailItem>
                 ) : null}
-              </div>
-              {(photos ?? []).length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("equipment.photosEmpty")}</p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {(photos ?? []).map((photo) => (
-                    <li
-                      key={photo.id}
-                      className="flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm"
-                    >
-                      <button
-                        type="button"
-                        className="truncate text-start text-primary underline-offset-2 hover:underline"
-                        onClick={() => {
-                          if (!deliveryId) return;
-                          void downloadDeliveryPhoto(deliveryId, photo.id, photo.fileName)
-                            .then(({ blob, fileName }) => saveBlob(blob, fileName))
-                            .catch(() => toast.error(t("equipment.photoFailed")));
-                        }}
-                      >
-                        {photo.fileName}
-                      </button>
-                      {canEdit ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={mutations.remove.isPending}
-                          onClick={() =>
-                            mutations.remove.mutate(photo.id, {
-                              onSuccess: () => toast.success(t("equipment.photoRemoved")),
-                            })
-                          }
-                          aria-label={t("equipment.photoRemove")}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+              </DetailList>
 
-            {canEdit ? (
-              <div className="mt-auto flex flex-wrap justify-end gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={onEdit}>
-                  {t("equipment.edit")}
-                </Button>
-              </div>
-            ) : null}
-          </>
-        )}
+              <DialogSection
+                aria-labelledby="eq-photos"
+                className="border-t pt-5"
+                title={
+                  <span id="eq-photos">
+                    {t("equipment.photos")} ({photos?.length ?? data.photoCount})
+                  </span>
+                }
+                action={
+                  canEdit && deliveryId ? (
+                    <>
+                      <input
+                        ref={fileInput}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) {
+                            mutations.upload.mutate(file, {
+                              onSuccess: () => toast.success(t("equipment.photoUploaded")),
+                              onError: (error) => {
+                                const status = (error as { status?: number }).status;
+                                toast.error(
+                                  status === 400
+                                    ? t("equipment.photoInvalid")
+                                    : t("equipment.photoFailed")
+                                );
+                              },
+                            });
+                          }
+                          event.target.value = "";
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={mutations.upload.isPending}
+                        onClick={() => fileInput.current?.click()}
+                      >
+                        <Camera data-icon="inline-start" />
+                        {t("equipment.photoAdd")}
+                      </Button>
+                    </>
+                  ) : null
+                }
+              >
+                {(photos ?? []).length === 0 ? (
+                  <p className="rounded-md border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+                    {t("equipment.photosEmpty")}
+                  </p>
+                ) : (
+                  <ul className="flex flex-col divide-y rounded-md border">
+                    {(photos ?? []).map((photo) => (
+                      <li
+                        key={photo.id}
+                        className="flex min-h-11 items-center justify-between gap-2 px-3 py-1.5 text-sm"
+                      >
+                        <button
+                          type="button"
+                          className="truncate text-start text-primary underline-offset-2 hover:underline"
+                          onClick={() => {
+                            if (!deliveryId) return;
+                            void downloadDeliveryPhoto(deliveryId, photo.id, photo.fileName)
+                              .then(({ blob, fileName }) => saveBlob(blob, fileName))
+                              .catch(() => toast.error(t("equipment.photoFailed")));
+                          }}
+                        >
+                          {photo.fileName}
+                        </button>
+                        {canEdit ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={mutations.remove.isPending}
+                            onClick={() =>
+                              mutations.remove.mutate(photo.id, {
+                                onSuccess: () => toast.success(t("equipment.photoRemoved")),
+                              })
+                            }
+                            aria-label={t("equipment.photoRemove")}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </DialogSection>
+            </>
+          )}
+        </DialogBody>
+
+        {canEdit && !isPending && !isError && data ? (
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onEdit}>
+              {t("equipment.edit")}
+            </Button>
+          </DialogFooter>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

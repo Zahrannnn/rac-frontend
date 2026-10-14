@@ -5,8 +5,11 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -69,11 +72,13 @@ export function AttendeeScoresDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogTitle>{t("trainings.editScores")}</DialogTitle>
-        <DialogDescription className="mt-1">{attendee?.technicianName}</DialogDescription>
+      <DialogContent size="sm">
+        <DialogHeader>
+          <DialogTitle>{t("trainings.editScores")}</DialogTitle>
+          <DialogDescription>{attendee?.technicianName}</DialogDescription>
+        </DialogHeader>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <DialogBody className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-pre-score">{t("trainings.preScore")}</Label>
             <Input
@@ -96,16 +101,16 @@ export function AttendeeScoresDialog({
               onChange={(e) => setPostScore(e.target.value)}
             />
           </div>
-        </div>
+        </DialogBody>
 
-        <div className="mt-4 flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             {t("common.cancel")}
           </Button>
           <Button type="button" disabled={update.isPending} onClick={save}>
             {t("trainings.saveScores")}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -16,8 +16,10 @@ import {
 } from "@/components/ui/select";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -69,18 +71,25 @@ function AuditDetailDialog({ entry, onOpenChange }: { entry: AuditLogEntry | nul
 
   return (
     <Dialog open={Boolean(entry)} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogTitle>{t("admin.audit.detailTitle")}</DialogTitle>
-        <DialogDescription className="sr-only">
-          {entry ? `${entry.entityName} ${entry.action}` : ""}
-        </DialogDescription>
+      <DialogContent size="xl">
+        <DialogHeader>
+          <DialogTitle>{t("admin.audit.detailTitle")}</DialogTitle>
+          <DialogDescription>
+            {entry ? (
+              <>
+                <span className="font-medium text-foreground">{entry.entityName}</span>
+                {" · "}
+                {entry.username ?? "—"}
+                {" · "}
+                <span className="tabular-nums">{formatDateTimeUtc(entry.atUtc)}</span>
+              </>
+            ) : null}
+          </DialogDescription>
+        </DialogHeader>
 
-        {entry ? (
-          <div className="flex flex-col gap-2 text-sm">
-            <p className="text-xs text-muted-foreground">
-              {entry.username ?? "—"} · {formatDateTimeUtc(entry.atUtc)}
-            </p>
-            <div className="max-h-80 overflow-y-auto rounded-md border">
+        <DialogBody>
+          {entry ? (
+            <div className="overflow-x-auto rounded-md border text-sm">
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
@@ -122,8 +131,8 @@ function AuditDetailDialog({ entry, onOpenChange }: { entry: AuditLogEntry | nul
                 </TableBody>
               </Table>
             </div>
-          </div>
-        ) : null}
+          ) : null}
+        </DialogBody>
       </DialogContent>
     </Dialog>
   );

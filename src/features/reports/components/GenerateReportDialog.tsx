@@ -1,13 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { saveBlob } from "@/shared/api/file-transfer";
@@ -33,6 +36,7 @@ function GenerateReportForm({
   const meta = useReportMeta(definition);
   const ReportIcon = meta.icon;
   const generate = useGenerateReport();
+  const formId = useId();
   const [filters, setFilters] = useState<ReportFilters>({});
 
   const supported = useMemo(
@@ -89,47 +93,48 @@ function GenerateReportForm({
 
   return (
     <>
-      <div className="flex items-start gap-3">
+      <DialogHeader className="flex-row items-start gap-4">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[var(--navy-shell)]/10 text-[var(--navy)]">
           <ReportIcon className="h-5 w-5" aria-hidden />
         </span>
-        <div className="min-w-0 flex-1">
-          <DialogTitle className="text-[var(--navy)]">{meta.title}</DialogTitle>
-          <DialogDescription className="mt-1 text-sm leading-6 text-muted-foreground">
-            {meta.description}
-          </DialogDescription>
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <DialogTitle>{meta.title}</DialogTitle>
+          <DialogDescription>{meta.description}</DialogDescription>
         </div>
-      </div>
+      </DialogHeader>
 
-      <form
-        className="flex flex-col gap-5"
-        onSubmit={(event) => {
-          event.preventDefault();
-          run();
-        }}
-      >
-        {supported.length > 0 ? (
-          <ReportFilterFields
-            supported={supported}
-            filters={filters}
-            onFilterChange={patchFilter}
-          />
-        ) : (
-          <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-            {t("reports.noFilters")}
-          </p>
-        )}
+      <DialogBody>
+        <form
+          id={formId}
+          className="flex flex-col gap-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            run();
+          }}
+        >
+          {supported.length > 0 ? (
+            <ReportFilterFields
+              supported={supported}
+              filters={filters}
+              onFilterChange={patchFilter}
+            />
+          ) : (
+            <p className="rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground">
+              {t("reports.noFilters")}
+            </p>
+          )}
+        </form>
+      </DialogBody>
 
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            {t("profile.cancel")}
-          </Button>
-          <Button type="submit" disabled={generate.isPending}>
-            <Download data-icon="inline-start" />
-            {generate.isPending ? t("reports.generating") : t("reports.download")}
-          </Button>
-        </div>
-      </form>
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onClose}>
+          {t("profile.cancel")}
+        </Button>
+        <Button type="submit" form={formId} disabled={generate.isPending}>
+          <Download data-icon="inline-start" />
+          {generate.isPending ? t("reports.generating") : t("reports.download")}
+        </Button>
+      </DialogFooter>
     </>
   );
 }
@@ -147,7 +152,7 @@ export function GenerateReportDialog({
 }) {
   return (
     <Dialog open={Boolean(definition)} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[min(96vw,48rem)] p-6 sm:p-7">
+      <DialogContent size="lg">
         {definition ? (
           <GenerateReportForm
             key={definition.key}

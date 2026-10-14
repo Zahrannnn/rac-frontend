@@ -34,9 +34,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   return (
     <Activity mode={open ? "visible" : "hidden"} name="CommandPalette">
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="p-0">
+        <DialogContent size="md">
           <DialogTitle className="sr-only">Command palette</DialogTitle>
-          <div className="flex items-center gap-2 border-b px-4 py-3">
+          <div data-slot="dialog-header" className="flex items-center gap-2 border-b ps-4 pe-14 py-3">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
               autoFocus
@@ -45,12 +45,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               onChange={(event) => debouncedSearch(event.target.value)}
             />
           </div>
-          <div className="p-2">
+          <div className="min-h-0 overflow-y-auto p-2">
             {filteredCommands.map((command) => (
               <button
                 key={command.href}
                 type="button"
-                className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm hover:bg-muted focus-visible:outline-2"
+                className="flex w-full items-center rounded-md px-3 py-2 text-start text-sm hover:bg-muted focus-visible:outline-2"
                 onClick={() => {
                   onOpenChange(false);
                   router.push(command.href);

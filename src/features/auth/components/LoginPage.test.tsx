@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
@@ -125,6 +126,24 @@ describe("LoginPage stored-session boot path", () => {
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/dashboard"));
     // The skeleton, not the form, is what shows while the probe runs.
     expect(screen.queryByRole("button", { name: /دخول|sign in/i })).toBeNull();
+  });
+
+  it("still redirects when the effect re-runs while the probe is in flight", async () => {
+    hoistedStoredSession.current = fakeSession;
+    resumeSession.mockResolvedValue({ ...fakeSession, token: "fresh-access" });
+
+    render(
+      <StrictMode>
+        <I18nProvider>
+          <AuthProvider>
+            <LoginPage />
+          </AuthProvider>
+        </I18nProvider>
+      </StrictMode>
+    );
+
+    await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/dashboard"));
+    expect(resumeSession).toHaveBeenCalledOnce();
   });
 
   it("falls back to the form when the session is definitively rejected", async () => {

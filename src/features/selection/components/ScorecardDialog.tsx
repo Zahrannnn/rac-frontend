@@ -3,8 +3,11 @@
 import { AlertTriangle, FileSearch } from "lucide-react";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,43 +54,45 @@ export function ScorecardDialog({
 
   return (
     <Dialog open={Boolean(workshopId)} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col gap-4 overflow-hidden sm:max-w-2xl">
-        <div className="flex flex-col gap-1">
+      <DialogContent size="xl">
+        <DialogHeader>
           <DialogTitle>
             {workshopLabel ?? t("selection.scorecard.title")}
           </DialogTitle>
-          <DialogDescription>{t("selection.scorecard.title")}</DialogDescription>
-        </div>
+          <DialogDescription className={workshopLabel ? undefined : "sr-only"}>
+            {t("selection.scorecard.title")}
+          </DialogDescription>
+        </DialogHeader>
 
-        {kind === "equipment" ? (
-          <p className="flex items-start gap-2 rounded-md bg-[var(--warning)]/15 p-3 text-sm font-medium text-[#8a5a14] dark:text-[var(--warning)]">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-            {t("selection.scorecard.needInvertedHint")}
-          </p>
-        ) : null}
-
-        {isPending ? (
-          <div className="flex flex-col gap-2" aria-busy>
-            {Array.from({ length: 6 }, (_, index) => (
-              <Skeleton key={index} className="h-10 w-full rounded-md" />
-            ))}
-          </div>
-        ) : notScorable || notFound ? (
-          <div className="flex flex-col items-center gap-3 rounded-lg border bg-card px-6 py-12 text-center">
-            <FileSearch className="h-8 w-8 text-muted-foreground" aria-hidden />
-            <p className="max-w-[46ch] text-sm text-muted-foreground">
-              {t(
-                kind === "equipment"
-                  ? "selection.scorecard.equipmentNotScorable"
-                  : "selection.scorecard.participationNotScorable"
-              )}
+        <DialogBody className="gap-4">
+          {kind === "equipment" ? (
+            <p className="flex items-start gap-2 rounded-md bg-[var(--warning)]/15 p-3 text-sm font-medium text-[#8a5a14] dark:text-[var(--warning)]">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              {t("selection.scorecard.needInvertedHint")}
             </p>
-          </div>
-        ) : isError ? (
-          <QueryErrorState onRetry={() => refetch()} />
-        ) : data ? (
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border">
+          ) : null}
+
+          {isPending ? (
+            <div className="flex flex-col gap-2" aria-busy>
+              {Array.from({ length: 6 }, (_, index) => (
+                <Skeleton key={index} className="h-10 w-full rounded-md" />
+              ))}
+            </div>
+          ) : notScorable || notFound ? (
+            <div className="flex flex-col items-center gap-3 rounded-lg border bg-card px-6 py-12 text-center">
+              <FileSearch className="h-8 w-8 text-muted-foreground" aria-hidden />
+              <p className="max-w-[46ch] text-sm text-muted-foreground">
+                {t(
+                  kind === "equipment"
+                    ? "selection.scorecard.equipmentNotScorable"
+                    : "selection.scorecard.participationNotScorable"
+                )}
+              </p>
+            </div>
+          ) : isError ? (
+            <QueryErrorState onRetry={() => refetch()} />
+          ) : data ? (
+            <div className="overflow-x-auto rounded-lg border">
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
@@ -134,14 +139,11 @@ export function ScorecardDialog({
                 </TableBody>
               </Table>
             </div>
+          ) : null}
+        </DialogBody>
 
-            <div className="flex flex-wrap items-baseline justify-between gap-2 rounded-md bg-muted p-3">
-              <span className="text-sm font-semibold">{t("selection.scorecard.total")}</span>
-              <span className="text-xl font-bold tabular-nums text-primary" dir="ltr">
-                {data.total} / {data.maxTotal}
-              </span>
-            </div>
-
+        {data && !isPending && !isError ? (
+          <DialogFooter className="justify-between gap-x-6 gap-y-1">
             <p className="text-xs text-muted-foreground">
               <span className="font-mono" dir="ltr">
                 {data.rubricVersion}
@@ -149,7 +151,13 @@ export function ScorecardDialog({
               {" · "}
               {t("selection.scorecard.computedAt", { date: formatUtc(data.computedAtUtc, locale) })}
             </p>
-          </div>
+            <p className="flex items-baseline gap-3">
+              <span className="text-sm font-semibold">{t("selection.scorecard.total")}</span>
+              <span className="text-xl font-bold tabular-nums text-primary" dir="ltr">
+                {data.total} / {data.maxTotal}
+              </span>
+            </p>
+          </DialogFooter>
         ) : null}
       </DialogContent>
     </Dialog>

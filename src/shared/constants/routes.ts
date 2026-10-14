@@ -29,6 +29,11 @@ export function workshopEdit(id: string): Route {
   return `/workshops/${id}/edit` as Route;
 }
 
+/** Deep link to one training session (details, participants, photos). */
+export function trainingDetail(id: string): Route {
+  return `/trainings/${id}` as Route;
+}
+
 /** Deep link to one selection run's ranked list (Screen 05 drill-in). */
 export function selectionRun(runId: string): Route {
   return `/selection/runs/${runId}` as Route;
