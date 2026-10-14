@@ -5,6 +5,7 @@ export const ar = {
   "app.programTitle": "منصة التقييم والمتابعة الرقمية لقطاع تكييف المركبات",
   "app.programTitleShort": "التقييم والمتابعة الرقمية: قطاع تكييف المركبات",
   "app.partners": "UNIDO · NOU · EED",
+  "auth.partner.eedName": "الشركة المصرية للتنمية البيئية",
   "shell.themeLight": "الوضع الفاتح",
   "shell.themeDark": "الوضع الداكن",
   "shell.toggleSidebar": "إظهار أو إخفاء الشريط الجانبي",

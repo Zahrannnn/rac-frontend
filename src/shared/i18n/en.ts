@@ -7,6 +7,7 @@ export const en: Dictionary = {
   "app.programTitle": "MAC Digital Assessment & Monitoring Platform",
   "app.programTitleShort": "Digital Assessment & Monitoring: MAC sector",
   "app.partners": "UNIDO · NOU · EED",
+  "auth.partner.eedName": "Egyptian Company for Environmental Development",
   "shell.themeLight": "Light mode",
   "shell.themeDark": "Dark mode",
   "shell.toggleSidebar": "Toggle sidebar",

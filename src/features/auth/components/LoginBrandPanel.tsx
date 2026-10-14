@@ -41,10 +41,14 @@ function BrandCar() {
 }
 
 function PartnerLogos() {
+  const t = useT();
   return (
     <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 rounded-2xl bg-white px-6 py-4 shadow-lg shadow-black/15 sm:justify-between">
       {PARTNER_LOGOS.map((logo) => (
-        <li key={logo.src}>
+        <li
+          key={logo.src}
+          className={cn("flex flex-col items-center", logo.captionKey && "gap-1.5 text-center")}
+        >
           <Image
             src={logo.src}
             alt={logo.alt}
@@ -53,6 +57,11 @@ function PartnerLogos() {
             className={cn("w-auto object-contain", logo.className)}
             priority
           />
+          {logo.captionKey ? (
+            <span className="max-w-44 text-[0.6875rem] font-medium leading-tight text-slate-500">
+              {t(logo.captionKey as never)}
+            </span>
+          ) : null}
         </li>
       ))}
     </ul>
