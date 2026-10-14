@@ -100,15 +100,8 @@ export const surveys = {
   "survey.photoDeleted": "تم حذف الصورة",
   "survey.photoDelete": "حذف الصورة",
   "survey.photoLimit": "بلغت الحد الأقصى لعدد الصور",
-  "survey.photoTooLarge": "حجم الصورة بعد الضغط يتجاوز ٢ ميجابايت",
+  "survey.photoTooLarge": "حجم الصورة بعد الضغط يتجاوز ٤ ميجابايت",
   "survey.photoTooLargeInput": "حجم الصورة الأصلي يتجاوز ٢٠ ميجابايت",
-  // signature image capture (questionnaire Ver3 — photo of the wet signature)
-  "survey.signatureCapture.add": "التقاط صورة التوقيع",
-  "survey.signatureCapture.retake": "إعادة الالتقاط",
-  "survey.signatureCapture.remove": "إزالة التوقيع",
-  "survey.signatureCapture.processing": "جارٍ معالجة الصورة…",
-  "survey.signatureCapture.hint": "التقط صورة للتوقيع الورقي على الورق",
-  "survey.signatureCapture.error": "تعذّرت معالجة صورة التوقيع — حاول مرة أخرى",
   "survey.continueWizard": "متابعة الاستبيان",
   // survey fields — consent
   "survey.field.consent.consent.participate": "هل توافق على المشاركة في هذا المسح؟",
@@ -146,8 +139,6 @@ export const surveys = {
   "survey.field.workforce.hasGasIdentifier": "تمتلك الورشة جهاز تحليل أو تعريف غاز الفريون؟",
   // survey fields — closing
   "survey.field.closing.photosConsent": "صور توثيقية بعد الموافقة",
-  "survey.field.closing.surveyorSignature": "توقيع الباحث",
-  "survey.field.closing.ownerSignature": "توقيع صاحب الورشة (إن وافق)",
   "survey.field.closing.date": "التاريخ",
   // survey fields — axes (schema v2 Likert tables)
   "survey.field.orgManagement.statements": "يرجى وضع علامة واحدة أمام درجة تطابق كل عبارة مع واقع الورشة",

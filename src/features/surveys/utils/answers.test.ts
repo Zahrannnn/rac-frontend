@@ -181,4 +181,22 @@ describe("parseStoredSections", () => {
     expect(parsed.broken).toBeUndefined();
     expect(parsed.array).toBeUndefined();
   });
+
+  it("legacy surveys with signature data URLs still parse and validate (answers are opaque JSON)", () => {
+    // Signatures were removed from the questionnaire (customer decision
+    // 2026-10-14); stored answers of old surveys keep the data URLs.
+    const legacyClosing = {
+      photosConsent: "taken",
+      surveyorSignature: "data:image/webp;base64,AAAA" + "B".repeat(400_000),
+      ownerSignature: "data:image/jpeg;base64,CCCC",
+      date: "2026-10-14",
+    };
+    const parsed = parseStoredSections({ closing: JSON.stringify(legacyClosing) });
+    expect(parsed.closing).toEqual(legacyClosing);
+
+    const closing = SECTIONS.find((section) => section.key === "closing")!;
+    // the retired signature keys are simply not schema fields anymore —
+    // completeness looks only at photosConsent + date
+    expect(isSectionComplete(closing, parsed.closing)).toBe(true);
+  });
 });

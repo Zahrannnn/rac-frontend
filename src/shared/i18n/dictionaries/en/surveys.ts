@@ -103,15 +103,8 @@ export const surveys: Record<keyof typeof surveysAr, string> = {
   "survey.photoDeleted": "Photo deleted",
   "survey.photoDelete": "Delete photo",
   "survey.photoLimit": "Maximum photo count reached",
-  "survey.photoTooLarge": "Image exceeds 2 MB after compression",
+  "survey.photoTooLarge": "Image exceeds 4 MB after compression",
   "survey.photoTooLargeInput": "Original image exceeds 20 MB",
-  // signature image capture (questionnaire Ver3 — photo of the wet signature)
-  "survey.signatureCapture.add": "Capture signature image",
-  "survey.signatureCapture.retake": "Retake",
-  "survey.signatureCapture.remove": "Remove signature",
-  "survey.signatureCapture.processing": "Processing image…",
-  "survey.signatureCapture.hint": "Photograph the wet signature on paper",
-  "survey.signatureCapture.error": "The signature image could not be processed — try again",
   "survey.continueWizard": "Continue survey",
   // survey fields — consent
   "survey.field.consent.consent.participate": "Do you consent to participate in this survey?",
@@ -149,8 +142,6 @@ export const surveys: Record<keyof typeof surveysAr, string> = {
   "survey.field.workforce.hasGasIdentifier": "The workshop owns a refrigerant analyzer/identifier",
   // survey fields — closing
   "survey.field.closing.photosConsent": "Documentation photos after consent",
-  "survey.field.closing.surveyorSignature": "Surveyor signature",
-  "survey.field.closing.ownerSignature": "Workshop owner signature (if agreed)",
   "survey.field.closing.date": "Date",
   // survey fields — axes (schema v2 Likert tables)
   "survey.field.orgManagement.statements": "Mark how well each statement matches the workshop's reality",

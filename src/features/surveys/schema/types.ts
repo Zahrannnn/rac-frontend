@@ -13,8 +13,6 @@ export type FieldType =
   | "matrix3col"
   | "likert"
   | "checklist"
-  /** Image capture (photo of the wet signature) — stored as a compressed data URL. */
-  | "signature"
   | "date"
   | "photo";
 

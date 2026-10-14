@@ -38,4 +38,13 @@ describe("schema contract (questionnaire Ver3)", () => {
     )!;
     expect(annualGasKg.options).toEqual(["R-134a", "R-1234yf", "other"]);
   });
+
+  it("closing section carries only photosConsent + date (signatures removed, customer decision 2026-10-14)", () => {
+    const closing = SECTIONS.find((section) => section.key === "closing")!;
+    expect(closing.fields.map((field) => field.key)).toEqual(["photosConsent", "date"]);
+    const signatureKeys = SECTIONS
+      .flatMap((section) => section.fields.map((field) => field.key))
+      .filter((key) => key.toLowerCase().includes("signature"));
+    expect(signatureKeys).toEqual([]);
+  });
 });

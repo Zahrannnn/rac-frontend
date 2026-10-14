@@ -4,9 +4,9 @@
 // cars-per-month table (<20 / 20–49 / 50–99 / 100–200 / >200).
 // Axis sections (order 2–9) are Likert tables transcribed from the paper
 // questionnaire (one mark per row); axis 8 also carries a 12-item priority
-// ranking (1–5) and 8 operational challenges (3-level). Closing signatures are
-// captured as IMAGES (photo of the wet signature), stored as compressed data
-// URLs under the same field keys.
+// ranking (1–5) and 8 operational challenges (3-level). Closing signatures were
+// removed from the questionnaire (customer decision 2026-10-14); legacy stored
+// answers may still carry the old signature keys and are ignored.
 // Labels live in i18n (survey.field.*, survey.opt.*, survey.row.*, survey.col.*,
 // survey.item.*, survey.statement.*).
 

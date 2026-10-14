@@ -6,7 +6,6 @@ import { RadioCards } from "./choice-fields";
 import { ChecklistTable, LikertTable } from "./assessment-tables";
 import { RefrigerantMatrix } from "./refrigerant-matrix";
 import { SeasonalMatrix, WorkforceMatrix } from "./matrix-tables";
-import { SignatureImage } from "./signature-image";
 import { ComplexFieldRenderer, FieldRenderer } from "./FieldRenderer";
 import { SECTIONS } from "../../schema/sections";
 
@@ -320,40 +319,5 @@ describe("RefrigerantMatrix (supply difficulty = single لا/نعم mark)", () =
     // second radiogroup on the card is the supply difficulty (لا then نعم)
     fireEvent.click(screen.getAllByRole("radio", { name: "نعم" })[1]);
     expect(onChange).toHaveBeenCalledWith({ "R-134a": { supplyDifficulty: "yes" } });
-  });
-});
-
-describe("SignatureImage (closing signatures captured as images)", () => {
-  it("offers a camera capture input and hint when empty", () => {
-    renderWithI18n(
-      <SignatureImage label="توقيع الباحث" value={null} onChange={vi.fn()} />
-    );
-
-    const input = document.querySelector('input[type="file"]');
-    expect(input).not.toBeNull();
-    expect(input).toHaveAttribute("accept", "image/*");
-    expect(input).toHaveAttribute("capture", "environment");
-    expect(screen.getByRole("button", { name: "التقاط صورة التوقيع" })).toBeInTheDocument();
-    expect(screen.getByText("التقط صورة للتوقيع الورقي على الورق")).toBeInTheDocument();
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
-  });
-
-  it("previews the stored signature image with retake and remove actions", () => {
-    const onChange = vi.fn();
-    renderWithI18n(
-      <SignatureImage
-        label="توقيع الباحث"
-        value="data:image/jpeg;base64,AAAA"
-        onChange={onChange}
-      />
-    );
-
-    expect(screen.getByRole("img", { name: "توقيع الباحث" })).toHaveAttribute(
-      "src",
-      "data:image/jpeg;base64,AAAA"
-    );
-    expect(screen.getByRole("button", { name: "إعادة الالتقاط" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "إزالة التوقيع" }));
-    expect(onChange).toHaveBeenCalledWith(null);
   });
 });

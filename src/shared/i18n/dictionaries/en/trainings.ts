@@ -90,7 +90,7 @@ export const trainings: Record<keyof typeof trainingsAr, string> = {
   "trainings.photoDownloadFailed": "Could not download photo",
   "trainings.photoRemove": "Remove photo",
   "trainings.photoInvalid": "Up to 20 MB — auto-compressed to WebP",
-  "trainings.photoTooLarge": "Image exceeds 2 MB after compression",
+  "trainings.photoTooLarge": "Image exceeds 4 MB after compression",
   "trainings.photoTooLargeInput": "Original image exceeds 20 MB",
   "trainings.photoFailed": "Photo upload failed",
   "trainings.pageSummary": "{count} sessions · page {page} of {totalPages}",

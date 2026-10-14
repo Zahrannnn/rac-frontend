@@ -41,7 +41,7 @@ export const equipment: Record<keyof typeof equipmentAr, string> = {
   "equipment.photoRemoved": "Photo removed",
   "equipment.photoRemove": "Remove photo",
   "equipment.photoInvalid": "Up to 20 MB — auto-compressed to WebP",
-  "equipment.photoTooLarge": "Image exceeds 2 MB after compression",
+  "equipment.photoTooLarge": "Image exceeds 4 MB after compression",
   "equipment.photoTooLargeInput": "Original image exceeds 20 MB",
   "equipment.photoFailed": "Photo upload failed",
   "equipment.pageSummary": "{count} deliveries · page {page} of {totalPages}",

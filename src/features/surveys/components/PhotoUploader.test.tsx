@@ -78,14 +78,14 @@ describe("PhotoUploader — compress-then-upload flow", () => {
     expect(toastMock.warning).not.toHaveBeenCalled();
   });
 
-  it("rejects with the post-compression toast when output still exceeds 2MB", async () => {
+  it("rejects with the post-compression toast when output still exceeds 4MB", async () => {
     prepareMock.mockResolvedValue({ ok: false, reason: "stored-too-large" });
 
     renderUploader();
     pickFile(new File([new Uint8Array(10)], "photo.jpg", { type: "image/jpeg" }));
 
     await waitFor(() =>
-      expect(toastMock.warning).toHaveBeenCalledWith("حجم الصورة بعد الضغط يتجاوز ٢ ميجابايت")
+      expect(toastMock.warning).toHaveBeenCalledWith("حجم الصورة بعد الضغط يتجاوز ٤ ميجابايت")
     );
     expect(uploadMutate).not.toHaveBeenCalled();
   });

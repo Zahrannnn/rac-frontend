@@ -1,6 +1,6 @@
 /**
  * Client-side image compression shared by every upload surface (survey
- * documentation photos, training photos, delivery photos, signature capture).
+ * documentation photos, training photos, delivery photos).
  *
  * Pipeline: decode (createImageBitmap, `<img>` + object URL fallback for old
  * Safari) → downscale so the longest side ≤ `maxSide` → WebP re-encode through
@@ -17,7 +17,7 @@
 export const IMAGE_UPLOAD_MAX_INPUT_BYTES = 20 * 1024 * 1024;
 
 /** Largest STORED image allowed after compression (backend mirror). */
-export const IMAGE_STORED_MAX_BYTES = 2 * 1024 * 1024;
+export const IMAGE_STORED_MAX_BYTES = 4 * 1024 * 1024;
 
 /** Longest allowed side of the compressed output. */
 const DEFAULT_MAX_SIDE = 2048;
@@ -29,7 +29,7 @@ const DEFAULT_TARGET_BYTES = 400 * 1024;
 const DEFAULT_QUALITY_LADDER = [0.85, 0.7, 0.55, 0.4];
 
 export interface CompressImageOptions {
-  /** Longest allowed side in px (default 2048; signatures use 1200). */
+  /** Longest allowed side in px (default 2048). */
   maxSide?: number;
   /** Stop the ladder once the blob is ≤ this size (default 400KB). */
   targetBytes?: number;
@@ -42,7 +42,7 @@ export interface CompressImageOptions {
 /** Why an image was refused by {@link prepareImageForUpload}. */
 export type PrepareImageFailureReason =
   | "input-too-large" // original over IMAGE_UPLOAD_MAX_INPUT_BYTES (20MB)
-  | "stored-too-large" // still over IMAGE_STORED_MAX_BYTES (2MB) after compression
+  | "stored-too-large" // still over IMAGE_STORED_MAX_BYTES (4MB) after compression
   | "decode-failed"; // source could not be decoded or encoded
 
 export type PrepareImageResult =
@@ -197,7 +197,7 @@ export async function compressImage(file: File, options: CompressImageOptions = 
 /**
  * Upload-surface guard used by every photo picker: reject originals over the
  * 20MB input cap before decoding, compress via {@link compressImage}, then
- * enforce the 2MB stored cap on the result — all without throwing.
+ * enforce the 4MB stored cap on the result — all without throwing.
  */
 export async function prepareImageForUpload(
   file: File,

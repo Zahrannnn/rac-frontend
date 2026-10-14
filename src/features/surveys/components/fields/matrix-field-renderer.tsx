@@ -6,7 +6,6 @@ import type { FieldRendererProps } from "./FieldRenderer";
 import { ChecklistTable, LikertTable } from "./assessment-tables";
 import { RangeMatrix, SeasonalMatrix, WorkforceMatrix } from "./matrix-tables";
 import { RefrigerantMatrix } from "./refrigerant-matrix";
-import { SignatureImage } from "./signature-image";
 
 /** Matrix and checklist renderers keyed by field type (workforce + axis sections). */
 export function ComplexFieldRenderer({
@@ -85,15 +84,6 @@ export function ComplexFieldRenderer({
           hideLabel={hideLabel}
           items={field.options ?? []}
           value={value as never}
-          onChange={(next) => onChange(field.key, next)}
-        />
-      );
-    case "signature":
-      return (
-        <SignatureImage
-          label={label}
-          hideLabel={hideLabel}
-          value={typeof answers[field.key] === "string" ? (answers[field.key] as string) : null}
           onChange={(next) => onChange(field.key, next)}
         />
       );

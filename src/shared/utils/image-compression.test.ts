@@ -65,9 +65,9 @@ afterEach(() => {
 });
 
 describe("image size constants", () => {
-  it("caps originals at 20MB and stored images at 2MB", () => {
+  it("caps originals at 20MB and stored images at 4MB", () => {
     expect(IMAGE_UPLOAD_MAX_INPUT_BYTES).toBe(20 * 1024 * 1024);
-    expect(IMAGE_STORED_MAX_BYTES).toBe(2 * 1024 * 1024);
+    expect(IMAGE_STORED_MAX_BYTES).toBe(4 * 1024 * 1024);
   });
 });
 
@@ -228,7 +228,7 @@ describe("prepareImageForUpload — surface guard", () => {
     expect(result).toEqual({ ok: true, file: expect.any(File) });
   });
 
-  it("rejects output still over the 2MB stored cap after compression", async () => {
+  it("rejects output still over the 4MB stored cap after compression", async () => {
     stubDecoder(4000, 4000);
     stubCanvas(() => blobOf(IMAGE_STORED_MAX_BYTES + 1, "image/webp"));
 

@@ -10,7 +10,7 @@ const SIMPLE: ReadonlySet<FieldType> = new Set([
 ]);
 
 const COMPLEX: ReadonlySet<FieldType> = new Set([
-  "likert", "matrix3x3", "matrix2x5", "matrixDynamic", "matrix3col", "checklist", "signature",
+  "likert", "matrix3x3", "matrix2x5", "matrixDynamic", "matrix3col", "checklist",
 ]);
 
 export function isSimpleField(field: FieldSpec): boolean {

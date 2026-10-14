@@ -87,7 +87,7 @@ export const trainings = {
   "trainings.photoDownloadFailed": "تعذّر تنزيل الصورة",
   "trainings.photoRemove": "حذف الصورة",
   "trainings.photoInvalid": "يُقبل حتى ٢٠ ميجابايت — تُضغط تلقائيًا إلى WebP",
-  "trainings.photoTooLarge": "حجم الصورة بعد الضغط يتجاوز ٢ ميجابايت",
+  "trainings.photoTooLarge": "حجم الصورة بعد الضغط يتجاوز ٤ ميجابايت",
   "trainings.photoTooLargeInput": "حجم الصورة الأصلي يتجاوز ٢٠ ميجابايت",
   "trainings.photoFailed": "فشل رفع الصورة",
   "trainings.pageSummary": "{count} جلسة · صفحة {page} من {totalPages}",

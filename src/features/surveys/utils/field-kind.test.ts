@@ -8,7 +8,7 @@ describe("field-kind (section-page classification)", () => {
     expect(isComplexField(CONSENT_SECTION.fields[0])).toBe(false);
   });
 
-  it("classifies likert/matrices/checklist/signature as complex (full-width blocks)", () => {
+  it("classifies likert/matrices/checklist as complex (full-width blocks)", () => {
     const axis = WIZARD_STEPS.find((s) => s.key === "orgManagement")!;
     expect(isComplexField(axis.fields[0])).toBe(true);
     expect(isSimpleField(axis.fields[0])).toBe(false);

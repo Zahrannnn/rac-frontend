@@ -12,7 +12,7 @@ import { downloadTrainingPhoto } from "../api/trainings-adapter";
 import { useTrainingPhotoMutations } from "../hooks/use-trainings";
 
 /** Training photo strip — originals up to 20MB are compressed client-side to
- * WebP (stored cap 2MB, the backend mirror) before upload. */
+ * WebP (stored cap 4MB, the backend mirror) before upload. */
 export function PhotosSection({
   trainingId,
   canEdit,

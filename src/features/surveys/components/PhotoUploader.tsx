@@ -12,7 +12,7 @@ import { photoUrl } from "../api/surveys-adapter";
 /**
  * Section-scoped photo uploader: camera capture on mobile, thumbnails with
  * delete. Originals up to 20MB are compressed client-side to WebP (stored
- * cap 2MB — the backend mirror); oversize/decode failures surface as toasts.
+ * cap 4MB — the backend mirror); oversize/decode failures surface as toasts.
  */
 export function PhotoUploader({
   surveyId,

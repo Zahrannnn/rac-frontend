@@ -38,7 +38,7 @@ export const equipment = {
   "equipment.photoRemoved": "تم حذف الصورة",
   "equipment.photoRemove": "حذف الصورة",
   "equipment.photoInvalid": "يُقبل حتى ٢٠ ميجابايت — تُضغط تلقائيًا إلى WebP",
-  "equipment.photoTooLarge": "حجم الصورة بعد الضغط يتجاوز ٢ ميجابايت",
+  "equipment.photoTooLarge": "حجم الصورة بعد الضغط يتجاوز ٤ ميجابايت",
   "equipment.photoTooLargeInput": "حجم الصورة الأصلي يتجاوز ٢٠ ميجابايت",
   "equipment.photoFailed": "فشل رفع الصورة",
   "equipment.pageSummary": "{count} تسليم · صفحة {page} من {totalPages}",

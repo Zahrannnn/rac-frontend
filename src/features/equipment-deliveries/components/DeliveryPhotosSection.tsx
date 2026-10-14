@@ -14,7 +14,7 @@ import type { DeliveryPhoto } from "../types";
 
 /** Photo strip of the delivery detail dialog — upload, download, remove.
  * The queries and mutations stay with the dialog; this is the UI over them.
- * Originals up to 20MB are compressed client-side to WebP (stored cap 2MB,
+ * Originals up to 20MB are compressed client-side to WebP (stored cap 4MB,
  * the backend mirror) before upload. */
 export function DeliveryPhotosSection({
   deliveryId,
