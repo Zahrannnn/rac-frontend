@@ -2,14 +2,7 @@
 
 import { CalendarClock, CalendarX2, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/shared/components/data-table/data-table";
 import { governorateLabel } from "@/shared/constants/egypt";
 import { useI18n, useT, type TranslationKey } from "@/shared/i18n";
 import { formatDateTimeUtc } from "@/shared/utils/datetime";
@@ -20,9 +13,6 @@ import type {
 } from "../types";
 import { KpiCard } from "./KpiCard";
 import { formatTrainerGain, formatTrainerScore } from "../utils/trainer-format";
-
-/** Navy shell shared by every header cell of the recent-sessions table. */
-const TABLE_HEAD_CLASS = "h-10 bg-[var(--navy-shell)] text-xs text-white";
 
 const RECENT_SESSIONS_LIMIT = 5;
 
@@ -87,6 +77,54 @@ export function TrainerDashboard({ summary }: { summary: TrainerDashboardSummary
       : `${formatTrainerScore(summary.avgPreScore)} → ${formatTrainerScore(summary.avgPostScore)}`;
 
   const recent = summary.recentSessions.slice(0, RECENT_SESSIONS_LIMIT);
+
+  // Client array (latest five) — newest first / busiest first on first toggle.
+  const recentColumns: DataTableColumn<TrainerSessionBrief>[] = [
+    {
+      key: "title",
+      header: t("trainings.sessionTitle"),
+      cell: (row) => (
+        <span className="block truncate font-medium text-[var(--navy)]">
+          {row.title || row.venue}
+        </span>
+      ),
+    },
+    {
+      key: "governorate",
+      header: t("trainings.governorate"),
+      cell: (row) => (
+        <span className="text-sm text-muted-foreground">
+          {governorateLabel(row.governorate, locale)}
+        </span>
+      ),
+    },
+    {
+      key: "venue",
+      header: t("trainings.venue"),
+      cell: (row) => <span className="text-sm text-muted-foreground">{row.venue}</span>,
+    },
+    {
+      key: "startAt",
+      header: t("trainings.startAt"),
+      cell: (row) => (
+        <span className="text-sm tabular-nums">{formatDateTimeUtc(row.startAtUtc)}</span>
+      ),
+      sortValue: (row) => row.startAtUtc,
+      sortDescFirst: true,
+    },
+    {
+      key: "status",
+      header: t("trainings.status"),
+      cell: (row) => <SessionStatusBadge status={row.status} />,
+    },
+    {
+      key: "attendees",
+      header: t("trainings.attendees"),
+      cell: (row) => <span className="text-sm tabular-nums">{row.attendeeCount}</span>,
+      sortValue: (row) => row.attendeeCount,
+      sortDescFirst: true,
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -154,52 +192,13 @@ export function TrainerDashboard({ summary }: { summary: TrainerDashboardSummary
             {t("dashboard.trainerRecent")}
           </h2>
         </div>
-        {recent.length === 0 ? (
-          <p className="rounded-lg border bg-card px-4 py-6 text-center text-sm text-muted-foreground">
-            {t("dashboard.trainerRecentEmpty")}
-          </p>
-        ) : (
-          <div className="overflow-x-auto rounded-lg border bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className={TABLE_HEAD_CLASS}>
-                    {t("trainings.sessionTitle")}
-                  </TableHead>
-                  <TableHead className={TABLE_HEAD_CLASS}>
-                    {t("trainings.governorate")}
-                  </TableHead>
-                  <TableHead className={TABLE_HEAD_CLASS}>{t("trainings.venue")}</TableHead>
-                  <TableHead className={TABLE_HEAD_CLASS}>{t("trainings.startAt")}</TableHead>
-                  <TableHead className={TABLE_HEAD_CLASS}>{t("trainings.status")}</TableHead>
-                  <TableHead className={TABLE_HEAD_CLASS}>{t("trainings.attendees")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recent.map((row: TrainerSessionBrief) => (
-                  <TableRow key={row.id} className="h-12">
-                    <TableCell>
-                      <span className="block truncate font-medium text-[var(--navy)]">
-                        {row.title || row.venue}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {governorateLabel(row.governorate, locale)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{row.venue}</TableCell>
-                    <TableCell className="text-sm tabular-nums">
-                      {formatDateTimeUtc(row.startAtUtc)}
-                    </TableCell>
-                    <TableCell>
-                      <SessionStatusBadge status={row.status} />
-                    </TableCell>
-                    <TableCell className="tabular-nums text-sm">{row.attendeeCount}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+        <DataTable<TrainerSessionBrief>
+          columns={recentColumns}
+          data={recent}
+          getRowId={(row) => row.id}
+          ariaLabel={t("dashboard.trainerRecent")}
+          emptyState={{ title: t("dashboard.trainerRecentEmpty") }}
+        />
       </section>
     </div>
   );

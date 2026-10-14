@@ -2,14 +2,7 @@
 
 import { FileSearch } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/shared/components/data-table/data-table";
 import { useI18n, useT } from "@/shared/i18n";
 import { governorateLabel } from "@/shared/constants/egypt";
 import type { SelectionRunRankedRow } from "../types";
@@ -34,6 +27,8 @@ export function TierBadge({ tier }: { tier: string }) {
 /**
  * One tier of a frozen run snapshot — every row opens the live scorecard dialog
  * (the traceability view). Rows are 48px with tabular figures per DESIGN.md.
+ * Rank order IS the content: only the workshop name is client-sortable; rank,
+ * score and tier keep the server's ranking order.
  */
 export function RunRankingTable({
   rows,
@@ -45,79 +40,73 @@ export function RunRankingTable({
   const t = useT();
   const { locale } = useI18n();
 
-  if (rows.length === 0) {
-    return (
-      <p className="py-8 text-center text-sm text-muted-foreground">
-        {t("selection.runs.emptyTier")}
-      </p>
-    );
-  }
+  const columns: DataTableColumn<SelectionRunRankedRow>[] = [
+    {
+      key: "rank",
+      header: t("selection.rank"),
+      cell: (row) => <span className="tabular-nums font-semibold">#{row.rank}</span>,
+    },
+    {
+      key: "workshop",
+      header: t("selection.workshop"),
+      sortValue: (row) => row.workshopName,
+      cell: (row) => (
+        <>
+          <span className="block truncate font-medium">{row.workshopName}</span>
+          <span className="block font-mono text-xs text-primary">{row.workshopCode}</span>
+        </>
+      ),
+    },
+    {
+      key: "governorate",
+      header: t("selection.governorate"),
+      className: "text-sm text-muted-foreground",
+      cell: (row) => governorateLabel(row.governorate, locale),
+    },
+    {
+      key: "score",
+      header: t("selection.score"),
+      className: "tabular-nums font-bold text-primary",
+      cell: (row) => row.totalScore.toLocaleString("en-US"),
+    },
+    {
+      key: "tier",
+      header: t("selection.tier"),
+      cell: (row) => <TierBadge tier={row.tier} />,
+    },
+    {
+      key: "scorecard",
+      header: "",
+      headerClassName: "w-24",
+      cell: (row) => (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() =>
+            onOpenScorecard({
+              id: row.workshopId,
+              label: `${row.workshopCode} — ${row.workshopName}`,
+            })
+          }
+          title={t("selection.scorecard.title")}
+        >
+          <FileSearch className="h-4 w-4" aria-hidden />
+          <span className="sr-only">
+            {t("selection.scorecard.openFor", { name: row.workshopName })}
+          </span>
+        </Button>
+      ),
+    },
+  ];
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="h-10 bg-[var(--navy-shell)] text-xs text-white">
-              {t("selection.rank")}
-            </TableHead>
-            <TableHead className="h-10 bg-[var(--navy-shell)] text-xs text-white">
-              {t("selection.workshop")}
-            </TableHead>
-            <TableHead className="h-10 bg-[var(--navy-shell)] text-xs text-white">
-              {t("selection.governorate")}
-            </TableHead>
-            <TableHead className="h-10 bg-[var(--navy-shell)] text-xs text-white">
-              {t("selection.score")}
-            </TableHead>
-            <TableHead className="h-10 bg-[var(--navy-shell)] text-xs text-white">
-              {t("selection.tier")}
-            </TableHead>
-            <TableHead className="h-10 w-24 bg-[var(--navy-shell)] text-xs text-white">
-              <span className="sr-only">{t("selection.scorecard.title")}</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.workshopId} className="h-12">
-              <TableCell className="tabular-nums font-semibold">#{row.rank}</TableCell>
-              <TableCell>
-                <span className="block truncate font-medium">{row.workshopName}</span>
-                <span className="block font-mono text-xs text-primary">{row.workshopCode}</span>
-              </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {governorateLabel(row.governorate, locale)}
-              </TableCell>
-              <TableCell className="tabular-nums font-bold text-primary">
-                {row.totalScore.toLocaleString("en-US")}
-              </TableCell>
-              <TableCell>
-                <TierBadge tier={row.tier} />
-              </TableCell>
-              <TableCell>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    onOpenScorecard({
-                      id: row.workshopId,
-                      label: `${row.workshopCode} — ${row.workshopName}`,
-                    })
-                  }
-                  title={t("selection.scorecard.title")}
-                >
-                  <FileSearch className="h-4 w-4" aria-hidden />
-                  <span className="sr-only">
-                    {t("selection.scorecard.openFor", { name: row.workshopName })}
-                  </span>
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      columns={columns}
+      data={rows}
+      getRowId={(row) => row.workshopId}
+      ariaLabel={t("selection.runs.rankedTitle")}
+      emptyState={{ title: t("selection.runs.emptyTier") }}
+    />
   );
 }

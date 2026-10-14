@@ -11,18 +11,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/shared/components/data-table/data-table";
 import { useI18n, useT } from "@/shared/i18n";
 import { QueryErrorState } from "@/shared/components/query-states";
 import { useScorecard } from "../hooks/use-selection";
-import type { RubricKind } from "../types";
+import type { RubricKind, ScorecardCriterion } from "../types";
 import { formatUtc } from "../utils/datetime";
 import { bandLabel, criterionLabel } from "../utils/rubric";
 
@@ -51,6 +44,49 @@ export function ScorecardDialog({
   const status = (error as { status?: number } | null)?.status;
   const notScorable = isError && status === 409;
   const notFound = isError && status === 404;
+
+  // Rubric order is the traceability contract (ADR-0004) — no sorting.
+  const columns: DataTableColumn<ScorecardCriterion>[] = [
+    {
+      key: "criterion",
+      header: t("selection.scorecard.criterion"),
+      className: "font-medium",
+      cell: (criterion) => t(criterionLabel(criterion.labelKey)),
+    },
+    {
+      key: "rawAnswer",
+      header: t("selection.scorecard.rawAnswer"),
+      className: "max-w-[12rem]",
+      cell: (criterion) =>
+        criterion.source.displayValue ? (
+          <code
+            dir="ltr"
+            className="block truncate rounded bg-muted px-1.5 py-0.5 font-mono text-xs"
+          >
+            {criterion.source.displayValue}
+          </code>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        ),
+    },
+    {
+      key: "band",
+      header: t("selection.scorecard.band"),
+      className: "text-sm",
+      cell: (criterion) => t(bandLabel(criterion.bandLabelKey)),
+    },
+    {
+      key: "points",
+      header: t("selection.scorecard.points"),
+      headerClassName: "w-24",
+      className: "tabular-nums font-semibold text-[var(--navy)]",
+      cell: (criterion) => (
+        <span dir="ltr">
+          {criterion.points} / {criterion.maxPoints}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <Dialog open={Boolean(workshopId)} onOpenChange={onOpenChange}>
@@ -92,53 +128,13 @@ export function ScorecardDialog({
           ) : isError ? (
             <QueryErrorState onRetry={() => refetch()} />
           ) : data ? (
-            <div className="overflow-x-auto rounded-lg border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="h-10 bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white">
-                      {t("selection.scorecard.criterion")}
-                    </TableHead>
-                    <TableHead className="h-10 bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white">
-                      {t("selection.scorecard.rawAnswer")}
-                    </TableHead>
-                    <TableHead className="h-10 bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white">
-                      {t("selection.scorecard.band")}
-                    </TableHead>
-                    <TableHead className="h-10 w-24 bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white">
-                      {t("selection.scorecard.points")}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.criteria.map((criterion) => (
-                    <TableRow key={criterion.key} className="h-12">
-                      <TableCell className="font-medium">
-                        {t(criterionLabel(criterion.labelKey))}
-                      </TableCell>
-                      <TableCell className="max-w-[12rem]">
-                        {criterion.source.displayValue ? (
-                          <code
-                            dir="ltr"
-                            className="block truncate rounded bg-muted px-1.5 py-0.5 font-mono text-xs"
-                          >
-                            {criterion.source.displayValue}
-                          </code>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {t(bandLabel(criterion.bandLabelKey))}
-                      </TableCell>
-                      <TableCell className="tabular-nums font-semibold text-[var(--navy)]" dir="ltr">
-                        {criterion.points} / {criterion.maxPoints}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <DataTable
+              columns={columns}
+              data={data.criteria}
+              getRowId={(criterion) => criterion.key}
+              ariaLabel={t("selection.scorecard.title")}
+              density="compact"
+            />
           ) : null}
         </DialogBody>
 

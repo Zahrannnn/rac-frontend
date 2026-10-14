@@ -4,7 +4,7 @@ import { totalPagesOf } from "@/shared/utils/pagination";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { ChevronRight, Plus, Search, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,52 +25,7 @@ import { useAuth, can } from "@/features/auth";
 import { useTechnicians } from "../hooks/use-technicians";
 import type { Technician, TechnicianListFilters } from "../types";
 import { TechnicianDialog } from "./TechnicianDialog";
-import { TechnicianStatusBadge } from "./TechnicianStatusBadge";
 import { TechniciansTable } from "./TechniciansTable";
-
-function TechnicianMobileCard({
-  technician,
-  onOpen,
-}: {
-  technician: Technician;
-  onOpen: () => void;
-}) {
-  const t = useT();
-  const title = technician.fullNameAr || technician.fullName;
-
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="flex w-full flex-col gap-3 rounded-lg border bg-card p-4 text-start transition-colors duration-150 hover:bg-[var(--row-selected)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate font-semibold text-[var(--navy)]">{title}</p>
-          {technician.specialty ? (
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">{technician.specialty}</p>
-          ) : null}
-        </div>
-        <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[var(--secondary)] rtl:rotate-180" />
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <TechnicianStatusBadge status={technician.status} />
-        <span className="rounded-md bg-[var(--navy-shell)] px-2 py-0.5 font-mono text-[0.65rem] font-semibold text-white">
-          {technician.workshopCode}
-        </span>
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span className="tabular-nums" dir="ltr">
-          {technician.mobile ?? "—"}
-        </span>
-        <span className="tabular-nums">
-          {t("technicians.yearsShort", { count: technician.yearsOfExperience })}
-        </span>
-      </div>
-      <span className="sr-only">{t("technicians.openTechnician")}</span>
-    </button>
-  );
-}
 
 export function TechniciansPage() {
   const router = useRouter();
@@ -197,17 +152,6 @@ export function TechniciansPage() {
       ) : data ? (
         <>
           <div className={cn(isPlaceholderData && "opacity-60")}>
-            <ul className="flex flex-col gap-3 md:hidden">
-              {data.items.map((technician) => (
-                <li key={technician.id}>
-                  <TechnicianMobileCard
-                    technician={technician}
-                    onOpen={() => openProfile(technician)}
-                  />
-                </li>
-              ))}
-            </ul>
-
             <TechniciansTable technicians={data.items} onOpen={openProfile} />
           </div>
 

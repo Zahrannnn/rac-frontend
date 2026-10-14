@@ -1,18 +1,11 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Pencil, Trash2, Users } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Section } from "@/shared/components/section";
+import { DataTable, type DataTableColumn } from "@/shared/components/data-table/data-table";
 import { useT } from "@/shared/i18n";
 import { cn } from "@/shared/utils/cn";
 import { useAttendeeMutations } from "../hooks/use-trainings";
@@ -20,9 +13,6 @@ import type { TrainingAttendee } from "../types";
 import { AttendeePicker } from "./AttendeePicker";
 import { AttendeeRemoveDialog } from "./AttendeeRemoveDialog";
 import { AttendeeScoresDialog } from "./AttendeeScoresDialog";
-
-/** Navy shell shared by every header cell of the attendees table. */
-const TABLE_HEAD_CLASS = "h-10 bg-[var(--navy-shell)] text-xs text-white";
 
 /** How long a freshly added participant row stays tinted. */
 const HIGHLIGHT_MS = 2400;
@@ -91,6 +81,66 @@ export function AttendeesSection({
     });
   };
 
+  // Client array — the full attendee list is sortable in place. Scores read
+  // best highest-first; missing scores sort as -1 so they sink.
+  const columns: DataTableColumn<TrainingAttendee>[] = [
+    {
+      key: "technician",
+      header: t("trainings.technician"),
+      cell: (row) => <span className="font-medium">{row.technicianName}</span>,
+      sortValue: (row) => row.technicianName,
+    },
+    {
+      key: "preScore",
+      header: t("trainings.preScore"),
+      cell: (row) => <span className="tabular-nums">{row.preScore ?? "—"}</span>,
+      sortValue: (row) => row.preScore ?? -1,
+      sortDescFirst: true,
+    },
+    {
+      key: "postScore",
+      header: t("trainings.postScore"),
+      cell: (row) => <span className="tabular-nums">{row.postScore ?? "—"}</span>,
+      sortValue: (row) => row.postScore ?? -1,
+      sortDescFirst: true,
+    },
+  ];
+
+  const actionButtons = (row: TrainingAttendee) => (
+    <div className="flex gap-1">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="max-sm:size-10"
+        onClick={() => setEditing(row)}
+        aria-label={t("trainings.editScores")}
+      >
+        <Pencil className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="text-destructive max-sm:size-10"
+        onClick={() => setPendingRemove(row)}
+        aria-label={t("trainings.removeAttendee")}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+
+  if (canEdit) {
+    columns.push({
+      key: "actions",
+      header: t("trainings.rowActions"),
+      headerClassName: "sr-only",
+      className: "w-24",
+      cell: actionButtons,
+    });
+  }
+
   return (
     <Section
       className="gap-4"
@@ -114,84 +164,37 @@ export function AttendeesSection({
         />
       ) : null}
 
-      {attendees.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed px-6 py-10 text-center">
-          <Users className="size-7 text-muted-foreground" aria-hidden />
-          <p className="font-medium text-[var(--navy)]">{t("trainings.attendeesEmpty")}</p>
-          {canEdit ? (
-            <p className="max-w-[44ch] text-sm text-muted-foreground">
-              {t("trainings.attendeesEmptyHint")}
+      <DataTable<TrainingAttendee>
+        columns={columns}
+        data={attendees}
+        getRowId={(row) => row.id}
+        ariaLabel={t("trainings.participants")}
+        emptyState={
+          canEdit
+            ? { title: t("trainings.attendeesEmpty"), hint: t("trainings.attendeesEmptyHint") }
+            : { title: t("trainings.attendeesEmpty") }
+        }
+        rowClassName={(row) =>
+          highlighted.has(row.technicianId) ? "bg-[var(--accent)]" : undefined
+        }
+        mobileCard={(row) => (
+          <div
+            className={cn(
+              "rounded-lg border px-3 py-2.5",
+              highlighted.has(row.technicianId) && "bg-[var(--accent)]"
+            )}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-medium">{row.technicianName}</span>
+              {canEdit ? actionButtons(row) : null}
+            </div>
+            <p className="pt-1 text-xs tabular-nums text-muted-foreground">
+              {t("trainings.preScoreShort")}: {row.preScore ?? "—"} ·{" "}
+              {t("trainings.postScoreShort")}: {row.postScore ?? "—"}
             </p>
-          ) : null}
-        </div>
-      ) : (
-        <div className="rounded-lg border max-sm:border-0">
-          <Table className="max-sm:block">
-            <TableHeader className="max-sm:sr-only">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className={TABLE_HEAD_CLASS}>{t("trainings.technician")}</TableHead>
-                <TableHead className={TABLE_HEAD_CLASS}>{t("trainings.preScore")}</TableHead>
-                <TableHead className={TABLE_HEAD_CLASS}>{t("trainings.postScore")}</TableHead>
-                {canEdit ? (
-                  <TableHead className={`${TABLE_HEAD_CLASS} w-24`}>
-                    <span className="sr-only">{t("trainings.rowActions")}</span>
-                  </TableHead>
-                ) : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody className="max-sm:flex max-sm:flex-col max-sm:gap-2">
-              {attendees.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className={cn(
-                    "h-12 transition-colors duration-700 motion-reduce:transition-none",
-                    "max-sm:grid max-sm:h-auto max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:rounded-lg max-sm:border max-sm:px-3 max-sm:py-2.5",
-                    highlighted.has(row.technicianId) && "bg-[var(--accent)]"
-                  )}
-                >
-                  <TableCell className="font-medium max-sm:col-span-1 max-sm:p-0">
-                    {row.technicianName}
-                  </TableCell>
-                  <TableCell className="tabular-nums max-sm:col-start-1 max-sm:p-0 max-sm:pt-1 max-sm:text-xs max-sm:text-muted-foreground">
-                    <span className="sm:hidden">{t("trainings.preScoreShort")}: </span>
-                    {row.preScore ?? "—"}
-                  </TableCell>
-                  <TableCell className="tabular-nums max-sm:col-start-1 max-sm:p-0 max-sm:text-xs max-sm:text-muted-foreground">
-                    <span className="sm:hidden">{t("trainings.postScoreShort")}: </span>
-                    {row.postScore ?? "—"}
-                  </TableCell>
-                  {canEdit ? (
-                    <TableCell className="max-sm:col-start-2 max-sm:row-span-3 max-sm:row-start-1 max-sm:self-center max-sm:p-0">
-                      <div className="flex gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="max-sm:size-10"
-                          onClick={() => setEditing(row)}
-                          aria-label={t("trainings.editScores")}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive max-sm:size-10"
-                          onClick={() => setPendingRemove(row)}
-                          aria-label={t("trainings.removeAttendee")}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  ) : null}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+          </div>
+        )}
+      />
 
       {canEdit ? (
         <>

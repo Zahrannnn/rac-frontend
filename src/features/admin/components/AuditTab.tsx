@@ -30,19 +30,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ListPagination } from "@/shared/components/list-pagination";
+import { DataTable, type DataTableColumn } from "@/shared/components/data-table/data-table";
 import { useT } from "@/shared/i18n";
 import { cn } from "@/shared/utils/cn";
 import { formatDateTimeUtc } from "@/shared/utils/datetime";
 import { AdminSurfaceHeader } from "./AdminSurfaceHeader";
-import { QueryErrorState, SkeletonRows } from "@/shared/components/query-states";
-import { EmptyState, TABLE_HEAD_CLASS } from "./query-states";
 import { useAuditLogs } from "../hooks/use-admin";
 import { AUDIT_ACTIONS, type AuditAction, type AuditFilters, type AuditLogEntry } from "../types";
 import { auditFiltersToQuery, parseAuditFilters } from "../utils/audit-filters";
 import { parseChanges, summarizeChanges } from "../utils/audit-changes";
-
-/** Navy band shared by the audit-table headers; widths are appended per column. */
 
 function ActionBadge({ action }: { action: AuditAction }) {
   const t = useT();
@@ -255,66 +251,6 @@ function AuditFiltersPanel({
   );
 }
 
-/** The audit grid — presentation only; row activation is delegated to the tab. */
-function AuditTable({
-  entries,
-  onSelect,
-}: {
-  entries: AuditLogEntry[];
-  onSelect: (entry: AuditLogEntry) => void;
-}) {
-  const t = useT();
-
-  return (
-    <Table className="table-fixed">
-      <TableHeader>
-        <TableRow className="hover:bg-transparent">
-          <TableHead className={`${TABLE_HEAD_CLASS} w-40`}>{t("admin.audit.at")}</TableHead>
-          <TableHead className={`${TABLE_HEAD_CLASS} w-32`}>{t("admin.audit.user")}</TableHead>
-          <TableHead className={`${TABLE_HEAD_CLASS} w-24`}>{t("admin.audit.action")}</TableHead>
-          <TableHead className={`${TABLE_HEAD_CLASS} w-40`}>{t("admin.audit.entity")}</TableHead>
-          <TableHead className={TABLE_HEAD_CLASS}>{t("admin.audit.changes")}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {entries.map((entry) => (
-          <TableRow
-            key={entry.id}
-            tabIndex={0}
-            className="h-12 cursor-pointer hover:bg-[var(--row-selected)] focus-visible:bg-[var(--row-selected)]"
-            onClick={() => onSelect(entry)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onSelect(entry);
-              }
-            }}
-          >
-            <TableCell className="text-sm tabular-nums" dir="ltr">
-              {formatDateTimeUtc(entry.atUtc)}
-            </TableCell>
-            <TableCell className="truncate font-mono text-xs font-semibold text-[var(--navy)]">
-              {entry.username ?? "—"}
-            </TableCell>
-            <TableCell>
-              <ActionBadge action={entry.action} />
-            </TableCell>
-            <TableCell>
-              <span className="block truncate text-sm font-medium">{entry.entityName}</span>
-              <span className="block truncate font-mono text-[0.65rem] text-muted-foreground" dir="ltr">
-                {entry.entityId}
-              </span>
-            </TableCell>
-            <TableCell className="truncate font-mono text-xs text-muted-foreground">
-              {summarizeChanges(parseChanges(entry.action, entry.changes))}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
-
 export function AuditTab() {
   const t = useT();
   const router = useRouter();
@@ -337,6 +273,58 @@ export function AuditTab() {
   const [detail, setDetail] = useState<AuditLogEntry | null>(null);
   const totalPages = data ? totalPagesOf(data.totalCount, data.pageSize) : 1;
 
+  // Chronological server order (older/newer paging) — no client sortValue.
+  const columns: DataTableColumn<AuditLogEntry>[] = [
+    {
+      key: "at",
+      header: t("admin.audit.at"),
+      headerClassName: "w-40",
+      className: "text-sm tabular-nums",
+      cell: (entry) => <span dir="ltr">{formatDateTimeUtc(entry.atUtc)}</span>,
+    },
+    {
+      key: "user",
+      header: t("admin.audit.user"),
+      headerClassName: "w-32",
+      cell: (entry) => (
+        <span className="block truncate font-mono text-xs font-semibold text-[var(--navy)]">
+          {entry.username ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "action",
+      header: t("admin.audit.action"),
+      headerClassName: "w-24",
+      cell: (entry) => <ActionBadge action={entry.action} />,
+    },
+    {
+      key: "entity",
+      header: t("admin.audit.entity"),
+      headerClassName: "w-40",
+      cell: (entry) => (
+        <>
+          <span className="block truncate text-sm font-medium">{entry.entityName}</span>
+          <span
+            className="block truncate font-mono text-[0.65rem] text-muted-foreground"
+            dir="ltr"
+          >
+            {entry.entityId}
+          </span>
+        </>
+      ),
+    },
+    {
+      key: "changes",
+      header: t("admin.audit.changes"),
+      cell: (entry) => (
+        <span className="block truncate font-mono text-xs text-muted-foreground">
+          {summarizeChanges(parseChanges(entry.action, entry.changes))}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       <AdminSurfaceHeader
@@ -346,34 +334,32 @@ export function AuditTab() {
 
       <AuditFiltersPanel filters={filters} onFiltersChange={onFiltersChange} />
 
-      {isPending ? (
-        <SkeletonRows count={6} className="h-11 w-full rounded-lg" />
-      ) : isError ? (
-        <QueryErrorState onRetry={() => refetch()} className="rounded-lg border bg-card p-6" />
-      ) : data && data.items.length === 0 ? (
-        <EmptyState message={t("admin.audit.empty")} />
-      ) : data ? (
-        <>
-          <div className={cn("overflow-x-auto rounded-lg border bg-card", isPlaceholderData && "opacity-60")}>
-            <AuditTable entries={data.items} onSelect={setDetail} />
-          </div>
-
-          <ListPagination
-            page={filters.page}
-            totalPages={totalPages}
-            onPageChange={(page) => onFiltersChange({ ...filters, page })}
-            disabled={isPlaceholderData}
-            labels={{
-              summary: `${t("admin.audit.totalCount", { count: data.totalCount })} · ${t(
-                "workshops.pageOf",
-                { page: data.page, total: totalPages }
-              )}`,
-              previous: t("workshops.prevPage"),
-              next: t("workshops.nextPage"),
-            }}
-          />
-        </>
-      ) : null}
+      <DataTable
+        className={cn(isPlaceholderData && "opacity-60")}
+        columns={columns}
+        data={data?.items}
+        getRowId={(entry) => entry.id}
+        ariaLabel={t("admin.tabAudit")}
+        onRowClick={setDetail}
+        isLoading={isPending}
+        error={isError}
+        onRetry={() => refetch()}
+        emptyState={{ title: t("admin.audit.empty") }}
+        pagination={
+          data
+            ? {
+                page: filters.page,
+                totalPages,
+                onPageChange: (page) => onFiltersChange({ ...filters, page }),
+                summary: `${t("admin.audit.totalCount", { count: data.totalCount })} · ${t(
+                  "workshops.pageOf",
+                  { page: data.page, total: totalPages }
+                )}`,
+                disabled: isPlaceholderData,
+              }
+            : undefined
+        }
+      />
 
       <AuditDetailDialog entry={detail} onOpenChange={(open) => !open && setDetail(null)} />
     </div>

@@ -1,14 +1,7 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/shared/components/data-table/data-table";
 import { useT } from "@/shared/i18n";
 import { cn } from "@/shared/utils/cn";
 import type { Workshop, WorkshopSurvey } from "@/features/workshops/types";
@@ -71,100 +64,101 @@ export function SurveyQueue({
 }) {
   const t = useT();
 
-  return (
-    <>
-      <ul className="flex flex-col gap-3 md:hidden">
-        {rows.map((workshop) => {
-          const entry = surveysMap.get(workshop.id);
-          return (
-            <li key={workshop.id}>
-              <SurveyMobileCard
-                workshop={workshop}
-                survey={entry?.survey ?? null}
-                surveyPending={entry?.isPending ?? false}
-                onOpen={() => openWizard(workshop.id)}
-              />
-            </li>
-          );
-        })}
-      </ul>
+  // Server-paged (rides on the workshops list) — fixed API order, no client sorting.
+  const columns: DataTableColumn<Workshop>[] = [
+    {
+      key: "code",
+      header: t("survey.workshopCode"),
+      className: "w-[8.5rem]",
+      cell: (workshop) => (
+        <span className="rounded-md bg-[var(--navy-shell)] px-2 py-1 font-mono text-[0.65rem] font-semibold text-white">
+          {workshop.code}
+        </span>
+      ),
+    },
+    {
+      key: "name",
+      header: t("workshops.colName"),
+      cell: (workshop) => (
+        <span className="block font-medium text-[var(--navy)]">
+          {workshop.nameAr || workshop.nameEn}
+        </span>
+      ),
+    },
+    {
+      key: "governorate",
+      header: t("workshops.colGovernorate"),
+      className: "w-[8rem]",
+      cell: (workshop) => (
+        <span className="text-sm text-muted-foreground">{workshop.governorate}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: t("survey.statusFilter"),
+      className: "w-[7.5rem]",
+      cell: (workshop) => {
+        const entry = surveysMap.get(workshop.id);
+        return (
+          <SurveyStatusSlot
+            survey={entry?.survey ?? null}
+            surveyPending={entry?.isPending ?? false}
+          />
+        );
+      },
+    },
+    {
+      key: "photos",
+      header: t("survey.photoCount"),
+      className: "w-[5rem]",
+      cell: (workshop) => {
+        const survey = surveysMap.get(workshop.id)?.survey ?? null;
+        return (
+          <span className="tabular-nums font-semibold text-[var(--navy)]">
+            {survey ? survey.photoCount : "—"}
+          </span>
+        );
+      },
+    },
+    {
+      key: "action",
+      header: t("survey.action"),
+      className: "w-[7rem]",
+      cell: (workshop) => {
+        const survey = surveysMap.get(workshop.id)?.survey ?? null;
+        return (
+          <span
+            className={cn(
+              "text-xs font-semibold",
+              survey?.status === "Incomplete" ? "text-[#8a5a14]" : "text-primary"
+            )}
+          >
+            {t(surveyActionLabelKey(survey))}
+          </span>
+        );
+      },
+    },
+  ];
 
-      <div className="hidden rounded-lg border bg-card md:block">
-        <Table className="table-fixed">
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="h-11 w-[8.5rem] bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white">
-                {t("survey.workshopCode")}
-              </TableHead>
-              <TableHead className="h-11 bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white">
-                {t("workshops.colName")}
-              </TableHead>
-              <TableHead className="h-11 w-[8rem] bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white">
-                {t("workshops.colGovernorate")}
-              </TableHead>
-              <TableHead className="h-11 w-[7.5rem] bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white">
-                {t("survey.statusFilter")}
-              </TableHead>
-              <TableHead className="h-11 w-[5rem] bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white">
-                {t("survey.photoCount")}
-              </TableHead>
-              <TableHead className="h-11 w-[7rem] bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white">
-                {t("survey.action")}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((workshop) => {
-              const entry = surveysMap.get(workshop.id);
-              const survey = entry?.survey ?? null;
-              return (
-                <TableRow
-                  key={workshop.id}
-                  tabIndex={0}
-                  className="h-12 cursor-pointer focus-visible:bg-[var(--row-selected)]"
-                  onClick={() => openWizard(workshop.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openWizard(workshop.id);
-                    }
-                  }}
-                >
-                  <TableCell>
-                    <span className="rounded-md bg-[var(--navy-shell)] px-2 py-1 font-mono text-[0.65rem] font-semibold text-white">
-                      {workshop.code}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="block font-medium text-[var(--navy)]">
-                      {workshop.nameAr || workshop.nameEn}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {workshop.governorate}
-                  </TableCell>
-                  <TableCell>
-                    <SurveyStatusSlot survey={survey} surveyPending={entry?.isPending ?? false} />
-                  </TableCell>
-                  <TableCell className="tabular-nums font-semibold text-[var(--navy)]">
-                    {survey ? survey.photoCount : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        "text-xs font-semibold",
-                        survey?.status === "Incomplete" ? "text-[#8a5a14]" : "text-primary"
-                      )}
-                    >
-                      {t(surveyActionLabelKey(survey))}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
-    </>
+  return (
+    <DataTable
+      columns={columns}
+      data={rows}
+      getRowId={(workshop) => workshop.id}
+      ariaLabel={t("survey.queueTitle")}
+      onRowClick={(workshop) => openWizard(workshop.id)}
+      emptyState={{ title: t("survey.queueEmpty"), hint: t("survey.queueEmptyHint") }}
+      mobileCard={(workshop) => {
+        const entry = surveysMap.get(workshop.id);
+        return (
+          <SurveyMobileCard
+            workshop={workshop}
+            survey={entry?.survey ?? null}
+            surveyPending={entry?.isPending ?? false}
+            onOpen={() => openWizard(workshop.id)}
+          />
+        );
+      }}
+    />
   );
 }

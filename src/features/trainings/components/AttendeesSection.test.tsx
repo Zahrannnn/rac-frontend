@@ -282,6 +282,31 @@ describe("AttendeePicker adding", () => {
 });
 
 describe("AttendeesSection list", () => {
+  it("renders the shared participants table and sorts by technician name", () => {
+    renderSection([
+      {
+        ...attendee,
+        id: "a-2",
+        technicianId: "t-9",
+        technicianName: "محمد علي",
+        preScore: 40,
+        postScore: 55,
+      },
+      attendee,
+    ]);
+
+    const table = screen.getByRole("table", { name: "المشاركون" });
+    expect(table).toBeInTheDocument();
+
+    // Client-side sort over the full attendee list: string column is asc-first,
+    // so one click puts أحمد (U+0623) before محمد (U+0645).
+    fireEvent.click(screen.getByRole("button", { name: "الفني" }));
+    const rows = within(table).getAllByRole("row").slice(1);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent("أحمد سمير");
+    expect(rows[1]).toHaveTextContent("محمد علي");
+  });
+
   it("teaches the empty state", () => {
     renderSection([]);
     expect(screen.getByText("لا يوجد حضور بعد")).toBeInTheDocument();
@@ -293,7 +318,8 @@ describe("AttendeesSection list", () => {
   it("edits a row's scores through the PUT endpoint", async () => {
     renderSection();
 
-    fireEvent.click(screen.getByRole("button", { name: "تعديل الدرجات" }));
+    // The actions render in both the mobile card and the table row.
+    fireEvent.click(screen.getAllByRole("button", { name: "تعديل الدرجات" })[0]);
     await flush();
 
     fireEvent.change(screen.getByLabelText("درجة ما قبل التدريب"), {
@@ -311,7 +337,7 @@ describe("AttendeesSection list", () => {
   it("removes an attendee only after the confirmation dialog", async () => {
     renderSection();
 
-    fireEvent.click(screen.getByRole("button", { name: "إزالة حضور" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "إزالة حضور" })[0]);
     expect(screen.getByText("إزالة أحمد سمير من قائمة الحضور؟")).toBeInTheDocument();
     expect(removeAttendeeMock).not.toHaveBeenCalled();
 

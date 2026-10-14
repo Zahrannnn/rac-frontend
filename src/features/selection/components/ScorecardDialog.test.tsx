@@ -108,6 +108,21 @@ describe("ScorecardDialog", () => {
     expect(screen.getByText("participation-v1")).toBeInTheDocument();
   });
 
+  it("renders the criteria as the scorecard table in fixed rubric order — no sorting", () => {
+    useScorecardMock.mockReturnValue({
+      data: scorecard,
+      isPending: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+    renderDialog();
+
+    expect(screen.getByRole("table", { name: "بطاقة التقييم الآلي" })).toBeInTheDocument();
+    // The rubric order is the traceability contract — headers carry no sort controls.
+    expect(screen.queryByRole("button", { name: "المعيار" })).not.toBeInTheDocument();
+  });
+
   it("shows the need-inverted hint for equipment scorecards only", () => {
     useScorecardMock.mockReturnValue({
       data: { ...scorecard, kind: "equipment", rubricVersion: "equipment-v1" },

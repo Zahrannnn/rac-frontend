@@ -125,10 +125,12 @@ describe("EquipmentDeliveriesPage", () => {
       refetch: refetchMock,
     });
 
-    const { container } = renderPage();
+    renderPage();
 
-    expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
-    expect(container.querySelectorAll(".animate-pulse")).toHaveLength(5);
+    const table = screen.getByRole("table", { name: "تسليم المعدات" });
+    expect(table).toHaveAttribute("aria-busy", "true");
+    expect(screen.getAllByRole("row")).toHaveLength(6); // header + 5 skeletons
+    expect(screen.queryByText("MAC-CAR-000125")).not.toBeInTheDocument();
   });
 
   it("renders the retryable error state when the query fails", async () => {
@@ -181,6 +183,9 @@ describe("EquipmentDeliveriesPage", () => {
   it("renders delivery rows with workshop identity and the delete icon action", async () => {
     renderPage();
 
+    expect(screen.getByRole("table", { name: "تسليم المعدات" })).toBeInTheDocument();
+    // Server-paged list — headers carry no client sort controls.
+    expect(screen.queryByRole("button", { name: "الورشة" })).not.toBeInTheDocument();
     expect(await screen.findByText("MAC-CAR-000125")).toBeInTheDocument();
     expect(screen.getByText("ورشة النصر للتبريد")).toBeInTheDocument();
     expect(screen.getByText("ماكينة استرجاع وسيط التبريد")).toBeInTheDocument();

@@ -17,17 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { PageHeader } from "@/shared/components/layout/page-header";
-import { ListPagination } from "@/shared/components/list-pagination";
+import {
+  DataTable,
+  type DataTableColumn,
+} from "@/shared/components/data-table/data-table";
 import { GOVERNORATES } from "@/shared/constants/egypt";
 import { useI18n, useT } from "@/shared/i18n";
 import { cn } from "@/shared/utils/cn";
@@ -37,10 +31,6 @@ import { useWorkshops } from "../hooks/use-workshops";
 import { filtersToSearchParams, parseWorkshopFilters } from "../utils/filter-state";
 import { formatDateUtc, governorateLabel, workshopDisplayName } from "../utils/format";
 import { LIFECYCLE_ORDER, type Workshop, type WorkshopListFilters, type WorkshopStatus } from "../types";
-
-/** Navy shell shared by every header cell of the list table. */
-const TABLE_HEAD_CLASS =
-  "h-11 bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white";
 
 function WorkshopMobileCard({
   workshop,
@@ -147,6 +137,61 @@ export function WorkshopsPage() {
     router.push(`/workshops/${id}` as Route);
   }
 
+  // Server-paged registry: the API fixes the row order, so no sortValue —
+  // sorting one page would mislead.
+  const columns: DataTableColumn<Workshop>[] = [
+    {
+      key: "code",
+      header: t("workshops.colCode"),
+      className: "w-[9.5rem]",
+      cell: (workshop) => (
+        <span className="font-mono text-xs font-semibold text-primary">{workshop.code}</span>
+      ),
+    },
+    {
+      key: "name",
+      header: t("workshops.colName"),
+      cell: (workshop) => (
+        <>
+          <span className="block font-medium text-[var(--navy)]">
+            {workshopDisplayName(workshop)}
+          </span>
+          {workshop.nameAr ? (
+            <span className="block text-xs text-muted-foreground">{workshop.nameEn}</span>
+          ) : null}
+        </>
+      ),
+    },
+    {
+      key: "governorate",
+      header: t("workshops.colGovernorate"),
+      className: "w-[8rem]",
+      cell: (workshop) => governorateLabel(workshop.governorate, locale),
+    },
+    {
+      key: "type",
+      header: t("workshops.colType"),
+      className: "w-[7.5rem]",
+      cell: (workshop) => <TypeBadge type={workshop.type} />,
+    },
+    {
+      key: "status",
+      header: t("workshops.colStatus"),
+      className: "w-[7rem]",
+      cell: (workshop) => <StatusBadge status={workshop.status} />,
+    },
+    {
+      key: "created",
+      header: t("workshops.colCreated"),
+      className: "w-[8rem]",
+      cell: (workshop) => (
+        <span className="tabular-nums text-muted-foreground">
+          {formatDateUtc(workshop.createdAtUtc)}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-5">
       <PageBreadcrumbs items={[{ label: t("workshops.title") }]} />
@@ -243,132 +288,53 @@ export function WorkshopsPage() {
         ) : null}
       </section>
 
-      {isPending ? (
-        <div className="flex flex-col gap-2">
-          {Array.from({ length: 5 }, (_, index) => (
-            <Skeleton key={index} className="h-14 w-full rounded-lg md:h-12" />
-          ))}
-        </div>
-      ) : isError ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-6 text-sm text-muted-foreground">
-          <p>{t("common.error")}</p>
-          <Button type="button" variant="outline" size="sm" onClick={() => refetch()}>
-            {t("common.retry")}
-          </Button>
-        </div>
-      ) : data && data.items.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border bg-card px-6 py-14 text-center">
-          <p className="text-lg font-semibold text-[var(--navy)]">{t("workshops.empty")}</p>
-          <p className="max-w-[40ch] text-sm text-muted-foreground">{t("workshops.emptyHint")}</p>
-          {canCreate ? (
-            <Button
-              className="mt-1"
-              variant="secondary"
-              onClick={() => router.push("/workshops/new" as Route)}
-            >
-              <Plus data-icon="inline-start" />
-              {t("workshops.register")}
-            </Button>
-          ) : null}
-        </div>
-      ) : data ? (
-        <>
-          <div className={cn(isPlaceholderData && "opacity-60")}>
-            {/* Mobile ops cards */}
-            <ul className="flex flex-col gap-3 md:hidden">
-              {data.items.map((workshop) => (
-                <li key={workshop.id}>
-                  <WorkshopMobileCard
-                    workshop={workshop}
-                    locale={locale}
-                    onOpen={() => openWorkshop(workshop.id)}
-                  />
-                </li>
-              ))}
-            </ul>
-
-            {/* Desktop table */}
-            <div className="hidden rounded-lg border bg-card md:block">
-              <Table className="table-fixed">
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className={cn(TABLE_HEAD_CLASS, "w-[9.5rem]")}>
-                      {t("workshops.colCode")}
-                    </TableHead>
-                    <TableHead className={TABLE_HEAD_CLASS}>{t("workshops.colName")}</TableHead>
-                    <TableHead className={cn(TABLE_HEAD_CLASS, "w-[8rem]")}>
-                      {t("workshops.colGovernorate")}
-                    </TableHead>
-                    <TableHead className={cn(TABLE_HEAD_CLASS, "w-[7.5rem]")}>
-                      {t("workshops.colType")}
-                    </TableHead>
-                    <TableHead className={cn(TABLE_HEAD_CLASS, "w-[7rem]")}>
-                      {t("workshops.colStatus")}
-                    </TableHead>
-                    <TableHead className={cn(TABLE_HEAD_CLASS, "w-[8rem]")}>
-                      {t("workshops.colCreated")}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.items.map((workshop) => (
-                    <TableRow
-                      key={workshop.id}
-                      tabIndex={0}
-                      className="h-12 cursor-pointer focus-visible:bg-[var(--row-selected)]"
-                      onClick={() => openWorkshop(workshop.id)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          openWorkshop(workshop.id);
-                        }
-                      }}
-                    >
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        {workshop.code}
-                      </TableCell>
-                      <TableCell>
-                        <span className="block font-medium text-[var(--navy)]">
-                          {workshopDisplayName(workshop)}
-                        </span>
-                        {workshop.nameAr ? (
-                          <span className="block text-xs text-muted-foreground">
-                            {workshop.nameEn}
-                          </span>
-                        ) : null}
-                      </TableCell>
-                      <TableCell>{governorateLabel(workshop.governorate, locale)}</TableCell>
-                      <TableCell>
-                        <TypeBadge type={workshop.type} />
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={workshop.status} />
-                      </TableCell>
-                      <TableCell className="tabular-nums text-muted-foreground">
-                        {formatDateUtc(workshop.createdAtUtc)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-
-          <ListPagination
-            page={filters.page}
-            totalPages={totalPages}
-            onPageChange={(page) => setFilters((prev) => ({ ...prev, page }))}
-            disabled={isPlaceholderData}
-            labels={{
-              summary: `${t("workshops.totalCount", { count: data.totalCount })} · ${t(
-                "workshops.pageOf",
-                { page: data.page, total: totalPages }
-              )}`,
-              previous: t("workshops.prevPage"),
-              next: t("workshops.nextPage"),
+      {isPending || isError || data ? (
+        <div className={cn(isPlaceholderData && "opacity-60")}>
+          <DataTable
+            columns={columns}
+            data={data?.items}
+            getRowId={(workshop) => workshop.id}
+            ariaLabel={t("workshops.title")}
+            onRowClick={(workshop) => openWorkshop(workshop.id)}
+            isLoading={isPending}
+            error={isError}
+            onRetry={() => refetch()}
+            emptyState={{
+              title: t("workshops.empty"),
+              hint: t("workshops.emptyHint"),
+              action: canCreate ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => router.push("/workshops/new" as Route)}
+                >
+                  <Plus data-icon="inline-start" />
+                  {t("workshops.register")}
+                </Button>
+              ) : undefined,
             }}
+            pagination={
+              data
+                ? {
+                    page: filters.page,
+                    totalPages,
+                    onPageChange: (page) => setFilters((prev) => ({ ...prev, page })),
+                    summary: `${t("workshops.totalCount", { count: data.totalCount })} · ${t(
+                      "workshops.pageOf",
+                      { page: data.page, total: totalPages }
+                    )}`,
+                    disabled: isPlaceholderData,
+                  }
+                : undefined
+            }
+            mobileCard={(workshop) => (
+              <WorkshopMobileCard
+                workshop={workshop}
+                locale={locale}
+                onOpen={() => openWorkshop(workshop.id)}
+              />
+            )}
           />
-        </>
+        </div>
       ) : null}
     </div>
   );

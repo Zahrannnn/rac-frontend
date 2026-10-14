@@ -4,7 +4,7 @@ import { totalPagesOf } from "@/shared/utils/pagination";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GraduationCap, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-picker";
@@ -16,17 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/shared/components/data-table/data-table";
 import { PageHeader } from "@/shared/components/layout/page-header";
-import { ListPagination } from "@/shared/components/list-pagination";
 import { GOVERNORATES, governorateLabel } from "@/shared/constants/egypt";
 import { trainingDetail } from "@/shared/constants/routes";
 import { useI18n, useT } from "@/shared/i18n";
@@ -38,9 +29,6 @@ import { TrainingDeleteDialog } from "./TrainingDeleteDialog";
 import { TrainingFormDialog } from "./TrainingFormDialog";
 
 const DEFAULT_FILTERS: TrainingListFilters = { page: 1 };
-
-/** Navy shell shared by every header cell of the list table. */
-const TABLE_HEAD_CLASS = "h-11 bg-[var(--navy-shell)] text-xs text-white";
 
 export function TrainingsPage() {
   const t = useT();
@@ -61,6 +49,83 @@ export function TrainingsPage() {
   const { data, isPending, isError, refetch, isPlaceholderData } = useTrainings(filters);
   const remove = useDeleteTraining();
   const totalPages = data ? totalPagesOf(data.totalCount, data.pageSize) : 1;
+
+  // Server-paged registry — the API owns the order, so no client sortValue here.
+  const columns: DataTableColumn<TrainingListItem>[] = [
+    {
+      key: "title",
+      header: t("trainings.sessionTitle"),
+      cell: (row) => (
+        <div>
+          <Link
+            href={trainingDetail(row.id)}
+            onClick={(e) => e.stopPropagation()}
+            className="block truncate font-medium text-[var(--navy)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            {row.title || row.venue}
+          </Link>
+          <span className="block text-xs text-muted-foreground">{row.venue}</span>
+        </div>
+      ),
+    },
+    {
+      key: "trainer",
+      header: t("trainings.trainerName"),
+      cell: (row) => <span className="text-sm">{row.trainerName}</span>,
+    },
+    {
+      key: "governorate",
+      header: t("trainings.governorate"),
+      cell: (row) => (
+        <span className="text-sm text-muted-foreground">
+          {governorateLabel(row.governorate, locale)}
+        </span>
+      ),
+    },
+    {
+      key: "startAt",
+      header: t("trainings.startAt"),
+      cell: (row) => (
+        <span className="text-sm tabular-nums">{formatDateTimeUtc(row.startAtUtc)}</span>
+      ),
+    },
+    {
+      key: "attendees",
+      header: t("trainings.attendees"),
+      cell: (row) => <span className="text-sm tabular-nums">{row.attendeeCount ?? "—"}</span>,
+    },
+    ...(canEdit || canDelete
+      ? [
+          {
+            key: "actions",
+            header: "",
+            className: "w-28",
+            // The row navigates to the detail page — keep action clicks to themselves.
+            cell: (row: TrainingListItem) => (
+              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                {canEdit ? (
+                  <Button asChild variant="ghost" size="sm">
+                    <Link href={trainingDetail(row.id)}>{t("trainings.open")}</Link>
+                  </Button>
+                ) : null}
+                {canDelete ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive"
+                    disabled={remove.isPending}
+                    onClick={() => setPendingDelete(row)}
+                  >
+                    {t("trainings.delete")}
+                  </Button>
+                ) : null}
+              </div>
+            ),
+          } satisfies DataTableColumn<TrainingListItem>,
+        ]
+      : []),
+  ];
 
   const setFilter = (patch: Partial<TrainingListFilters>) =>
     setFilters((prev) => ({ ...prev, page: 1, ...patch }));
@@ -139,126 +204,30 @@ export function TrainingsPage() {
         </div>
       </section>
 
-      {isPending && !data ? (
-        <div className="flex flex-col gap-2" aria-busy>
-          {Array.from({ length: 5 }, (_, i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : isError ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-6 text-sm text-muted-foreground">
-          <p>{t("common.error")}</p>
-          <Button type="button" variant="outline" size="sm" onClick={() => refetch()}>
-            {t("common.retry")}
-          </Button>
-        </div>
-      ) : !data || data.items.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border bg-card px-6 py-14 text-center">
-          <GraduationCap className="h-8 w-8 text-muted-foreground" />
-          <p className="text-lg font-semibold text-[var(--navy)]">{t("trainings.empty")}</p>
-          <p className="max-w-[40ch] text-sm text-muted-foreground">{t("trainings.emptyHint")}</p>
-        </div>
-      ) : (
-        <>
-          <div
-            className={`overflow-x-auto rounded-lg border bg-card ${isPlaceholderData ? "opacity-70" : ""}`}
-          >
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className={TABLE_HEAD_CLASS}>
-                    {t("trainings.sessionTitle")}
-                  </TableHead>
-                  <TableHead className={TABLE_HEAD_CLASS}>
-                    {t("trainings.trainerName")}
-                  </TableHead>
-                  <TableHead className={TABLE_HEAD_CLASS}>
-                    {t("trainings.governorate")}
-                  </TableHead>
-                  <TableHead className={TABLE_HEAD_CLASS}>
-                    {t("trainings.startAt")}
-                  </TableHead>
-                  <TableHead className={TABLE_HEAD_CLASS}>
-                    {t("trainings.attendees")}
-                  </TableHead>
-                  {(canEdit || canDelete) && (
-                    <TableHead className={`${TABLE_HEAD_CLASS} w-28`} />
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.items.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className="h-12 cursor-pointer"
-                    onClick={() => router.push(trainingDetail(row.id))}
-                  >
-                    <TableCell>
-                      <Link
-                        href={trainingDetail(row.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="block truncate font-medium text-[var(--navy)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
-                      >
-                        {row.title || row.venue}
-                      </Link>
-                      <span className="block text-xs text-muted-foreground">{row.venue}</span>
-                    </TableCell>
-                    <TableCell className="text-sm">{row.trainerName}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {governorateLabel(row.governorate, locale)}
-                    </TableCell>
-                    <TableCell className="text-sm tabular-nums">
-                      {formatDateTimeUtc(row.startAtUtc)}
-                    </TableCell>
-                    <TableCell className="tabular-nums text-sm">
-                      {row.attendeeCount ?? "—"}
-                    </TableCell>
-                    {(canEdit || canDelete) && (
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <div className="flex gap-1">
-                          {canEdit ? (
-                            <Button asChild variant="ghost" size="sm">
-                              <Link href={trainingDetail(row.id)}>{t("trainings.open")}</Link>
-                            </Button>
-                          ) : null}
-                          {canDelete ? (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive"
-                              disabled={remove.isPending}
-                              onClick={() => setPendingDelete(row)}
-                            >
-                              {t("trainings.delete")}
-                            </Button>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          <ListPagination
-            page={filters.page}
-            totalPages={totalPages}
-            onPageChange={(page) => setFilters((prev) => ({ ...prev, page }))}
-            disabled={isPlaceholderData}
-            labels={{
-              summary: t("trainings.pageSummary", {
-                count: data.totalCount,
-                page: filters.page,
-                totalPages,
-              }),
-              previous: t("common.previous"),
-              next: t("common.next"),
-            }}
-          />
-        </>
-      )}
+      <DataTable<TrainingListItem>
+        columns={columns}
+        data={data?.items}
+        getRowId={(row) => row.id}
+        ariaLabel={t("trainings.title")}
+        onRowClick={(row) => router.push(trainingDetail(row.id))}
+        isLoading={isPending && !data}
+        loadingRows={5}
+        error={isError}
+        onRetry={() => refetch()}
+        emptyState={{ title: t("trainings.empty"), hint: t("trainings.emptyHint") }}
+        pagination={{
+          page: filters.page,
+          totalPages,
+          onPageChange: (page) => setFilters((prev) => ({ ...prev, page })),
+          summary: t("trainings.pageSummary", {
+            count: data?.totalCount ?? 0,
+            page: filters.page,
+            totalPages,
+          }),
+          disabled: isPlaceholderData,
+        }}
+        className={isPlaceholderData ? "opacity-70" : undefined}
+      />
 
       <TrainingDeleteDialog
         pendingDelete={pendingDelete}

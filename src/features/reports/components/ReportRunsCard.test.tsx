@@ -81,6 +81,15 @@ describe("ReportRunsCard", () => {
     expect(screen.getAllByText("Csv").length).toBe(1);
   });
 
+  it("renders the shared runs table in fixed server order — no client sorting", () => {
+    renderCard(vi.fn());
+
+    expect(screen.getByRole("table", { name: "سجل التشغيل" })).toBeInTheDocument();
+    // Server-paged history (newest first) — headers carry no sort controls.
+    expect(screen.queryByRole("button", { name: "التقرير" })).not.toBeInTheDocument();
+    expect(screen.getByText(/2 تشغيل/)).toBeInTheDocument();
+  });
+
   it("regenerates through the catalog definition; unknown keys stay disabled", () => {
     const onRegenerate = vi.fn();
     renderCard(onRegenerate);
