@@ -1,10 +1,9 @@
 "use client";
 
 import { CalendarClock, CalendarX2, GraduationCap } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/shared/components/data-table/data-table";
 import { governorateLabel } from "@/shared/constants/egypt";
-import { useI18n, useT, type TranslationKey } from "@/shared/i18n";
+import { useI18n, useT } from "@/shared/i18n";
 import { formatDateTimeUtc } from "@/shared/utils/datetime";
 import { cn } from "@/shared/utils/cn";
 import type {
@@ -12,33 +11,10 @@ import type {
   TrainerSessionBrief,
 } from "../types";
 import { KpiCard } from "./KpiCard";
+import { SessionStatusBadge } from "./SessionStatusBadge";
 import { formatTrainerGain, formatTrainerScore } from "../utils/trainer-format";
 
 const RECENT_SESSIONS_LIMIT = 5;
-
-/** Session status badge — text label always (never color alone). Unknown
- * statuses fall back to the raw backend string, still labeled. */
-export function SessionStatusBadge({ status }: { status: string }) {
-  const t = useT();
-
-  const labelKeys: Record<string, TranslationKey> = {
-    Completed: "trainings.statusCompleted",
-    Upcoming: "trainings.statusUpcoming",
-  };
-  const label = labelKeys[status] ? t(labelKeys[status]) : status;
-  const tone =
-    status === "Completed"
-      ? "border-transparent bg-[var(--success)]/15 text-[var(--success)]"
-      : status === "Upcoming"
-        ? "border-transparent bg-[var(--accent)] text-[var(--accent-foreground)]"
-        : "border-transparent bg-muted text-muted-foreground";
-
-  return (
-    <Badge variant="secondary" className={cn(tone)}>
-      {label}
-    </Badge>
-  );
-}
 
 function StatChip({
   label,

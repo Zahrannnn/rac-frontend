@@ -2,18 +2,19 @@
 
 import { totalPagesOf } from "@/shared/utils/pagination";
 import { useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
-import { DataTable, type DataTableColumn } from "@/shared/components/data-table/data-table";
+import { DataTable } from "@/shared/components/data-table/data-table";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { useT } from "@/shared/i18n";
-import { formatDateTimeUtc, utcDayBounds } from "@/shared/utils/datetime";
+import { utcDayBounds } from "@/shared/utils/datetime";
 import { can, useAuth } from "@/features/auth";
 import { useDeleteDelivery, useDeliveries } from "../hooks/use-equipment";
 import type { DeliveryListFilters, EquipmentDelivery } from "../types";
+import { buildDeliveryColumns } from "./delivery-columns";
 import { DeleteDeliveryDialog } from "./DeleteDeliveryDialog";
 import { DeliveryDetailDialog } from "./DeliveryDetailDialog";
 import { DeliveryFormDialog } from "./DeliveryFormDialog";
@@ -39,76 +40,13 @@ export function EquipmentDeliveriesPage() {
   const remove = useDeleteDelivery();
   const totalPages = data ? totalPagesOf(data.totalCount, data.pageSize) : 1;
 
-  // Server-paged registry — the API owns the order, so no client sortValue here.
-  const columns: DataTableColumn<EquipmentDelivery>[] = [
-    {
-      key: "workshop",
-      header: t("equipment.workshop"),
-      cell: (row) => (
-        <button
-          type="button"
-          className="block w-full text-start"
-          onClick={() => setDetailId(row.id)}
-        >
-          <span className="block font-mono text-xs text-primary">{row.workshopCode}</span>
-          <span className="block truncate text-sm font-medium">{row.workshopName}</span>
-        </button>
-      ),
-    },
-    {
-      key: "description",
-      header: t("equipment.description"),
-      className: "max-w-[20ch] truncate",
-      cell: (row) => (
-        <span className="block truncate text-sm" title={row.equipmentDescription}>
-          {row.equipmentDescription}
-        </span>
-      ),
-    },
-    {
-      key: "recipient",
-      header: t("equipment.recipientName"),
-      cell: (row) => <span className="text-sm">{row.recipientName}</span>,
-    },
-    {
-      key: "deliveredAt",
-      header: t("equipment.deliveredAt"),
-      cell: (row) => (
-        <span className="text-sm tabular-nums">{formatDateTimeUtc(row.deliveredAtUtc)}</span>
-      ),
-    },
-    {
-      key: "photos",
-      header: t("equipment.photos"),
-      cell: (row) => <span className="text-sm tabular-nums">{row.photoCount}</span>,
-    },
-    ...(canDelete
-      ? [
-          {
-            key: "actions",
-            header: "",
-            className: "w-16",
-            // The row opens the detail dialog — keep the delete click to itself.
-            cell: (row: EquipmentDelivery) => (
-              <div onClick={(e) => e.stopPropagation()}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive"
-                  disabled={remove.isPending}
-                  onClick={() => setPendingDelete(row)}
-                  aria-label={t("equipment.delete")}
-                  title={t("equipment.delete")}
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden />
-                </Button>
-              </div>
-            ),
-          } satisfies DataTableColumn<EquipmentDelivery>,
-        ]
-      : []),
-  ];
+  const columns = buildDeliveryColumns({
+    t,
+    canDelete,
+    deletePending: remove.isPending,
+    onOpenDetail: setDetailId,
+    onDelete: setPendingDelete,
+  });
 
   const onDelete = () => {
     if (!pendingDelete) return;

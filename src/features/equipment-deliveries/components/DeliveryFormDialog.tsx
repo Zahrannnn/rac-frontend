@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DateTimePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogBody,
@@ -13,17 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { FormField } from "@/shared/components/form/form-field";
-import { useT, type TranslationKey } from "@/shared/i18n";
+import { useT } from "@/shared/i18n";
 import { useRecommendedCompanies } from "@/features/selection";
 import { useCreateDelivery, useUpdateDelivery } from "../hooks/use-equipment";
 import type { CreateDeliveryPayload, EquipmentDelivery } from "../types";
@@ -35,16 +24,7 @@ import {
   type DeliveryFormErrors,
   type DeliveryFormValues,
 } from "../utils/delivery-form";
-
-function fieldError(t: ReturnType<typeof useT>, code: string | undefined) {
-  if (!code) return undefined;
-  // Zod issues carry dictionary keys ("validation.*") — legacy codes still map.
-  if (code.startsWith("validation.")) return t(code as TranslationKey);
-  if (code === "required") return t("equipment.validation.required");
-  if (code === "max") return t("equipment.validation.max");
-  if (code === "phone") return t("equipment.validation.phone");
-  return t("equipment.validation.required");
-}
+import { DeliveryFormFields } from "./DeliveryFormFields";
 
 export function DeliveryFormDialog({
   open,
@@ -166,99 +146,15 @@ export function DeliveryFormDialog({
         </DialogHeader>
 
         <DialogBody>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {!editing ? (
-              <FormField
-                className="sm:col-span-2"
-                label={t("equipment.workshop")}
-                required
-                error={submitted ? fieldError(t, errors.workshopId) : undefined}
-              >
-                <Select
-                  value={values.workshopId || undefined}
-                  onValueChange={(workshopId) => pickRecommended(workshopId)}
-                >
-                  <SelectTrigger aria-invalid={submitted && Boolean(errors.workshopId)}>
-                    <SelectValue placeholder={t("equipment.pickWorkshop")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(recommended?.items ?? []).map((item) => (
-                      <SelectItem key={item.workshopId} value={item.workshopId}>
-                        {item.code} · {item.name} ({item.governorate})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {values.sourceBadge ? (
-                  <p className="text-xs text-muted-foreground">
-                    {t("equipment.source", { source: values.sourceBadge })}
-                  </p>
-                ) : null}
-                {(recommended?.items.length ?? 0) === 0 ? (
-                  <p className="text-xs text-muted-foreground">{t("equipment.noRecommended")}</p>
-                ) : null}
-              </FormField>
-            ) : (
-              <div className="flex flex-col gap-1.5 sm:col-span-2">
-                <p className="text-sm font-medium">{t("equipment.workshop")}</p>
-                <p className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
-                  {values.workshopLabel}
-                </p>
-              </div>
-            )}
-
-            <FormField
-              className="sm:col-span-2"
-              label={t("equipment.description")}
-              required
-              error={submitted ? fieldError(t, errors.equipmentDescription) : undefined}
-            >
-              <Textarea
-                value={values.equipmentDescription}
-                onChange={(e) => set("equipmentDescription")(e.target.value)}
-                rows={3}
-              />
-            </FormField>
-            <FormField
-              label={t("equipment.recipientName")}
-              required
-              error={submitted ? fieldError(t, errors.recipientName) : undefined}
-            >
-              <Input
-                value={values.recipientName}
-                onChange={(e) => set("recipientName")(e.target.value)}
-              />
-            </FormField>
-            <FormField
-              label={t("equipment.recipientPhone")}
-              error={submitted ? fieldError(t, errors.recipientPhone) : undefined}
-            >
-              <Input
-                dir="ltr"
-                inputMode="tel"
-                value={values.recipientPhone}
-                onChange={(e) => set("recipientPhone")(e.target.value)}
-                placeholder="01XXXXXXXXX"
-              />
-            </FormField>
-            <FormField
-              label={t("equipment.deliveredAt")}
-              required
-              error={submitted ? fieldError(t, errors.deliveredAtUtc) : undefined}
-            >
-              <DateTimePicker
-                value={values.deliveredAtUtc}
-                onChange={set("deliveredAtUtc")}
-              />
-            </FormField>
-            <FormField
-              className="sm:col-span-2"
-              label={t("equipment.notes")}
-              error={submitted ? fieldError(t, errors.notes) : undefined}
-            >
-              <Textarea value={values.notes} onChange={(e) => set("notes")(e.target.value)} rows={2} />
-            </FormField>
-          </div>
+          <DeliveryFormFields
+            values={values}
+            errors={errors}
+            submitted={submitted}
+            set={set}
+            editing={Boolean(editing)}
+            recommended={recommended}
+            pickRecommended={pickRecommended}
+          />
         </DialogBody>
 
         <DialogFooter>

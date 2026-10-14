@@ -9,21 +9,22 @@ import {
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ChevronsUpDown, Inbox } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { useT } from "@/shared/i18n";
 import { cn } from "@/shared/utils/cn";
 import { ListPagination } from "@/shared/components/list-pagination";
-import { QueryErrorState } from "@/shared/components/query-states";
+import { DataTableHeaderCell } from "./data-table-header-cell";
+import {
+  DataTableEmptyRow,
+  DataTableErrorRow,
+  DataTableSkeletonRows,
+} from "./data-table-states";
+import {
+  ALIGN_CLASS,
+  type DataTableColumn,
+  type DataTableEmptyState,
+  type DataTablePagination,
+} from "./data-table-types";
 
 /**
  * The app's single data-table implementation. One navy header shell, 48px rows
@@ -37,39 +38,18 @@ import { QueryErrorState } from "@/shared/components/query-states";
  *
  * RTL-safe by construction: alignment uses logical utilities (start/end) and
  * the header shell works mirrored.
+ *
+ * This file is the composing shell AND the public export: the column contract
+ * lives in ./data-table-types, the header cell in ./data-table-header-cell and
+ * the body states in ./data-table-states — re-exported below so consumers keep
+ * importing from this path.
  */
 
-export type DataTableColumn<T> = {
-  /** Unique column id (stable across renders). */
-  key: string;
-  /** Already-translated header label. */
-  header: string;
-  /** Cell renderer. */
-  cell: (row: T) => ReactNode;
-  /** Enables client sorting on this column. See the sorting caveat above. */
-  sortValue?: (row: T) => string | number;
-  /** Initial sort direction when the column is the first sorted one. */
-  sortDescFirst?: boolean;
-  align?: "start" | "center" | "end";
-  /** Extra classes for the th/td pair (widths, tabular-nums, …). */
-  className?: string;
-  headerClassName?: string;
-};
-
-export type DataTablePagination = {
-  page: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  /** Ready-formatted "N results · page X of Y" summary from the caller's i18n. */
-  summary: string;
-  disabled?: boolean;
-};
-
-export type DataTableEmptyState = {
-  title: string;
-  hint?: string;
-  action?: ReactNode;
-};
+export type {
+  DataTableColumn,
+  DataTableEmptyState,
+  DataTablePagination,
+} from "./data-table-types";
 
 export type DataTableProps<T> = {
   columns: readonly DataTableColumn<T>[];
@@ -96,12 +76,6 @@ export type DataTableProps<T> = {
   initialSorting?: SortingState;
   className?: string;
 };
-
-const ALIGN_CLASS = {
-  start: "text-start",
-  center: "text-center",
-  end: "text-end",
-} as const;
 
 export function DataTable<T>({
   columns,
@@ -173,53 +147,17 @@ export function DataTable<T>({
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => {
                   const column = columns[header.column.getIndex()];
-                  const canSort = header.column.getCanSort();
-                  const sorted = header.column.getIsSorted();
-                  const align = column?.align ?? "start";
                   return (
-                    <TableHead
+                    <DataTableHeaderCell
                       key={header.id}
-                      scope="col"
-                      aria-sort={
-                        sorted === "asc"
-                          ? "ascending"
-                          : sorted === "desc"
-                            ? "descending"
-                            : canSort
-                              ? "none"
-                              : undefined
-                      }
-                      className={cn(
-                        "h-11 bg-[var(--navy-shell)] text-xs font-semibold uppercase tracking-wide text-white",
-                        stickyHeader && "sticky top-0 z-10",
-                        align !== "start" && ALIGN_CLASS[align],
-                        column?.headerClassName
-                      )}
-                    >
-                      {canSort ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 gap-1.5 px-2 text-xs font-semibold uppercase tracking-wide text-white hover:bg-white/15 hover:text-white focus-visible:ring-white/70"
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          {column?.header}
-                          {sorted === "asc" ? (
-                            <ArrowUp aria-hidden className="size-3.5" />
-                          ) : sorted === "desc" ? (
-                            <ArrowDown aria-hidden className="size-3.5" />
-                          ) : (
-                            <ChevronsUpDown
-                              aria-hidden
-                              className="size-3.5 opacity-60"
-                            />
-                          )}
-                        </Button>
-                      ) : (
-                        column?.header
-                      )}
-                    </TableHead>
+                      label={column?.header ?? ""}
+                      align={column?.align ?? "start"}
+                      canSort={header.column.getCanSort()}
+                      sorted={header.column.getIsSorted()}
+                      sticky={stickyHeader}
+                      headerClassName={column?.headerClassName}
+                      onToggleSort={header.column.getToggleSortingHandler()}
+                    />
                   );
                 })}
               </TableRow>
@@ -227,43 +165,11 @@ export function DataTable<T>({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: loadingRows }, (_, index) => (
-                <TableRow key={`skeleton-${index}`} className="hover:bg-transparent">
-                  {columns.map((column) => (
-                    <TableCell key={column.key} className={column.className}>
-                      <Skeleton className="h-4 w-4/5 max-w-32" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              <DataTableSkeletonRows columns={columns} rowCount={loadingRows} />
             ) : error ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={columns.length} className="p-6">
-                  <QueryErrorState
-                    onRetry={onRetry ?? (() => undefined)}
-                    className="justify-center"
-                  />
-                </TableCell>
-              </TableRow>
+              <DataTableErrorRow colSpan={columns.length} onRetry={onRetry} />
             ) : (data?.length ?? 0) === 0 ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={columns.length} className="p-10">
-                  <div className="flex flex-col items-center gap-2 text-center">
-                    <Inbox aria-hidden className="size-10 text-muted-foreground/40" />
-                    <p className="text-base font-semibold text-[var(--navy)]">
-                      {emptyState?.title ?? t("table.emptyTitle")}
-                    </p>
-                    {emptyState?.hint ? (
-                      <p className="max-w-[44ch] text-sm text-muted-foreground">
-                        {emptyState.hint}
-                      </p>
-                    ) : null}
-                    {emptyState?.action ? (
-                      <div className="pt-2">{emptyState.action}</div>
-                    ) : null}
-                  </div>
-                </TableCell>
-              </TableRow>
+              <DataTableEmptyRow colSpan={columns.length} emptyState={emptyState} />
             ) : (
               table.getRowModel().rows.map((row) => (
                 <TableRow

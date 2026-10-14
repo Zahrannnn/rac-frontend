@@ -2,7 +2,6 @@
 
 import { totalPagesOf } from "@/shared/utils/pagination";
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -16,15 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DataTable, type DataTableColumn } from "@/shared/components/data-table/data-table";
+import { DataTable } from "@/shared/components/data-table/data-table";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { GOVERNORATES, governorateLabel } from "@/shared/constants/egypt";
 import { trainingDetail } from "@/shared/constants/routes";
 import { useI18n, useT } from "@/shared/i18n";
-import { formatDateTimeUtc, utcDayBounds } from "@/shared/utils/datetime";
+import { utcDayBounds } from "@/shared/utils/datetime";
 import { can, useAuth } from "@/features/auth";
 import { useDeleteTraining, useTrainings } from "../hooks/use-trainings";
 import type { TrainingDetails, TrainingListFilters, TrainingListItem } from "../types";
+import { buildTrainingColumns } from "./trainings-columns";
 import { TrainingDeleteDialog } from "./TrainingDeleteDialog";
 import { TrainingFormDialog } from "./TrainingFormDialog";
 
@@ -50,82 +50,14 @@ export function TrainingsPage() {
   const remove = useDeleteTraining();
   const totalPages = data ? totalPagesOf(data.totalCount, data.pageSize) : 1;
 
-  // Server-paged registry — the API owns the order, so no client sortValue here.
-  const columns: DataTableColumn<TrainingListItem>[] = [
-    {
-      key: "title",
-      header: t("trainings.sessionTitle"),
-      cell: (row) => (
-        <div>
-          <Link
-            href={trainingDetail(row.id)}
-            onClick={(e) => e.stopPropagation()}
-            className="block truncate font-medium text-[var(--navy)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
-            {row.title || row.venue}
-          </Link>
-          <span className="block text-xs text-muted-foreground">{row.venue}</span>
-        </div>
-      ),
-    },
-    {
-      key: "trainer",
-      header: t("trainings.trainerName"),
-      cell: (row) => <span className="text-sm">{row.trainerName}</span>,
-    },
-    {
-      key: "governorate",
-      header: t("trainings.governorate"),
-      cell: (row) => (
-        <span className="text-sm text-muted-foreground">
-          {governorateLabel(row.governorate, locale)}
-        </span>
-      ),
-    },
-    {
-      key: "startAt",
-      header: t("trainings.startAt"),
-      cell: (row) => (
-        <span className="text-sm tabular-nums">{formatDateTimeUtc(row.startAtUtc)}</span>
-      ),
-    },
-    {
-      key: "attendees",
-      header: t("trainings.attendees"),
-      cell: (row) => <span className="text-sm tabular-nums">{row.attendeeCount ?? "—"}</span>,
-    },
-    ...(canEdit || canDelete
-      ? [
-          {
-            key: "actions",
-            header: "",
-            className: "w-28",
-            // The row navigates to the detail page — keep action clicks to themselves.
-            cell: (row: TrainingListItem) => (
-              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                {canEdit ? (
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href={trainingDetail(row.id)}>{t("trainings.open")}</Link>
-                  </Button>
-                ) : null}
-                {canDelete ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive"
-                    disabled={remove.isPending}
-                    onClick={() => setPendingDelete(row)}
-                  >
-                    {t("trainings.delete")}
-                  </Button>
-                ) : null}
-              </div>
-            ),
-          } satisfies DataTableColumn<TrainingListItem>,
-        ]
-      : []),
-  ];
+  const columns = buildTrainingColumns({
+    t,
+    locale,
+    canEdit,
+    canDelete,
+    deletePending: remove.isPending,
+    onDelete: setPendingDelete,
+  });
 
   const setFilter = (patch: Partial<TrainingListFilters>) =>
     setFilters((prev) => ({ ...prev, page: 1, ...patch }));

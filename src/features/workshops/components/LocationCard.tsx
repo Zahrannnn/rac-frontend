@@ -1,20 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Copy, ExternalLink, MapPin } from "lucide-react";
 import { LocationMapLazy } from "@/shared/components/map";
-import { useGeolocationCapture } from "@/shared/hooks/use-geolocation";
 import { useT } from "@/shared/i18n";
-import { useUpdateWorkshop } from "../hooks/use-workshops";
-import { coordinatePairError, formatCoords, googleMapsUrl, hasCoordinates } from "../utils/geo";
+import { formatCoords, googleMapsUrl } from "../utils/geo";
+import { parseOptionalNumber } from "../utils/number-input";
+import { useLocationDraft } from "../hooks/use-location-draft";
 
 /**
  * Profile location card: OSM pin map when coordinates exist, GPS capture /
  * manual entry when the user can edit. Backend PATCH accepts lat/lon pairs.
+ * Draft/warning/save state lives in useLocationDraft.
  */
 export function LocationCard({
   workshopId,
@@ -30,105 +29,23 @@ export function LocationCard({
   canEdit?: boolean;
 }) {
   const t = useT();
-  const update = useUpdateWorkshop(workshopId);
-  const [copied, setCopied] = useState(false);
-  const geolocation = useGeolocationCapture();
-  const gpsState = geolocation.status;
-  const [draftLat, setDraftLat] = useState<number | null>(latitude);
-  const [draftLon, setDraftLon] = useState<number | null>(longitude);
-  const [pairError, setPairError] = useState<string | null>(null);
-  const [duplicateRetry, setDuplicateRetry] = useState(false);
-
-  // Every draft edit invalidates the transient pair/duplicate warnings.
-  function clearDraftWarnings() {
-    setPairError(null);
-    setDuplicateRetry(false);
-  }
-
-  // Re-seed the draft when the saved coordinates change (render-time adjustment).
-  const [prevSaved, setPrevSaved] = useState<[number | null, number | null]>([latitude, longitude]);
-  if (prevSaved[0] !== latitude || prevSaved[1] !== longitude) {
-    setPrevSaved([latitude, longitude]);
-    setDraftLat(latitude);
-    setDraftLon(longitude);
-    clearDraftWarnings();
-    geolocation.reset();
-  }
-
-  useEffect(() => {
-    if (!copied) return;
-    const timeout = window.setTimeout(() => setCopied(false), 2000);
-    return () => window.clearTimeout(timeout);
-  }, [copied]);
-
-  const savedHasCoords = hasCoordinates(latitude, longitude);
-  const draftHasCoords = hasCoordinates(draftLat, draftLon);
-  const dirty =
-    draftLat !== latitude || draftLon !== longitude;
-
-  async function copyCoords() {
-    if (!hasCoordinates(draftLat, draftLon)) return;
-    try {
-      await navigator.clipboard.writeText(formatCoords(draftLat!, draftLon!));
-      setCopied(true);
-      toast.success(t("map.coordsCopied"));
-    } catch {
-      toast.error(t("common.error"));
-    }
-  }
-
-  function captureGps() {
-    geolocation.capture({
-      onPosition: (latitude, longitude) => {
-        setDraftLat(latitude);
-        setDraftLon(longitude);
-        clearDraftWarnings();
-      },
-    });
-  }
-
-  function save(confirmDuplicate: boolean) {
-    const invalidPairMessage = coordinatePairError(draftLat, draftLon);
-    if (invalidPairMessage) {
-      setPairError(t(invalidPairMessage));
-      return;
-    }
-    setPairError(null);
-
-    update.mutate(
-      {
-        latitude: draftLat,
-        longitude: draftLon,
-        confirmDuplicate,
-      },
-      {
-        onSuccess: () => {
-          setDuplicateRetry(false);
-          geolocation.reset();
-          toast.success(t("profile.saved"));
-        },
-        onError: (error) => {
-          if ((error as { status?: number }).status === 409) {
-            if (!confirmDuplicate) {
-              setDuplicateRetry(true);
-              toast.warning(t("duplicate.conflictRetry"));
-            } else {
-              toast.warning(t("duplicate.conflict"));
-            }
-          } else if ((error as { status?: number }).status !== 403) {
-            toast.error(`${t("common.error")} — ${t("common.retry")}`);
-          }
-        },
-      }
-    );
-  }
-
-  function resetDraft() {
-    setDraftLat(latitude);
-    setDraftLon(longitude);
-    clearDraftWarnings();
-    geolocation.reset();
-  }
+  const {
+    update,
+    copied,
+    gpsState,
+    draftLat,
+    draftLon,
+    pairError,
+    duplicateRetry,
+    savedHasCoords,
+    draftHasCoords,
+    dirty,
+    updateDraft,
+    copyCoords,
+    captureGps,
+    save,
+    resetDraft,
+  } = useLocationDraft(workshopId, latitude, longitude);
 
   return (
     <section className="rounded-lg border bg-card p-4 text-start">
@@ -145,10 +62,7 @@ export function LocationCard({
                 id="workshop-lat"
                 className="w-36 tabular-nums"
                 value={draftLat ?? ""}
-                onChange={(event) => {
-                  setDraftLat(event.target.value === "" ? null : Number(event.target.value));
-                  clearDraftWarnings();
-                }}
+                onChange={(event) => updateDraft({ latitude: parseOptionalNumber(event.target.value) })}
                 inputMode="decimal"
                 dir="ltr"
               />
@@ -159,10 +73,7 @@ export function LocationCard({
                 id="workshop-lon"
                 className="w-36 tabular-nums"
                 value={draftLon ?? ""}
-                onChange={(event) => {
-                  setDraftLon(event.target.value === "" ? null : Number(event.target.value));
-                  clearDraftWarnings();
-                }}
+                onChange={(event) => updateDraft({ longitude: parseOptionalNumber(event.target.value) })}
                 inputMode="decimal"
                 dir="ltr"
               />
@@ -231,9 +142,7 @@ export function LocationCard({
             onChange={
               canEdit
                 ? (newLat, newLon) => {
-                    setDraftLat(newLat);
-                    setDraftLon(newLon);
-                    clearDraftWarnings();
+                    updateDraft({ latitude: newLat, longitude: newLon });
                   }
                 : undefined
             }

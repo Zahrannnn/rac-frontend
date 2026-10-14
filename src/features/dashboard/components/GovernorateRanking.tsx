@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { GOVERNORATE_AR } from "@/shared/constants/egypt";
 import { useI18n, useT } from "@/shared/i18n";
 import type { GovernorateCount } from "../types";
 import {
@@ -10,24 +9,11 @@ import {
   CHART_MUTED,
   CHART_ORANGE,
 } from "../constants/chart-theme";
-
-const TOP_N = 6;
-const OTHERS_KEY = "__others__";
-
-function labelGovernorate(name: string, locale: string): string {
-  if (locale !== "ar") {
-    return name;
-  }
-  return GOVERNORATE_AR[name as keyof typeof GOVERNORATE_AR] ?? name;
-}
-
-type SliceRow = {
-  key: string;
-  label: string;
-  count: number;
-  /** Real governorate id, or null for the rolled-up “Others” slice. */
-  governorate: string | null;
-};
+import {
+  buildRankingSlices,
+  OTHERS_KEY,
+  type SliceRow,
+} from "../utils/ranking-slices";
 
 type GovernorateRankingProps = {
   byGovernorate: GovernorateCount[];
@@ -45,39 +31,12 @@ export function GovernorateRanking({
   const t = useT();
   const { locale } = useI18n();
 
-  const ranked = useMemo(() => {
-    return [...byGovernorate].sort(
-      (a, b) => b.count - a.count || a.governorate.localeCompare(b.governorate)
-    );
-  }, [byGovernorate]);
+  const slices = useMemo(
+    () => buildRankingSlices(byGovernorate, locale, t),
+    [byGovernorate, locale, t]
+  );
 
-  const slices = useMemo((): SliceRow[] => {
-    if (ranked.length === 0) {
-      return [];
-    }
-
-    const head = ranked.slice(0, TOP_N);
-    const tail = ranked.slice(TOP_N);
-    const rows: SliceRow[] = head.map((entry) => ({
-      key: entry.governorate,
-      label: labelGovernorate(entry.governorate, locale),
-      count: entry.count,
-      governorate: entry.governorate,
-    }));
-
-    if (tail.length > 0) {
-      rows.push({
-        key: OTHERS_KEY,
-        label: t("dashboard.rankingOthers"),
-        count: tail.reduce((sum, entry) => sum + entry.count, 0),
-        governorate: null,
-      });
-    }
-
-    return rows;
-  }, [ranked, locale, t]);
-
-  const total = ranked.reduce((sum, entry) => sum + entry.count, 0);
+  const total = byGovernorate.reduce((sum, entry) => sum + entry.count, 0);
 
   function sliceFill(row: SliceRow, index: number): string {
     if (row.governorate && selected === row.governorate) {

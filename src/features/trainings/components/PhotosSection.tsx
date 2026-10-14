@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { saveBlob } from "@/shared/api/file-transfer";
 import { Section } from "@/shared/components/section";
 import { useT } from "@/shared/i18n";
+import { prepareImageForUpload } from "@/shared/utils/image-compression";
 import { downloadTrainingPhoto } from "../api/trainings-adapter";
 import { useTrainingPhotoMutations } from "../hooks/use-trainings";
 
+/** Training photo strip — originals up to 20MB are compressed client-side to
+ * WebP (stored cap 2MB, the backend mirror) before upload. */
 export function PhotosSection({
   trainingId,
   canEdit,
@@ -22,6 +25,31 @@ export function PhotosSection({
   const t = useT();
   const fileInput = useRef<HTMLInputElement>(null);
   const { upload, remove } = useTrainingPhotoMutations(trainingId);
+
+  async function handlePick(file: File) {
+    const result = await prepareImageForUpload(file);
+    if (!result.ok) {
+      if (result.reason === "decode-failed") {
+        toast.error(t("trainings.photoFailed"));
+      } else {
+        toast.error(
+          t(
+            result.reason === "input-too-large"
+              ? "trainings.photoTooLargeInput"
+              : "trainings.photoTooLarge"
+          )
+        );
+      }
+      return;
+    }
+    upload.mutate(result.file, {
+      onSuccess: () => toast.success(t("trainings.photoUploaded")),
+      onError: (error) => {
+        const status = (error as { status?: number }).status;
+        toast.error(status === 400 ? t("trainings.photoInvalid") : t("trainings.photoFailed"));
+      },
+    });
+  }
 
   return (
     <Section
@@ -37,18 +65,10 @@ export function PhotosSection({
               className="hidden"
               onChange={(event) => {
                 const file = event.target.files?.[0];
-                if (file) {
-                  upload.mutate(file, {
-                    onSuccess: () => toast.success(t("trainings.photoUploaded")),
-                    onError: (error) => {
-                      const status = (error as { status?: number }).status;
-                      toast.error(
-                        status === 400 ? t("trainings.photoInvalid") : t("trainings.photoFailed")
-                      );
-                    },
-                  });
-                }
                 event.target.value = "";
+                if (file) {
+                  void handlePick(file);
+                }
               }}
             />
             <Button

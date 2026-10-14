@@ -1,6 +1,5 @@
 "use client";
 
-import { useId, useState, type KeyboardEvent } from "react";
 import { Loader2, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/shared/i18n";
 import { cn } from "@/shared/utils/cn";
-import { useCandidateAdd } from "../hooks/use-candidate-add";
-import { useCandidateHighlight } from "../hooks/use-candidate-highlight";
-import { useCandidateSearch } from "../hooks/use-candidate-search";
 import { CANDIDATE_RESULT_CAP, candidateOptionId } from "../utils/candidate-search";
+import { useAttendeePicker } from "../hooks/use-attendee-picker";
 import { CandidateOption } from "./CandidateOption";
 import { NextAddScoreFields } from "./NextAddScoreFields";
 
@@ -34,53 +31,25 @@ export function AttendeePicker({
   onUndone: (technicianId: string) => void;
 }) {
   const t = useT();
-  const baseId = useId();
-  const inputId = `${baseId}-search`;
-  const labelId = `${baseId}-label`;
-  const listboxId = `${baseId}-listbox`;
-  const statusId = `${baseId}-status`;
-  const scoresErrorId = `${baseId}-scores-error`;
-
-  const [query, setQuery] = useState("");
-  const search = useCandidateSearch(query);
+  const {
+    baseId,
+    inputId,
+    labelId,
+    listboxId,
+    statusId,
+    scoresErrorId,
+    query,
+    setQuery,
+    search,
+    highlight,
+    adder,
+    showList,
+    addActive,
+    onKeyDown,
+    resultsAnnouncement,
+  } = useAttendeePicker({ trainingId, enrolledTechnicianIds, onAdded, onUndone });
   const { candidates, settling, typedReady } = search;
-  const showList = candidates.length > 0;
-
-  const highlight = useCandidateHighlight({ baseId, candidates, enrolledTechnicianIds });
   const { active } = highlight;
-  const adder = useCandidateAdd({
-    trainingId,
-    enrolledTechnicianIds,
-    onAdded,
-    onUndone,
-    onAddSucceeded: highlight.advancePast,
-  });
-
-  const addActive = () => {
-    if (!active) return false;
-    adder.addCandidate(active);
-    return true;
-  };
-
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (highlight.navigate(event.key)) {
-      event.preventDefault();
-    } else if (event.key === "Enter" && addActive()) {
-      event.preventDefault();
-    } else if (event.key === "Escape" && query) {
-      // Clear first; a second Escape is left to whatever hosts the picker.
-      event.preventDefault();
-      event.stopPropagation();
-      setQuery("");
-    }
-  };
-
-  const resultsAnnouncement =
-    settling || !typedReady || search.showError
-      ? ""
-      : search.showEmpty
-        ? t("trainings.candidatesEmpty")
-        : t("trainings.candidatesCount", { count: candidates.length });
 
   return (
     <div className="flex flex-col gap-2">

@@ -22,6 +22,9 @@ import type { DuplicateCheckResponse, DuplicateMatch, WorkshopType } from "../ty
 const LAST_STEP = WIZARD_STEP_KEYS.length - 1;
 const DUPLICATE_DEBOUNCE_MS = 500;
 
+/** Render-side view of the wizard — what the step components consume. */
+export type WorkshopWizardController = ReturnType<typeof useWorkshopWizard>;
+
 /**
  * The registration wizard's state machine: four steps, per-step zod validation,
  * live (debounced) duplicate probing with the SRS confirm/dismiss flow, and the

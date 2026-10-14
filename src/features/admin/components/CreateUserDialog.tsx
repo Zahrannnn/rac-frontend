@@ -1,7 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
-import { toast } from "sonner";
+import { useId } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,9 +22,8 @@ import {
 } from "@/components/ui/select";
 import { FormField } from "@/shared/components/form/form-field";
 import { useT } from "@/shared/i18n";
-import { useCreateUser } from "../hooks/use-admin";
+import { useCreateUserForm } from "../hooks/use-create-user-form";
 import { USER_ROLES, type UserRole } from "../types";
-import { createUserSchema, USER_FIELD_MESSAGES, type CreateUserFormValues } from "../validations/user-schema";
 
 /** Create-user form dialog; opened from the UsersTab header. */
 export function CreateUserDialog({
@@ -36,72 +34,9 @@ export function CreateUserDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useT();
-  const create = useCreateUser();
   const formId = useId();
-  const [values, setValues] = useState<CreateUserFormValues>({
-    username: "",
-    email: "",
-    fullName: "",
-    password: "",
-    role: "FieldTeams",
-    phone: "",
-  });
-  const [errors, setErrors] = useState<Partial<Record<keyof CreateUserFormValues, string>>>({});
-  const [submitted, setSubmitted] = useState(false);
-
-  const patch = (next: Partial<CreateUserFormValues>) => {
-    setValues((prev) => ({ ...prev, ...next }));
-    setErrors((prev) => {
-      const cleared = { ...prev };
-      for (const key of Object.keys(next)) {
-        delete cleared[key as keyof CreateUserFormValues];
-      }
-      return cleared;
-    });
-  };
-
-  const submit = () => {
-    setSubmitted(true);
-    const parsed = createUserSchema.safeParse(values);
-    if (!parsed.success) {
-      const fieldErrors: Partial<Record<keyof CreateUserFormValues, string>> = {};
-      for (const issue of parsed.error.issues) {
-        const field = issue.path[0] as keyof CreateUserFormValues;
-        fieldErrors[field] = t(USER_FIELD_MESSAGES[field] as Parameters<typeof t>[0]);
-      }
-      setErrors(fieldErrors);
-      return;
-    }
-
-    create.mutate(
-      {
-        ...parsed.data,
-        phone: parsed.data.phone || null,
-      },
-      {
-        onSuccess: () => {
-          toast.success(t("admin.users.created"));
-          onOpenChange(false);
-          setValues({
-            username: "",
-            email: "",
-            fullName: "",
-            password: "",
-            role: "FieldTeams",
-            phone: "",
-          });
-          setSubmitted(false);
-        },
-        onError: (error) => {
-          if ((error as { status?: number }).status === 409) {
-            toast.error(t("admin.users.duplicate"));
-          } else {
-            toast.error(t("common.error"));
-          }
-        },
-      }
-    );
-  };
+  const form = useCreateUserForm(() => onOpenChange(false));
+  const { values, errors, submitted, patch, submit } = form;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -193,7 +128,7 @@ export function CreateUserDialog({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             {t("profile.cancel")}
           </Button>
-          <Button type="submit" form={formId} disabled={create.isPending}>
+          <Button type="submit" form={formId} disabled={form.isPending}>
             <Plus data-icon="inline-start" />
             {t("admin.users.add")}
           </Button>

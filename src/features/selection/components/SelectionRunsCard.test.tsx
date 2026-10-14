@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nProvider } from "@/shared/i18n";
 import type { PagedResult } from "@/shared/api/paged-result";
 import type { SelectionRunSummary } from "../types";
-import { groupRunsForHistory } from "./SelectionRunsCard";
+import { groupRunsForHistory } from "../utils/run-history";
 
 const { useSelectionRunsMock, exportMutateMock, toastSuccessMock, toastErrorMock, saveBlobMock } =
   vi.hoisted(() => ({

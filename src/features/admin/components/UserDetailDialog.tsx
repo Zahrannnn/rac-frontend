@@ -11,22 +11,17 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogSection,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ApiError } from "@/shared/api/http-client";
-import { DetailItem, DetailList } from "@/shared/components/detail-list";
 import { useT } from "@/shared/i18n";
-import { formatDateTimeUtc } from "@/shared/utils/datetime";
 import { usePatchUserStatus, useUser } from "../hooks/use-admin";
 import { apiMessage } from "../utils/api-error";
-import { RoleBadge } from "./RoleBadge";
-import {
-  ChangeRoleDialog,
-  EditProfileDialog,
-  ResetPasswordDialog,
-} from "./UserDetailActionDialogs";
+import { ChangeRoleDialog } from "./ChangeRoleDialog";
+import { EditProfileDialog } from "./EditProfileDialog";
+import { ResetPasswordDialog } from "./ResetPasswordDialog";
+import { UserDetailSummary } from "./UserDetailSummary";
 
 export function UserDetailDialog({
   userId,
@@ -92,68 +87,7 @@ export function UserDetailDialog({
                 </Button>
               </div>
             ) : (
-              <>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <p className="text-base font-semibold text-foreground">{data.fullName}</p>
-                    <p className="font-mono text-sm text-muted-foreground" dir="ltr">
-                      {data.username}
-                    </p>
-                  </div>
-                  <RoleBadge role={data.role} />
-                </div>
-
-                <DetailList className="border-t pt-5">
-                  <DetailItem label={t("admin.users.email")}>
-                    <span dir="ltr">{data.email}</span>
-                  </DetailItem>
-                  <DetailItem label={t("admin.users.phone")}>
-                    <span dir="ltr" className="tabular-nums">{data.phone ?? "—"}</span>
-                  </DetailItem>
-                  <DetailItem label={t("admin.users.status")}>
-                    {t(data.isActive ? "admin.users.active" : "admin.users.inactive")}
-                  </DetailItem>
-                  <DetailItem label={t("admin.users.lastLogin")}>
-                    <span dir="ltr" className="tabular-nums">
-                      {data.lastLoginAtUtc ? formatDateTimeUtc(data.lastLoginAtUtc) : "—"}
-                    </span>
-                  </DetailItem>
-                  <DetailItem label={t("admin.users.createdAt")}>
-                    <span dir="ltr" className="tabular-nums">
-                      {formatDateTimeUtc(data.createdAtUtc)}
-                    </span>
-                  </DetailItem>
-                  {data.role === "FieldTeams" ? (
-                    <DetailItem label={t("admin.users.assignments")}>
-                      <span className="tabular-nums">{data.assignedWorkshopCount ?? 0}</span>
-                    </DetailItem>
-                  ) : null}
-                </DetailList>
-
-                <DialogSection title={t("admin.users.recentActivity")} className="border-t pt-5">
-                  {data.recentActivity.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">{t("admin.users.noActivity")}</p>
-                  ) : (
-                    <ul className="divide-y rounded-md border">
-                      {data.recentActivity.map((item, index) => (
-                        <li
-                          key={`${item.occurredAtUtc}-${index}`}
-                          className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-sm"
-                        >
-                          <span>
-                            <span className="font-semibold">{item.action}</span>
-                            {" · "}
-                            <span className="text-muted-foreground">{item.entity}</span>
-                          </span>
-                          <span className="text-xs tabular-nums text-muted-foreground" dir="ltr">
-                            {formatDateTimeUtc(item.occurredAtUtc)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </DialogSection>
-              </>
+              <UserDetailSummary user={data} />
             )}
           </DialogBody>
 

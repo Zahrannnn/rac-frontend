@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,36 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { racApi } from "@/shared/api/rac-api";
 import { useT } from "@/shared/i18n";
-import { adminKeys } from "@/features/admin";
 import { useAssignmentMutations, useAssignments } from "../hooks/use-workshops";
+import { useFieldTeamsUsers } from "../hooks/use-field-teams-users";
 import { formatDateUtc } from "../utils/format";
 import type { Assignment } from "../types";
-
-type AdminUser = {
-  id: string;
-  username: string;
-  fullName: string;
-  role: string;
-  isActive: boolean;
-};
-
-/** FieldTeams picker — the users endpoint is admin:users-gated; 403 degrades gracefully. */
-function useFieldTeamsUsers(enabled: boolean) {
-  return useQuery({
-    queryKey: adminKeys.users.fieldTeams(),
-    queryFn: async () => {
-      const { data } = await racApi.get<{ items: AdminUser[] }>("/admin/users", {
-        params: { page: 1, pageSize: 100 },
-      });
-      return data.items.filter((user) => user.role === "FieldTeams" && user.isActive);
-    },
-    enabled,
-    retry: false,
-    staleTime: 60_000,
-  });
-}
 
 export function AssignmentsCard({
   workshopId,

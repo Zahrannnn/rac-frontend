@@ -1,18 +1,14 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { I18nProvider } from "@/shared/i18n";
-import {
-  RadioCards,
-  ChecklistTable,
-  LikertTable,
-  RefrigerantMatrix,
-  SeasonalMatrix,
-  SignatureImage,
-  WorkforceMatrix,
-} from "./inputs";
+import { RadioCards } from "./choice-fields";
+import { ChecklistTable, LikertTable } from "./assessment-tables";
+import { RefrigerantMatrix } from "./refrigerant-matrix";
+import { SeasonalMatrix, WorkforceMatrix } from "./matrix-tables";
+import { SignatureImage } from "./signature-image";
 import { ComplexFieldRenderer, FieldRenderer } from "./FieldRenderer";
-import { SECTIONS } from "../../schema";
+import { SECTIONS } from "../../schema/sections";
 
 // Radix Select (governorate dropdown) relies on pointer-capture APIs jsdom
 // does not implement — same stubs as the workshops DistrictSelect tests.

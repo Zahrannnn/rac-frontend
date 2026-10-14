@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  PILOT_GOVERNORATE_OPTIONS,
-  SECTIONS,
-  SEASONAL_COLS,
-  SUPPLY_DIFFICULTY_OPTIONS,
-} from "./schema";
+import { PILOT_GOVERNORATE_OPTIONS, SEASONAL_COLS, SUPPLY_DIFFICULTY_OPTIONS } from "./schema/constants";
+import { SECTIONS } from "./schema/sections";
 
 /** Questionnaire Ver3 contract pins — the stored answers and the backend
  * rubric keys depend on these exact option/band keys (schema.ts is a 1:1

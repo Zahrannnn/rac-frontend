@@ -5,12 +5,14 @@ import { toast } from "sonner";
 import { Camera, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/shared/i18n";
+import { prepareImageForUpload } from "@/shared/utils/image-compression";
 import { usePhotoMutations, useSurveyPhotos } from "../hooks/use-survey";
 import { photoUrl } from "../api/surveys-adapter";
 
 /**
  * Section-scoped photo uploader: camera capture on mobile, thumbnails with
- * delete. Backend limits: 8 photos/survey, 512 KB each — errors surface as toasts.
+ * delete. Originals up to 20MB are compressed client-side to WebP (stored
+ * cap 2MB — the backend mirror); oversize/decode failures surface as toasts.
  */
 export function PhotoUploader({
   surveyId,
@@ -35,6 +37,38 @@ export function PhotoUploader({
     fileInput.current?.click();
   }
 
+  // Compress-then-upload: originals up to 20MB are WebP-compressed on-device
+  // (EXIF stripped) before the round trip so field surveyors pay no mobile data.
+  async function handlePick(file: File) {
+    const result = await prepareImageForUpload(file);
+    if (!result.ok) {
+      if (result.reason === "decode-failed") {
+        toast.error(`${t("common.error")} — ${t("common.retry")}`);
+      } else {
+        toast.warning(
+          t(result.reason === "input-too-large" ? "survey.photoTooLargeInput" : "survey.photoTooLarge")
+        );
+      }
+      return;
+    }
+    upload.mutate(
+      { file: result.file, sectionKey },
+      {
+        onSuccess: () => toast.success(t("survey.photoUploaded")),
+        onError: (error) => {
+          const status = (error as { status?: number }).status;
+          if (status === 409) {
+            toast.warning(t("survey.photoLimit"));
+          } else if (status === 400) {
+            toast.warning(t("survey.photoTooLarge"));
+          } else if (status !== 403) {
+            toast.error(`${t("common.error")} — ${t("common.retry")}`);
+          }
+        },
+      }
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2" role="group" aria-label={hideLabel ? label : undefined}>
       {hideLabel ? null : <p className="text-sm font-medium">{label}</p>}
@@ -46,32 +80,10 @@ export function PhotoUploader({
         className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0];
-          // Backend mirror: photos over 512 KB are rejected — block before the
-          // round trip so field surveyors get instant feedback.
-          if (file && file.size > 512 * 1024) {
-            toast.warning(t("survey.photoTooLarge"));
-            event.target.value = "";
-            return;
-          }
-          if (file) {
-            upload.mutate(
-              { file, sectionKey },
-              {
-                onSuccess: () => toast.success(t("survey.photoUploaded")),
-                onError: (error) => {
-                  const status = (error as { status?: number }).status;
-                  if (status === 409) {
-                    toast.warning(t("survey.photoLimit"));
-                  } else if (status === 400) {
-                    toast.warning(t("survey.photoTooLarge"));
-                  } else if (status !== 403) {
-                    toast.error(`${t("common.error")} — ${t("common.retry")}`);
-                  }
-                },
-              }
-            );
-          }
           event.target.value = "";
+          if (file) {
+            void handlePick(file);
+          }
         }}
       />
       <div className="flex flex-wrap items-center gap-2">

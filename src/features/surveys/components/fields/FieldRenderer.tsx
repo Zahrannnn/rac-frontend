@@ -4,35 +4,13 @@ import { useId } from "react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useT } from "@/shared/i18n";
-import {
-  checklistItemLabelKey,
-  fieldLabelKey,
-  optionLabelKey,
-  statementLabelKey,
-  type FieldSpec,
-  type SectionSpec,
-} from "../../schema";
-import {
-  CheckGroup,
-  ChecklistTable,
-  LikertTable,
-  PhoneField,
-  RadioCards,
-  RangeMatrix,
-  RefrigerantMatrix,
-  SeasonalMatrix,
-  SignatureImage,
-  WorkforceMatrix,
-  YesNoToggle,
-} from "./inputs";
+import { fieldLabelKey } from "../../schema/label-keys";
+import type { FieldSpec, SectionSpec } from "../../schema/types";
+import { CheckGroup, PhoneField, RadioCards, YesNoToggle } from "./choice-fields";
+import { EnumSelectField } from "./enum-select-field";
+
+export { ComplexFieldRenderer } from "./matrix-field-renderer";
 
 export type FieldRendererProps = {
   section: SectionSpec;
@@ -58,35 +36,18 @@ export function FieldRenderer({
   const value = answers[field.key] ?? null;
 
   switch (field.type) {
-    case "enum": {
+    case "enum":
       // Long option lists (27 governorates) render as a dropdown; everything
       // else stays the radio-card column. Values remain the slugged keys.
       if (field.ui === "select") {
-        const current = value === null || value === "" ? null : String(value);
         return (
-          <div className="flex flex-col gap-1">
-            {hideLabel ? null : <Label htmlFor={id}>{label}</Label>}
-            <Select
-              value={current ?? undefined}
-              onValueChange={(next) => onChange(field.key, next)}
-            >
-              <SelectTrigger id={id} aria-label={hideLabel ? label : undefined}>
-                {/* Children win over the placeholder once a value exists — Radix
-                    only shows the selected item text after the list has opened,
-                    so the label is passed directly (workshop prefill must show). */}
-                <SelectValue placeholder={t("survey.selectOption" as never)}>
-                  {current ? t(optionLabelKey(current) as never) : undefined}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {(field.options ?? []).map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {t(optionLabelKey(option) as never)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <EnumSelectField
+            label={label}
+            hideLabel={hideLabel}
+            value={value}
+            options={field.options ?? []}
+            onChange={(next) => onChange(field.key, next)}
+          />
         );
       }
       return (
@@ -98,7 +59,6 @@ export function FieldRenderer({
           onChange={(next) => onChange(field.key, next)}
         />
       );
-    }
 
     case "multi":
       return (
@@ -220,99 +180,5 @@ export function FieldRenderer({
           />
         </div>
       );
-  }
-}
-
-/** Matrix and checklist renderers keyed by field key (workforce section). */
-export function ComplexFieldRenderer({
-  section,
-  field,
-  answers,
-  onChange,
-  hideLabel = false,
-}: FieldRendererProps) {
-  const t = useT();
-  const label = t(fieldLabelKey(section.key, field.key) as never);
-  const value = (answers[field.key] ?? {}) as Record<string, never>;
-
-  switch (field.type) {
-    case "matrix3x3":
-      return (
-        <WorkforceMatrix
-          label={label}
-          hideLabel={hideLabel}
-          rows={field.options ?? []}
-          value={value as never}
-          onChange={(next) => onChange(field.key, next)}
-        />
-      );
-    case "matrix2x5":
-      return (
-        <SeasonalMatrix
-          label={label}
-          hideLabel={hideLabel}
-          rows={field.options ?? []}
-          value={value as never}
-          onChange={(next) => onChange(field.key, next)}
-        />
-      );
-    case "matrixDynamic":
-      return (
-        <RefrigerantMatrix
-          label={label}
-          hideLabel={hideLabel}
-          rows={field.options ?? []}
-          value={value as never}
-          onChange={(next) => onChange(field.key, next)}
-        />
-      );
-    case "matrix3col":
-      return (
-        <RangeMatrix
-          label={label}
-          hideLabel={hideLabel}
-          rows={field.options ?? []}
-          value={value as never}
-          onChange={(next) => onChange(field.key, next)}
-        />
-      );
-    case "likert":
-      return (
-        <LikertTable
-          label={label}
-          hideLabel={hideLabel}
-          firstColLabel={t((field.firstColKey ?? "survey.likert.statementCol") as never)}
-          rows={field.options ?? []}
-          rowLabelFor={(row) =>
-            field.statementRows
-              ? t(statementLabelKey(section.key, row) as never)
-              : t(checklistItemLabelKey(row) as never)
-          }
-          scale={field.scale ?? []}
-          value={value as never}
-          onChange={(next) => onChange(field.key, next)}
-        />
-      );
-    case "checklist":
-      return (
-        <ChecklistTable
-          label={label}
-          hideLabel={hideLabel}
-          items={field.options ?? []}
-          value={value as never}
-          onChange={(next) => onChange(field.key, next)}
-        />
-      );
-    case "signature":
-      return (
-        <SignatureImage
-          label={label}
-          hideLabel={hideLabel}
-          value={typeof answers[field.key] === "string" ? (answers[field.key] as string) : null}
-          onChange={(next) => onChange(field.key, next)}
-        />
-      );
-    default:
-      return null;
   }
 }

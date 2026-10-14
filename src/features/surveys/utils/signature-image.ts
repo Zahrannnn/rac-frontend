@@ -1,18 +1,25 @@
 /**
  * Closing-signature image pipeline (questionnaire Ver3): the surveyor
- * photographs the wet signature and the browser downscales/compresses it to a
- * JPEG data URL that fits the stored-answers budget (≤512KB target, ~700KB
- * hard ceiling — the backend stores answers as opaque JSON).
+ * photographs the wet signature and the browser compresses it through the
+ * shared canvas pipeline into a WebP data URL (JPEG fallback) that fits the
+ * stored-answers budget (≤400KB — the backend stores answers as opaque JSON).
+ * EXIF is stripped by the canvas re-encode; tiny, small-dimension originals
+ * are kept as-is (the shared util's no-loss fast path).
  */
+import { compressImage } from "@/shared/utils/image-compression";
 
-/** Target ceiling per signature image, mirroring the 512KB photo limit. */
-export const SIGNATURE_MAX_BYTES = 512 * 1024;
+/** Stored-signature budget per image inside the stored-answers JSON. */
+export const SIGNATURE_MAX_BYTES = 400 * 1024;
 
-/** Longest allowed side of the compressed signature image. */
-const MAX_SIDE = 1200;
+/** Longest allowed side — signatures are fine detail, tighter than photos. */
+const SIGNATURE_MAX_SIDE = 1200;
 
-/** JPEG quality ladder — first rung that fits the budget wins. */
-const QUALITY_LADDER = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3];
+/** Shared-util options for the signature pass (white backdrop for JPEG fallback). */
+const SIGNATURE_OPTIONS = {
+  maxSide: SIGNATURE_MAX_SIDE,
+  targetBytes: SIGNATURE_MAX_BYTES,
+  background: "#ffffff",
+} as const;
 
 /** Decoded byte size of a base64 data URL (payload after the comma). */
 export function dataUrlBytes(dataUrl: string): number {
@@ -27,54 +34,38 @@ export function fitsSignatureBudget(dataUrl: string): boolean {
   return dataUrlBytes(dataUrl) <= SIGNATURE_MAX_BYTES;
 }
 
-function drawToCanvas(source: ImageBitmap | HTMLImageElement, width: number, height: number): HTMLCanvasElement {
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-  if (!context) {
-    throw new Error("canvas 2d context unavailable");
-  }
-  // white backdrop so transparent PNG signatures read correctly as JPEG
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, width, height);
-  context.drawImage(source, 0, 0, width, height);
-  return canvas;
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("signature encoding failed"));
+    reader.readAsDataURL(blob);
+  });
 }
 
-function encodeWithinBudget(canvas: HTMLCanvasElement): string {
-  let output = canvas.toDataURL("image/jpeg", QUALITY_LADDER[QUALITY_LADDER.length - 1]);
-  for (const quality of QUALITY_LADDER) {
-    output = canvas.toDataURL("image/jpeg", quality);
-    if (fitsSignatureBudget(output)) {
-      return output;
-    }
+async function toSignatureDataUrl(file: File): Promise<string> {
+  const dataUrl = await blobToDataUrl(file);
+  if (!fitsSignatureBudget(dataUrl)) {
+    throw new Error("signature exceeds the stored-answers budget");
   }
-  return output; // best rung — caller may still reject if over the hard ceiling
+  return dataUrl;
 }
 
 /**
- * Compress an image File (camera capture or gallery pick) into a JPEG data URL
- * scaled down to MAX_SIDE and quality-stepped until it fits SIGNATURE_MAX_BYTES.
- * Throws when the source cannot be decoded or no canvas context is available.
+ * Compress an image File (camera capture or gallery pick) into a WebP data
+ * URL scaled to 1200px and quality-stepped until it fits SIGNATURE_MAX_BYTES;
+ * a second, half-size pass covers pathological aspect ratios. Throws when the
+ * source cannot be decoded or the budget still cannot be met.
  */
 export async function compressSignatureImage(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  try {
-    const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
-    const canvas = drawToCanvas(
-      bitmap,
-      Math.max(1, Math.round(bitmap.width * scale)),
-      Math.max(1, Math.round(bitmap.height * scale))
-    );
-    const output = encodeWithinBudget(canvas);
-    if (fitsSignatureBudget(output)) {
-      return output;
-    }
-    // pathological aspect ratios: halve once more before giving up
-    const smaller = drawToCanvas(bitmap, Math.round(canvas.width / 2), Math.round(canvas.height / 2));
-    return encodeWithinBudget(smaller);
-  } finally {
-    bitmap.close();
+  const compressed = await compressImage(file, SIGNATURE_OPTIONS);
+  if (compressed.size <= SIGNATURE_MAX_BYTES) {
+    return toSignatureDataUrl(compressed);
   }
+  // pathological aspect ratios: halve once more before giving up
+  const smaller = await compressImage(compressed, {
+    ...SIGNATURE_OPTIONS,
+    maxSide: Math.round(SIGNATURE_MAX_SIDE / 2),
+  });
+  return toSignatureDataUrl(smaller);
 }

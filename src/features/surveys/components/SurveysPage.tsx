@@ -5,27 +5,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { ClipboardList, Search, X } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { useT } from "@/shared/i18n";
 import { cn } from "@/shared/utils/cn";
 import { useWorkshops } from "@/features/workshops";
 import { surveyByWorkshopId, useWorkshopSurveys } from "../hooks/use-workshop-surveys";
-import type { SurveyStatus } from "../types";
 import { SurveyQueue } from "./SurveyQueue";
-
-type SurveyFilter = SurveyStatus | "none" | "all";
+import { SurveysFilters, type SurveyFilter } from "./SurveysFilters";
 
 export function SurveysPage() {
   const router = useRouter();
@@ -109,60 +98,18 @@ export function SurveysPage() {
         </section>
       ) : null}
 
-      <section
-        className="flex flex-col gap-3 rounded-lg border bg-card p-3 sm:flex-row sm:flex-wrap sm:items-end"
-        aria-label={t("survey.search")}
-      >
-        <div className="flex min-w-56 flex-1 flex-col gap-1.5">
-          <Label htmlFor="survey-search" className="text-primary">
-            {t("survey.search")}
-          </Label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="survey-search"
-              value={searchDraft}
-              onChange={(event) => setSearchDraft(event.target.value)}
-              className="ps-8"
-              placeholder={t("survey.searchPlaceholder")}
-            />
-          </div>
-        </div>
-        <div className="flex w-full flex-col gap-1.5 sm:w-48">
-          <Label>{t("survey.statusFilter")}</Label>
-          <Select
-            value={surveyFilter}
-            onValueChange={(value) => setSurveyFilter(value as SurveyFilter)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("survey.allStatuses")}</SelectItem>
-              <SelectItem value="none">{t("survey.statusNone")}</SelectItem>
-              <SelectItem value="Draft">{t("status.Draft")}</SelectItem>
-              <SelectItem value="Incomplete">{t("status.Incomplete")}</SelectItem>
-              <SelectItem value="Submitted">{t("status.Submitted")}</SelectItem>
-              <SelectItem value="Complete">{t("status.Complete")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {hasFilters ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-[var(--secondary)] hover:text-[var(--secondary)]"
-            onClick={() => {
-              setSearchDraft("");
-              setSurveyFilter("all");
-              setFilters({ page: 1 });
-            }}
-          >
-            <X data-icon="inline-start" />
-            {t("workshops.clearFilters")}
-          </Button>
-        ) : null}
-      </section>
+      <SurveysFilters
+        search={searchDraft}
+        onSearchChange={setSearchDraft}
+        status={surveyFilter}
+        onStatusChange={setSurveyFilter}
+        hasFilters={hasFilters}
+        onClearFilters={() => {
+          setSearchDraft("");
+          setSurveyFilter("all");
+          setFilters({ page: 1 });
+        }}
+      />
 
       {isPending ? (
         <div className="flex flex-col gap-2" aria-busy>
