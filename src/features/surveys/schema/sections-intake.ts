@@ -48,7 +48,9 @@ export const INTAKE_SECTIONS: readonly SectionSpec[] = [
         options: ["male", "female", "joint", "company"],
       },
       // front photo — required by the default minPhotos rule (basicInfo ≥ 1)
-      { key: "frontPhoto", type: "photo", required: true },
+      // optional per product decision (2026-10-14) — the minPhotos rule default no
+      // longer demands a basicInfo photo either (backend + migration in lockstep)
+      { key: "frontPhoto", type: "photo", required: false },
     ],
   },
   {
