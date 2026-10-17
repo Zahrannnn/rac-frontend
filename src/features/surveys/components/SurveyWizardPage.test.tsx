@@ -3,6 +3,8 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 
 const push = vi.fn();
 const saveSection = vi.fn();
+const removePhotoMock = vi.fn();
+let photosMock: { id: string; fileName: string; sectionKey: string; contentType: string; sizeBytes: number }[] = [];
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace: vi.fn() }),
@@ -62,10 +64,10 @@ vi.mock("../hooks/use-survey", () => ({
   }),
   useRecordGps: () => ({ mutate: vi.fn(), isPending: false }),
   useSubmitSurvey: () => ({ mutate: vi.fn(), isPending: false }),
-  useSurveyPhotos: () => ({ data: [], isPending: false }),
+  useSurveyPhotos: () => ({ data: photosMock, isPending: false }),
   usePhotoMutations: () => ({
     upload: { mutate: vi.fn(), isPending: false },
-    remove: { mutate: vi.fn(), isPending: false },
+    remove: { mutate: removePhotoMock, isPending: false },
   }),
 }));
 
@@ -97,6 +99,8 @@ describe("SurveyWizardPage section-page navigation", () => {
   beforeEach(() => {
     saveSection.mockReset();
     push.mockReset();
+    removePhotoMock.mockReset();
+    photosMock = [];
     window.localStorage.clear();
     vi.useRealTimers();
   });
@@ -358,5 +362,63 @@ describe("SurveyWizardPage new schema fields", () => {
     expect(screen.getByText("القيمة غير صحيحة")).toBeInTheDocument();
     fireEvent.change(area, { target: { value: "120" } });
     expect(screen.queryByText("القيمة غير صحيحة")).not.toBeInTheDocument();
+  });
+});
+
+describe("SurveyWizardPage owner-refused photos", () => {
+  beforeEach(() => {
+    saveSection.mockReset();
+    push.mockReset();
+    removePhotoMock.mockReset();
+    photosMock = [];
+    window.localStorage.clear();
+    vi.useRealTimers();
+  });
+
+  it("deletes the front photo and hides capture when the owner refuses", async () => {
+    window.localStorage.setItem("rac.survey.section.sv-1", "closing");
+    photosMock = [
+      { id: "ph-1", fileName: "front.webp", sectionKey: "basicInfo", contentType: "image/webp", sizeBytes: 10 },
+    ];
+    render(
+      <I18nProvider>
+        <SurveyWizardPage workshopId="w-1" />
+      </I18nProvider>
+    );
+    expect(
+      await screen.findByRole("heading", { name: "الإغلاق والموافقات" })
+    ).toBeInTheDocument();
+
+    // owner refuses documentation photos
+    fireEvent.click(screen.getByRole("radio", { name: "رفض صاحب الورشة" }));
+
+    // the previously uploaded basicInfo photo is deleted server-side
+    await waitFor(() => expect(removePhotoMock).toHaveBeenCalledWith("ph-1"));
+
+    // the closing docs uploader disappears with the refusal
+    expect(screen.queryByText("صور التوثيق")).not.toBeInTheDocument();
+
+    // revisiting basicInfo: the front-photo card is gone
+    openToc();
+    fireEvent.click(screen.getByRole("button", { name: /البيانات الأساسية للورشة/ }));
+    expect(
+      await screen.findByRole("heading", { name: "البيانات الأساسية للورشة" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("صورة واجهة الورشة")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "إضافة صورة" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the front-photo capture available when photos are consented", async () => {
+    window.localStorage.setItem("rac.survey.section.sv-1", "basicInfo");
+    render(
+      <I18nProvider>
+        <SurveyWizardPage workshopId="w-1" />
+      </I18nProvider>
+    );
+    expect(
+      await screen.findByRole("heading", { name: "البيانات الأساسية للورشة" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("صورة واجهة الورشة")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "إضافة صورة" })).toBeInTheDocument();
   });
 });

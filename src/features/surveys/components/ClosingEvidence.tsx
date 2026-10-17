@@ -17,11 +17,14 @@ export function ClosingEvidence({
   onSaveGps,
   onCaptureGps,
   isCapturing,
+  photosHidden = false,
 }: {
   survey: SurveyRecord;
   onSaveGps: (latitude: number, longitude: number) => void;
   onCaptureGps: () => void;
   isCapturing: boolean;
+  /** Owner refused documentation photos — the uploader disappears. */
+  photosHidden?: boolean;
 }) {
   const t = useT();
   const gpsRecorded =
@@ -59,7 +62,9 @@ export function ClosingEvidence({
           </>
         )}
       </div>
-      <PhotoUploader surveyId={survey.id} sectionKey="closing" label={t("survey.docsPhotos")} />
+      {photosHidden ? null : (
+        <PhotoUploader surveyId={survey.id} sectionKey="closing" label={t("survey.docsPhotos")} />
+      )}
     </>
   );
 }

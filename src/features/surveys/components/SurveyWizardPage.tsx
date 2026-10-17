@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import type { Route } from "next";
 import { Button } from "@/components/ui/button";
 import { useAuth, can } from "@/features/auth";
@@ -19,7 +20,7 @@ import {
   buildShellTitle,
   buildTocSections,
 } from "./wizard-view-model";
-import { useStartSurvey } from "../hooks/use-survey";
+import { usePhotoMutations, useStartSurvey, useSurveyPhotos } from "../hooks/use-survey";
 import { useSurveyWizard } from "../hooks/use-survey-wizard";
 import { WIZARD_STEPS } from "../schema/sections";
 import { isSectionComplete } from "../utils/answers";
@@ -62,6 +63,22 @@ export function SurveyWizardPage({
   } = useSurveyWizard({ workshopId, stepHint });
 
   const canStart = Boolean(user && can(user.permissions, "surveys:create"));
+
+  // Product decision (2026-10-14): picking "رفض صاحب الورشة" hides the workshop
+  // front-photo capture (already optional) and deletes any photo uploaded before
+  // the refusal, so a refused-consent survey ships with zero basicInfo photos.
+  const photosRefused =
+    (answers["closing"] as Record<string, unknown> | undefined)?.photosConsent === "ownerRefused";
+  const photos = useSurveyPhotos(survey?.id);
+  const { remove: removePhoto } = usePhotoMutations(survey?.id ?? "");
+  const basicPhotos = (photos.data ?? []).filter((photo) => photo.sectionKey === "basicInfo");
+  useEffect(() => {
+    if (!photosRefused || basicPhotos.length === 0) {
+      return;
+    }
+    basicPhotos.forEach((photo) => removePhoto.mutate(photo.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-runs only on the refusal flip / photo count
+  }, [photosRefused, basicPhotos.length]);
 
   // ---- loading / not-started / error states ----
   if (isPending) {
@@ -174,7 +191,14 @@ export function SurveyWizardPage({
       {currentSection ? (
         <SectionStage
           key={currentSection.key}
-          section={currentSection}
+          section={
+            photosRefused && currentSection.key === "basicInfo"
+              ? {
+                  ...currentSection,
+                  fields: currentSection.fields.filter((field) => field.key !== "frontPhoto"),
+                }
+              : currentSection
+          }
           answers={answers[currentSection.key] ?? {}}
           onChange={(key, value) => setAnswer(currentSection.key, key, value)}
           touchedFields={touchedBySection[currentSection.key] ?? []}
@@ -198,6 +222,7 @@ export function SurveyWizardPage({
             <div className="mt-2 flex flex-col gap-4 rounded-lg border bg-card p-4">
               <ClosingEvidence
                 survey={survey}
+                photosHidden={photosRefused}
                 onSaveGps={saveGps}
                 onCaptureGps={captureGps}
                 isCapturing={isCapturingGps}
