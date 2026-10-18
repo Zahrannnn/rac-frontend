@@ -46,4 +46,12 @@ export const profile = {
   "profile.tabSurvey": "الاستبيان",
   "profile.tabTeam": "الفريق",
   "profile.tabTeamRestricted": "ليس لديك صلاحية إدارة إسناد فرق الميدان لهذه الورشة.",
+  "profile.dangerZone": "منطقة الخطر",
+  "profile.deleteDescription": "إزالة هذه الورشة (مسودة) مع استبيانها وفنييها وإسناداتها. يمكن حذف الورش في حالة المسودة فقط.",
+  "profile.deleteButton": "حذف الورشة",
+  "profile.deleteTitle": "حذف الورشة؟",
+  "profile.deleteDialogText": "لا يمكن التراجع عن هذا الإجراء — سيتم حذف الورشة وسجلاتها الأولية نهائيًا.",
+  "profile.deleteTypeCode": "اكتب {code} للتأكيد",
+  "profile.deleteDone": "تم حذف الورشة",
+  "profile.deleteConflict": "لم يعد بالإمكان حذف هذه الورشة",
 } as const;

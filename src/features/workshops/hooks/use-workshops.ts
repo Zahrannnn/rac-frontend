@@ -5,6 +5,7 @@ import {
   assignUser,
   checkDuplicates,
   createWorkshop,
+  deleteWorkshop,
   fetchAssignments,
   fetchWorkshop,
   fetchWorkshopSurvey,
@@ -57,6 +58,19 @@ export function useUpdateWorkshop(id: string) {
     // server so the UI shows the real current state before the user retries.
     onError: () => {
       void queryClient.invalidateQueries({ queryKey: workshopsKeys.detail(id) });
+    },
+  });
+}
+
+export function useDeleteWorkshop() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteWorkshop(id),
+    onSuccess: (_data, id) => {
+      // The workshop is gone — drop its cache instead of invalidating it.
+      queryClient.removeQueries({ queryKey: workshopsKeys.detail(id) });
+      void queryClient.invalidateQueries({ queryKey: workshopsKeys.list.all() });
     },
   });
 }

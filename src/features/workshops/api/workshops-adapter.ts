@@ -96,6 +96,11 @@ export async function updateWorkshop(
   return data;
 }
 
+/** Draft-only removal: 204 on success, 409 once the workshop left Draft. */
+export async function deleteWorkshop(id: string): Promise<void> {
+  await racApi.delete(`/workshops/${id}`);
+}
+
 export async function fetchAssignments(workshopId: string): Promise<Assignment[]> {
   const { data } = await racApi.get<Assignment[]>(`/workshops/${workshopId}/assignments`);
   return data;

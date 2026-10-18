@@ -17,6 +17,7 @@ import type { Workshop } from "../types";
 import { FlagBadge, StatusBadge, TypeBadge } from "./badges";
 import { WorkshopDetailSkeleton, WorkshopNotFoundState } from "./WorkshopLoadStates";
 import { WorkshopProfileTabs, isProfileTab, type ProfileTab } from "./WorkshopProfileTabs";
+import { WorkshopDeleteCard } from "./WorkshopDeleteCard";
 
 export function WorkshopProfilePage({ workshopId }: { workshopId: string }) {
   const t = useT();
@@ -63,6 +64,7 @@ export function WorkshopProfilePage({ workshopId }: { workshopId: string }) {
   const canEdit = mounted && Boolean(user && can(user.permissions, "workshops:edit"));
   const canAssign = mounted && Boolean(user && can(user.permissions, "workshops:assign"));
   const canStartSurvey = mounted && Boolean(user && can(user.permissions, "surveys:create"));
+  const canDelete = mounted && Boolean(user && can(user.permissions, "workshops:delete"));
 
   async function copyCode() {
     try {
@@ -104,6 +106,8 @@ export function WorkshopProfilePage({ workshopId }: { workshopId: string }) {
         canAssign={canAssign}
         canStartSurvey={canStartSurvey}
       />
+
+      <WorkshopDeleteCard workshop={workshop} canDelete={canDelete} />
     </>
   );
 }

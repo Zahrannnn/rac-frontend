@@ -49,4 +49,12 @@ export const profile: Record<keyof typeof profileAr, string> = {
   "profile.tabSurvey": "Survey",
   "profile.tabTeam": "Team",
   "profile.tabTeamRestricted": "You do not have permission to manage field-team assignments for this workshop.",
+  "profile.dangerZone": "Danger zone",
+  "profile.deleteDescription": "Remove this draft workshop along with its survey, technicians and assignments. Only Draft workshops can be deleted.",
+  "profile.deleteButton": "Delete workshop",
+  "profile.deleteTitle": "Delete workshop?",
+  "profile.deleteDialogText": "This action cannot be undone — the workshop and its draft-stage records will be permanently removed.",
+  "profile.deleteTypeCode": "Type {code} to confirm",
+  "profile.deleteDone": "Workshop deleted",
+  "profile.deleteConflict": "This workshop can no longer be deleted",
 };

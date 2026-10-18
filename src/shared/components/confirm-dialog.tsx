@@ -19,6 +19,8 @@ export type ConfirmDialogProps = {
   description: ReactNode;
   confirmLabel: ReactNode;
   isPending: boolean;
+  /** Extra gate on top of isPending — e.g. a typed-code confirmation. */
+  confirmDisabled?: boolean;
   onConfirm: () => void;
   onClose: () => void;
   /** Extra copy under the description, e.g. an irreversibility warning. */
@@ -32,6 +34,7 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   isPending,
+  confirmDisabled = false,
   onConfirm,
   onClose,
   children,
@@ -55,7 +58,12 @@ export function ConfirmDialog({
           <Button type="button" variant="outline" onClick={onClose}>
             {t("common.cancel")}
           </Button>
-          <Button type="button" variant="destructive" onClick={onConfirm} disabled={isPending}>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={isPending || confirmDisabled}
+          >
             {confirmLabel}
           </Button>
         </DialogFooter>
