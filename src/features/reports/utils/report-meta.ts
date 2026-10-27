@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   ClipboardCheck,
   Factory,
+  GraduationCap,
   HardHat,
   MapPinned,
   Package,
@@ -64,6 +65,12 @@ const KNOWN_REPORTS: Record<string, ReportMeta> = {
     icon: Users,
     titleKey: "report.training_records.title",
     descriptionKey: "report.training_records.description",
+    category: "people",
+  },
+  technician_training_profile: {
+    icon: GraduationCap,
+    titleKey: "report.technician_training_profile.title",
+    descriptionKey: "report.technician_training_profile.description",
     category: "people",
   },
   equipment_deliveries: {

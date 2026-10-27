@@ -81,6 +81,9 @@ export const reports: Record<keyof typeof reportsAr, string> = {
   "report.training_records.title": "Training records",
   "report.training_records.description":
     "Training sessions with attendees and pre/post scores.",
+  "report.technician_training_profile.title": "Technician training profile",
+  "report.technician_training_profile.description":
+    "Per technician: trainings attended, average pre/post scores and gain — including the untrained (coverage gap).",
   "report.equipment_deliveries.title": "Equipment deliveries",
   "report.equipment_deliveries.description":
     "Equipment delivery records with recipient and photo count.",

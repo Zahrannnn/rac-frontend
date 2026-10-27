@@ -78,6 +78,9 @@ export const reports = {
   "report.training_records.title": "سجلات التدريب",
   "report.training_records.description":
     "جلسات التدريب مع الحضور ودرجات قبل/بعد.",
+  "report.technician_training_profile.title": "ملف تدريب الفنيين",
+  "report.technician_training_profile.description":
+    "لكل فني: عدد التدريبات ومتوسطات الدرجات والتحسن — يشمل غير المدربين (فجوة التغطية).",
   "report.equipment_deliveries.title": "تسليم المعدات",
   "report.equipment_deliveries.description":
     "سجلات تسليم المعدات مع المستلم وعدد الصور.",
