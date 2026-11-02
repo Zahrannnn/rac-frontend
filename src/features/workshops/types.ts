@@ -6,16 +6,17 @@ export type WorkshopType = "Independent" | "AuthorizedServiceCenter" | "DealerAf
 
 export type WorkshopFlags = "None" | "DuplicateSuspected" | "NotRelevant";
 
-/** Allowed lifecycle transitions (Domain/WorkshopStatus.cs WorkshopLifecycle). */
 /**
  * MANUAL transition targets per status. Mirrors the backend's WorkshopLifecycle
- * (ADR-0004: Complete is terminal — the former Scored state was demolished).
+ * (Domain/WorkshopStatus.cs). ADR-0004 removed the Scored state; the 2026-11
+ * reopen decision makes Complete → Submitted legal so completed workshops stay
+ * correctable instead of dead-ending.
  */
 export const LIFECYCLE_TRANSITIONS: Record<WorkshopStatus, WorkshopStatus[]> = {
   Draft: ["Submitted"],
   Submitted: ["Complete", "Incomplete"],
   Incomplete: ["Submitted"],
-  Complete: [],
+  Complete: ["Submitted"],
 };
 
 /**

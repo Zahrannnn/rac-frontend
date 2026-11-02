@@ -132,11 +132,14 @@ describe("canTransition (lifecycle guard)", () => {
     expect(canTransition("Submitted", "Complete")).toBe(true);
     expect(canTransition("Submitted", "Incomplete")).toBe(true);
     expect(canTransition("Incomplete", "Submitted")).toBe(true);
+    // 2026-11 reopen decision: Complete returns to Submitted for corrections.
+    expect(canTransition("Complete", "Submitted")).toBe(true);
   });
 
-  it("forbids skipping and terminal transitions", () => {
-    // ADR-0004: Complete is terminal (the former Scored state is demolished).
+  it("forbids skipping transitions", () => {
     expect(canTransition("Draft", "Complete")).toBe(false);
-    expect(canTransition("Complete", "Submitted")).toBe(false);
+    expect(canTransition("Draft", "Incomplete")).toBe(false);
+    expect(canTransition("Complete", "Draft")).toBe(false);
+    expect(canTransition("Complete", "Incomplete")).toBe(false);
   });
 });

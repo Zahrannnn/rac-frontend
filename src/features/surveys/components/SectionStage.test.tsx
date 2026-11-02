@@ -110,8 +110,10 @@ describe("SectionStage (one scrollable section page)", () => {
 
     fireEvent.click(trigger);
     await waitFor(() => {
-      // react-day-picker grid with Arabic month caption (October 2026)
-      const caption = screen.getByText(/أكتوبر|٢٠٢٦/, { exact: false });
+      // react-day-picker opens on the CURRENT month; derive its Arabic caption
+      // independently instead of pinning one month (which broke at month rollover).
+      const currentMonth = new Intl.DateTimeFormat("ar", { month: "long" }).format(new Date());
+      const caption = screen.getByText(new RegExp(currentMonth), { exact: false });
       expect(caption).toBeInTheDocument();
     });
     const dayButton = screen

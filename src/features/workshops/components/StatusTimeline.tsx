@@ -6,7 +6,7 @@ import { LIFECYCLE_ORDER, type WorkshopStatus } from "../types";
 
 /**
  * Horizontal lifecycle stepper: Draft → Submitted → Complete/Incomplete
- * (ADR-0004: Complete is terminal — the former Scored stage is gone).
+ * (ADR-0004 removed the former Scored stage).
  * Reached states tint in, unreached ones stay grey (no per-state timestamps in
  * the contract — created/updated shown separately as the audit hint).
  */

@@ -30,14 +30,10 @@ export function StatusActions({ workshop }: { workshop: Workshop }) {
   const targets = LIFECYCLE_TRANSITIONS[workshop.status];
 
   if (targets.length === 0) {
-    // Complete is terminal (ADR-0004) — the workshop is selection-eligible; scoring
-    // is machine-derived from its survey when the next run fires.
+    // Defensive: every current state has a transition; this only fires if a
+    // future map entry ever goes empty again.
     return (
-      <p className="text-sm text-muted-foreground">
-        {workshop.status === "Complete"
-          ? t("profile.awaitingScoring")
-          : t("profile.terminalState")}
-      </p>
+      <p className="text-sm text-muted-foreground">{t("profile.terminalState")}</p>
     );
   }
 

@@ -33,7 +33,7 @@ export const profile = {
   "profile.transition.Submitted>Complete": "إكمال",
   "profile.transition.Submitted>Incomplete": "تعليم كغير مكتملة",
   "profile.transition.Incomplete>Submitted": "إعادة تقديم",
-  "profile.awaitingScoring": "استبيان الورشة مكتمل، وتدخل الورشة في الترتيب مع تشغيلة الاختيار القادمة",
+  "profile.transition.Complete>Submitted": "إعادة فتح للتصحيح",
   "profile.transitionConfirm": "تغيير حالة الورشة إلى «{status}»؟",
   "profile.transitionDone": "تم تحديث الحالة",
   "profile.transitionConflict": "انتقال حالة غير صالح من الخادم",

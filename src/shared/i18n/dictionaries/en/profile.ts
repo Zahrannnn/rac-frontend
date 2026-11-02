@@ -36,7 +36,7 @@ export const profile: Record<keyof typeof profileAr, string> = {
   "profile.transition.Submitted>Complete": "Mark complete",
   "profile.transition.Submitted>Incomplete": "Mark incomplete",
   "profile.transition.Incomplete>Submitted": "Resubmit",
-  "profile.awaitingScoring": "The workshop's survey is Complete, so it joins the ranking with the next selection run",
+  "profile.transition.Complete>Submitted": "Reopen for corrections",
   "profile.transitionConfirm": "Change workshop status to “{status}”?",
   "profile.transitionDone": "Status updated",
   "profile.transitionConflict": "Invalid status transition reported by the server",
