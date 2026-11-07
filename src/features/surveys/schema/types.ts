@@ -42,4 +42,10 @@ export type SectionSpec = {
   /** 0-based questionnaire order (consent is the implicit step 0 handled here too). */
   order: number;
   fields: readonly FieldSpec[];
+  /**
+   * 2026-11: single-choice groups in this section may be cleared by re-clicking the
+   * marked option (surveyor correction UX). Scoped per section — defaults to the
+   * always-select behavior everywhere else.
+   */
+  deselectable?: boolean;
 };

@@ -14,12 +14,15 @@ export function RadioCards({
   value,
   options,
   onChange,
+  deselectable = false,
 }: {
   label: string;
   hideLabel?: boolean;
   value: string | null;
   options: readonly string[];
-  onChange: (value: string) => void;
+  onChange: (value: string | null) => void;
+  /** 2026-11: re-clicking the marked option emits null (Section 3 correction UX). */
+  deselectable?: boolean;
 }) {
   const t = useT();
 
@@ -35,7 +38,7 @@ export function RadioCards({
               type="button"
               role="radio"
               aria-checked={active}
-              onClick={() => onChange(option)}
+              onClick={() => onChange(deselectable && active ? null : option)}
               className={cn(
                 "flex min-h-12 items-center gap-3 rounded-lg border px-4 py-2.5 text-start text-sm transition-colors",
                 active
@@ -121,11 +124,14 @@ export function YesNoToggle({
   hideLabel = false,
   value,
   onChange,
+  deselectable = false,
 }: {
   label: string;
   hideLabel?: boolean;
   value: string | null;
-  onChange: (value: "yes" | "no") => void;
+  onChange: (value: "yes" | "no" | null) => void;
+  /** 2026-11: re-clicking the marked option emits null (Section 3 correction UX). */
+  deselectable?: boolean;
 }) {
   const t = useT();
 
@@ -136,7 +142,8 @@ export function YesNoToggle({
         name={label}
         value={value}
         options={["yes", "no"]}
-        onSelect={(option) => onChange(option as "yes" | "no")}
+        deselectable={deselectable}
+        onSelect={(option) => onChange(option as "yes" | "no" | null)}
         labelFor={(option) => t(optionLabelKey(option) as never)}
       />
     </div>

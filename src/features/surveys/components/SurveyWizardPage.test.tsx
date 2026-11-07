@@ -282,6 +282,45 @@ describe("SurveyWizardPage autosave", () => {
   });
 });
 
+describe("SurveyWizardPage workforce deselect", () => {
+  it("removes a deselected Section 3 answer from the autosaved section data", async () => {
+    renderWizard();
+    await openBasicInfo();
+
+    openToc();
+    fireEvent.click(
+      screen.getByRole("button", { name: "حجم النشاط والقوى العاملة — لم يبدأ" })
+    );
+    expect(await screen.findByRole("heading", { name: "حجم النشاط والقوى العاملة" })).toBeInTheDocument();
+
+    // first radio group on the section is avgTechnicianExperience — select its first band
+    fireEvent.click(screen.getAllByRole("radio")[0]);
+    await waitFor(
+      () =>
+        expect(saveSection).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            key: "workforce",
+            data: expect.objectContaining({ avgTechnicianExperience: "lt1y" }),
+          })
+        ),
+      { timeout: 3000 }
+    );
+
+    // re-click the marked option → deselected: the key leaves the payload entirely
+    fireEvent.click(
+      screen.getAllByRole("radio").filter((radio) => radio.getAttribute("aria-checked") === "true")[0]
+    );
+    await waitFor(
+      () => {
+        const lastCall = saveSection.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+        expect(lastCall.key).toBe("workforce");
+        expect(lastCall.data).not.toHaveProperty("avgTechnicianExperience");
+      },
+      { timeout: 3000 }
+    );
+  }, 15000);
+});
+
 describe("SurveyWizardPage resume", () => {
   beforeEach(() => {
     saveSection.mockReset();

@@ -17,6 +17,13 @@ export function parseStoredSections(
     try {
       const value = JSON.parse(raw) as SectionAnswers;
       if (value && typeof value === "object" && !Array.isArray(value)) {
+        // 2026-11 deselect invariant: nulls never enter state — legacy payloads that
+        // stored "key": null (pre-deselect save shape) migrate on first load+save.
+        for (const fieldKey of Object.keys(value)) {
+          if (value[fieldKey] === null) {
+            delete value[fieldKey];
+          }
+        }
         parsed[key] = value;
       }
     } catch {

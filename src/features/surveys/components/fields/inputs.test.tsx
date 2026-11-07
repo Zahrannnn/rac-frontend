@@ -1,11 +1,12 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useState } from "react";
 import { I18nProvider } from "@/shared/i18n";
 import { RadioCards } from "./choice-fields";
 import { ChecklistTable, LikertTable } from "./assessment-tables";
 import { RefrigerantMatrix } from "./refrigerant-matrix";
-import { SeasonalMatrix, WorkforceMatrix } from "./matrix-tables";
+import { RangeMatrix, SeasonalMatrix, WorkforceMatrix } from "./matrix-tables";
+import { SegmentedRow } from "./primitives";
 import { ComplexFieldRenderer, FieldRenderer } from "./FieldRenderer";
 import { SECTIONS } from "../../schema/sections";
 
@@ -40,6 +41,65 @@ describe("RadioCards (singleChoice renderer)", () => {
       <RadioCards label="النوع" value="no" options={["yes", "no"]} onChange={vi.fn()} />
     );
     expect(screen.getByRole("radio", { name: "لا" })).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("deselectable: clicking the active option fires null, another option replaces it", () => {
+    const onChange = vi.fn();
+    const { rerender } = renderWithI18n(
+      <I18nProvider>
+        <RadioCards label="النوع" value="yes" options={["yes", "no"]} onChange={onChange} deselectable />
+      </I18nProvider>
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "نعم" }));
+    expect(onChange).toHaveBeenLastCalledWith(null);
+
+    rerender(
+      <I18nProvider>
+        <RadioCards label="النوع" value={null} options={["yes", "no"]} onChange={onChange} deselectable />
+      </I18nProvider>
+    );
+    fireEvent.click(screen.getByRole("radio", { name: "لا" }));
+    expect(onChange).toHaveBeenLastCalledWith("no");
+  });
+
+  it("without deselectable, clicking the active option keeps it selected", () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <RadioCards label="النوع" value="yes" options={["yes", "no"]} onChange={onChange} />
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "نعم" }));
+    expect(onChange).toHaveBeenCalledWith("yes");
+  });
+});
+
+describe("SegmentedRow (segmented single-choice row)", () => {
+  it("deselectable: clicking the active segment fires null", () => {
+    const onSelect = vi.fn();
+    renderWithI18n(
+      <SegmentedRow
+        name="الخبرة"
+        value="lt1y"
+        options={["lt1y", "y1_5"]}
+        onSelect={onSelect}
+        deselectable
+      />
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "lt1y" }));
+    expect(onSelect).toHaveBeenCalledWith(null);
+    expect(screen.getByRole("radio", { name: "lt1y" })).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("without deselectable, clicking the active segment keeps it selected", () => {
+    const onSelect = vi.fn();
+    renderWithI18n(
+      <SegmentedRow name="الخبرة" value="lt1y" options={["lt1y", "y1_5"]} onSelect={onSelect} />
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "lt1y" }));
+    expect(onSelect).toHaveBeenCalledWith("lt1y");
   });
 });
 
@@ -319,5 +379,157 @@ describe("RefrigerantMatrix (supply difficulty = single لا/نعم mark)", () =
     // second radiogroup on the card is the supply difficulty (لا then نعم)
     fireEvent.click(screen.getAllByRole("radio", { name: "نعم" })[1]);
     expect(onChange).toHaveBeenCalledWith({ "R-134a": { supplyDifficulty: "yes" } });
+  });
+});
+
+// ---- 2026-11 deselectable (Section 3 — workforce only) ----
+
+function activeRadio(): HTMLElement {
+  const active = screen
+    .getAllByRole("radio")
+    .find((radio) => radio.getAttribute("aria-checked") === "true");
+  if (!active) throw new Error("no marked radio in the group");
+  return active;
+}
+
+describe("SeasonalMatrix — deselectable cell toggle (workforce)", () => {
+  it("deselectable: re-clicking the marked band removes the row key from the payload", () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <I18nProvider>
+        <SeasonalMatrix
+          label="الحجم"
+          rows={["peakSeason_may_sep"]}
+          value={{ peakSeason_may_sep: "lt20" }}
+          onChange={onChange}
+          deselectable
+        />
+      </I18nProvider>
+    );
+
+    fireEvent.click(activeRadio());
+    expect(onChange).toHaveBeenCalledWith({});   // removed, not null-retained
+  });
+
+  it("without deselectable, re-clicking the marked band keeps it", () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <I18nProvider>
+        <SeasonalMatrix
+          label="الحجم"
+          rows={["peakSeason_may_sep"]}
+          value={{ peakSeason_may_sep: "lt20" }}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    fireEvent.click(activeRadio());
+    expect(onChange).toHaveBeenCalledWith({ peakSeason_may_sep: "lt20" });
+  });
+});
+
+describe("RangeMatrix — deselectable cell toggle (workforce gas tables)", () => {
+  it("deselectable: re-clicking the marked range empties that row", () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <I18nProvider>
+        <RangeMatrix
+          label="الغاز سنويًا"
+          rows={["R-134a"]}
+          value={{ "R-134a": "lt860" }}
+          onChange={onChange}
+          deselectable
+        />
+      </I18nProvider>
+    );
+
+    fireEvent.click(activeRadio());
+    expect(onChange).toHaveBeenCalledWith({});
+  });
+});
+
+describe("RefrigerantMatrix — deselectable row columns (workforce)", () => {
+  it("deselectable: re-clicking a marked used clears that column but keeps the rest of the row", () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <I18nProvider>
+        <RefrigerantMatrix
+          label="الغازات"
+          rows={["R-134a"]}
+          value={{ "R-134a": { used: "yes", carsPerMonthApprox: 12 } }}
+          onChange={onChange}
+          deselectable
+        />
+      </I18nProvider>
+    );
+
+    fireEvent.click(within(screen.getByRole("radiogroup", { name: "R-134a used" })).getByRole("radio", { name: "نعم" }));
+    expect(onChange).toHaveBeenCalledWith({ "R-134a": { carsPerMonthApprox: 12 } });
+  });
+
+  it("deselectable: clearing the last answer of a row removes the row key entirely", () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <I18nProvider>
+        <RefrigerantMatrix
+          label="الغازات"
+          rows={["R-134a"]}
+          value={{ "R-134a": { used: "yes" } }}
+          onChange={onChange}
+          deselectable
+        />
+      </I18nProvider>
+    );
+
+    fireEvent.click(within(screen.getByRole("radiogroup", { name: "R-134a used" })).getByRole("radio", { name: "نعم" }));
+    expect(onChange).toHaveBeenCalledWith({});
+  });
+});
+
+describe("FieldRenderer — section-scoped deselectable (workforce only)", () => {
+  const workforce = SECTIONS.find((candidate) => candidate.key === "workforce")!;
+  const experience = workforce.fields.find((field) => field.key === "avgTechnicianExperience")!;
+  const basicInfo = SECTIONS.find((candidate) => candidate.key === "basicInfo")!;
+  const legalStatus = basicInfo.fields.find((field) => field.key === "legalStatus")!;
+
+  it("workforce enum: re-clicking the active option fires null", () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <I18nProvider>
+        <FieldRenderer
+          section={workforce}
+          field={experience}
+          answers={{ avgTechnicianExperience: "lt1y" }}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    fireEvent.click(activeRadio());
+    expect(onChange).toHaveBeenLastCalledWith("avgTechnicianExperience", null);
+  });
+
+  it("another section's enum keeps always-select behavior", () => {
+    const onChange = vi.fn();
+    renderWithI18n(
+      <I18nProvider>
+        <FieldRenderer
+          section={basicInfo}
+          field={legalStatus}
+          answers={{ legalStatus: basicInfo.fields.find((f) => f.key === "legalStatus")!.options![0] }}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    const active = screen
+      .getAllByRole("radio")
+      .find((radio) => radio.getAttribute("aria-checked") === "true")!;
+    fireEvent.click(active);
+    expect(onChange).toHaveBeenLastCalledWith(
+      "legalStatus",
+      basicInfo.fields.find((f) => f.key === "legalStatus")!.options![0]
+    );
   });
 });

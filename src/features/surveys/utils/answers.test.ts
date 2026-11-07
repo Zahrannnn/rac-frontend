@@ -202,4 +202,17 @@ describe("parseStoredSections", () => {
     // completeness looks only at photosConsent + date
     expect(isSectionComplete(closing, parsed.closing)).toBe(true);
   });
+
+  it("strips null-valued keys from legacy payloads (2026-11 deselect invariant)", () => {
+    // The pre-deselect save shape retained cleared answers as "key": null;
+    // hydration must not re-introduce them (they migrate away on first save).
+    const parsed = parseStoredSections({
+      workforce: JSON.stringify({
+        avgTechnicianExperience: null,
+        mixedGasDetected: "no",
+        annualGasKg: {},
+      }),
+    });
+    expect(parsed.workforce).toEqual({ mixedGasDetected: "no", annualGasKg: {} });
+  });
 });

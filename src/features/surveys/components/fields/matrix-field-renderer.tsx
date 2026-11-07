@@ -38,6 +38,7 @@ export function ComplexFieldRenderer({
           rows={field.options ?? []}
           value={value as never}
           onChange={(next) => onChange(field.key, next)}
+          deselectable={section.deselectable === true}
         />
       );
     case "matrixDynamic":
@@ -48,6 +49,7 @@ export function ComplexFieldRenderer({
           rows={field.options ?? []}
           value={value as never}
           onChange={(next) => onChange(field.key, next)}
+          deselectable={section.deselectable === true}
         />
       );
     case "matrix3col":
@@ -58,6 +60,7 @@ export function ComplexFieldRenderer({
           rows={field.options ?? []}
           value={value as never}
           onChange={(next) => onChange(field.key, next)}
+          deselectable={section.deselectable === true}
         />
       );
     case "likert":

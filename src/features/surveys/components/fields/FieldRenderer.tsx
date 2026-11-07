@@ -57,6 +57,7 @@ export function FieldRenderer({
           value={value === null ? null : String(value)}
           options={field.options ?? []}
           onChange={(next) => onChange(field.key, next)}
+          deselectable={section.deselectable === true}
         />
       );
 
@@ -91,6 +92,7 @@ export function FieldRenderer({
           hideLabel={hideLabel}
           value={value === "yes" || value === "no" ? value : null}
           onChange={(next) => onChange(field.key, next)}
+          deselectable={section.deselectable === true}
         />
       );
 

@@ -39,12 +39,15 @@ export function SegmentedRow({
   options,
   onSelect,
   labelFor,
+  deselectable = false,
 }: {
   name: string;
   value: string | null;
   options: readonly string[];
-  onSelect: (option: string) => void;
+  onSelect: (option: string | null) => void;
   labelFor?: (option: string) => string;
+  /** 2026-11: re-clicking the marked option emits null (Section 3 correction UX). */
+  deselectable?: boolean;
 }) {
   return (
     <div role="radiogroup" aria-label={name} className="flex flex-wrap gap-1.5">
@@ -56,7 +59,7 @@ export function SegmentedRow({
             type="button"
             role="radio"
             aria-checked={active}
-            onClick={() => onSelect(option)}
+            onClick={() => onSelect(deselectable && active ? null : option)}
             className={cn(
               "min-h-11 rounded-md border px-3.5 py-2.5 text-sm font-medium transition-colors",
               active

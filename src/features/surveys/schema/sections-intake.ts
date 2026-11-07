@@ -56,6 +56,10 @@ export const INTAKE_SECTIONS: readonly SectionSpec[] = [
   {
     key: "workforce",
     order: 1,
+    // Paper questionnaire §3: activity volume + applicable forces — every single-choice
+    // group here (radio cards, yes/no, matrix dots, refrigerant row columns) can be
+    // cleared by re-clicking the marked option (2026-11 surveyor correction UX).
+    deselectable: true,
     fields: [
       {
         key: "workforce", type: "matrix3x3", required: true,

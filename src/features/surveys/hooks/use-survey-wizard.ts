@@ -115,10 +115,15 @@ export function useSurveyWizard({
     if (isFieldAnswered(previous) && previous !== value) {
       telemetry.fieldRevisited(key);
     }
-    const next = {
-      ...answersRef.current,
-      [sectionKey]: { ...(answersRef.current[sectionKey] ?? {}), [key]: value },
-    };
+    // 2026-11 deselect: a null value removes the key outright — deselected answers are
+    // gone from state AND from the autosaved section payload, never null-retained.
+    const section = { ...(answersRef.current[sectionKey] ?? {}) };
+    if (value === null) {
+      delete section[key];
+    } else {
+      section[key] = value;
+    }
+    const next = { ...answersRef.current, [sectionKey]: section };
     answersRef.current = next;
     setAnswers(next);
     setTouchedBySection((prev) => {

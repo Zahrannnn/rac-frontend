@@ -81,8 +81,8 @@ export function ChecklistTable({
   label: string;
   hideLabel?: boolean;
   items: readonly string[];
-  value: Record<string, string>;
-  onChange: (next: Record<string, string>) => void;
+  value: Record<string, string | null>;
+  onChange: (next: Record<string, string | null>) => void;
 }) {
   const t = useT();
 

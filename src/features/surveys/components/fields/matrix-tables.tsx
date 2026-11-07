@@ -83,12 +83,15 @@ export function SeasonalMatrix({
   rows,
   value,
   onChange,
+  deselectable = false,
 }: {
   label: string;
   hideLabel?: boolean;
   rows: readonly string[];
   value: Record<string, string | null>;
   onChange: (next: Record<string, string | null>) => void;
+  /** 2026-11: re-clicking the marked band removes the row key (Section 3 correction UX). */
+  deselectable?: boolean;
 }) {
   const t = useT();
 
@@ -117,7 +120,15 @@ export function SeasonalMatrix({
                     <RadioDot
                       active={active}
                       label={`${t(matrixRowLabelKey(row) as never)} — ${t(matrixColLabelKey(column) as never)}`}
-                      onSelect={() => onChange({ ...value, [row]: column })}
+                      onSelect={() => {
+                        const next = { ...value };
+                        if (deselectable && active) {
+                          delete next[row];   // removed, never null-retained
+                        } else {
+                          next[row] = column;
+                        }
+                        onChange(next);
+                      }}
                     />
                   </td>
                 );
@@ -137,12 +148,15 @@ export function RangeMatrix({
   rows,
   value,
   onChange,
+  deselectable = false,
 }: {
   label: string;
   hideLabel?: boolean;
   rows: readonly string[];
   value: Record<string, string | null>;
   onChange: (next: Record<string, string | null>) => void;
+  /** 2026-11: re-clicking the marked range removes the row key (Section 3 correction UX). */
+  deselectable?: boolean;
 }) {
   const t = useT();
 
@@ -171,7 +185,15 @@ export function RangeMatrix({
                     <RadioDot
                       active={active}
                       label={`${row} — ${t(matrixColLabelKey(column) as never)}`}
-                      onSelect={() => onChange({ ...value, [row]: column })}
+                      onSelect={() => {
+                        const next = { ...value };
+                        if (deselectable && active) {
+                          delete next[row];   // removed, never null-retained
+                        } else {
+                          next[row] = column;
+                        }
+                        onChange(next);
+                      }}
                     />
                   </td>
                 );
