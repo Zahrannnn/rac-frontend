@@ -21,6 +21,26 @@ describe("schema contract (questionnaire Ver3)", () => {
     expect(carsPerMonth.type).toBe("matrix2x5");
   });
 
+  it("makes the three annual gas tables optional and the only deselectable fields", () => {
+    const workforce = SECTIONS.find((section) => section.key === "workforce")!;
+    const gasKeys = ["annualGasKg", "annualLeakageKg", "expectedRecoveryKg"];
+    for (const key of gasKeys) {
+      const field = workforce.fields.find((field) => field.key === key)!;
+      expect(field.required).toBe(false);
+      expect(field.deselectable).toBe(true);
+    }
+    // 2026-11 scope: no other workforce field (and no other section) deselects.
+    const others = workforce.fields.filter((field) => !gasKeys.includes(field.key));
+    expect(others.every((field) => !field.deselectable)).toBe(true);
+    expect(
+      SECTIONS.every((section) =>
+        section.fields.every(
+          (field) => !field.deselectable || section.key === "workforce"
+        )
+      )
+    ).toBe(true);
+  });
+
   it("narrows supply difficulty to the paper's single لا/نعم mark", () => {
     expect([...SUPPLY_DIFFICULTY_OPTIONS]).toEqual(["no", "yes"]);
   });

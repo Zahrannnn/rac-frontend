@@ -10,7 +10,7 @@ import { SegmentedRow } from "./primitives";
 type RefrigerantRowValue = {
   used?: string;
   supplyDifficulty?: string;
-  carsPerMonthApprox?: number | null;
+  carsPerMonthApprox?: number;   // cleared numbers delete the key (never null-retained)
 };
 
 /** Dynamic refrigerant rows: used + supply difficulty + approx cars/month. */
@@ -20,15 +20,12 @@ export function RefrigerantMatrix({
   rows,
   value,
   onChange,
-  deselectable = false,
 }: {
   label: string;
   hideLabel?: boolean;
   rows: readonly string[];
   value: Record<string, RefrigerantRowValue>;
   onChange: (next: Record<string, RefrigerantRowValue>) => void;
-  /** 2026-11: re-clicking a marked column clears it from the row (Section 3 correction UX). */
-  deselectable?: boolean;
 }) {
   const t = useT();
 
@@ -36,7 +33,7 @@ export function RefrigerantMatrix({
     const nextRow: Record<string, unknown> = { ...value[row] };
     for (const [key, patchValue] of Object.entries(patch)) {
       if (patchValue === null) {
-        delete nextRow[key];   // removed, never null-retained
+        delete nextRow[key];   // cleared numbers leave no null behind (2026-11)
       } else {
         nextRow[key] = patchValue;
       }
@@ -67,7 +64,6 @@ export function RefrigerantMatrix({
                   name={`${row} used`}
                   value={value[row]?.used ?? null}
                   options={["yes", "no"]}
-                  deselectable={deselectable}
                   onSelect={(option) => setRow(row, { used: option })}
                   labelFor={(option) => t(optionLabelKey(option) as never)}
                 />
@@ -80,7 +76,6 @@ export function RefrigerantMatrix({
                   name={`${row} supply`}
                   value={value[row]?.supplyDifficulty ?? null}
                   options={SUPPLY_DIFFICULTY_OPTIONS}
-                  deselectable={deselectable}
                   onSelect={(option) => setRow(row, { supplyDifficulty: option })}
                   labelFor={(option) => t(optionLabelKey(option) as never)}
                 />

@@ -60,8 +60,9 @@ describe("telemetry tracker (wizard wiring)", () => {
     ]);
     expect(events[1]).toMatchObject({ sectionKey: "workforce", dwellMs: 44_000 });
     expect(events[2]).toMatchObject({ from: "workforce", to: "basicInfo" });
-    // workforce has 6 required fields — all unanswered here
-    expect(events[3]).toMatchObject({ sectionKey: "workforce", unansweredRequired: 6 });
+    // workforce has 5 required fields (the three annual gas tables went optional,
+    // 2026-11) — all unanswered here
+    expect(events[3]).toMatchObject({ sectionKey: "workforce", unansweredRequired: 5 });
   });
 
   it("does not log abandon when every required field is valid", () => {

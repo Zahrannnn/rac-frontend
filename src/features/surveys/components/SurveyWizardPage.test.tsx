@@ -282,8 +282,8 @@ describe("SurveyWizardPage autosave", () => {
   });
 });
 
-describe("SurveyWizardPage workforce deselect", () => {
-  it("removes a deselected Section 3 answer from the autosaved section data", async () => {
+describe("SurveyWizardPage gas-table deselect", () => {
+  it("removes a deselected annualGasKg mark from the autosaved section data", async () => {
     renderWizard();
     await openBasicInfo();
 
@@ -293,28 +293,36 @@ describe("SurveyWizardPage workforce deselect", () => {
     );
     expect(await screen.findByRole("heading", { name: "حجم النشاط والقوى العاملة" })).toBeInTheDocument();
 
-    // first radio group on the section is avgTechnicianExperience — select its first band
-    fireEvent.click(screen.getAllByRole("radio")[0]);
+    // annualGasKg is the first matrix3col table; its dots are the radios aria-labelled
+    // "R-134a — …" (the refrigerant card's used/supply buttons carry no aria-label).
+    const gasDots = () =>
+      screen
+        .getAllByRole("radio")
+        .filter((radio) => (radio.getAttribute("aria-label") ?? "").startsWith("R-134a — "));
+
+    fireEvent.click(gasDots()[0]);   // marks the first range for R-134a
     await waitFor(
       () =>
         expect(saveSection).toHaveBeenLastCalledWith(
           expect.objectContaining({
             key: "workforce",
-            data: expect.objectContaining({ avgTechnicianExperience: "lt1y" }),
+            data: expect.objectContaining({ annualGasKg: { "R-134a": "lt860" } }),
           })
         ),
       { timeout: 3000 }
     );
 
-    // re-click the marked option → deselected: the key leaves the payload entirely
-    fireEvent.click(
-      screen.getAllByRole("radio").filter((radio) => radio.getAttribute("aria-checked") === "true")[0]
-    );
+    // re-click the marked dot → deselected: the mark leaves the payload (empty record,
+    // nothing retained internally)
+    fireEvent.click(gasDots()[0]);
     await waitFor(
       () => {
-        const lastCall = saveSection.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+        const lastCall = saveSection.mock.calls.at(-1)?.[0] as {
+          key: string;
+          data: Record<string, unknown>;
+        };
         expect(lastCall.key).toBe("workforce");
-        expect(lastCall.data).not.toHaveProperty("avgTechnicianExperience");
+        expect(lastCall.data.annualGasKg).toEqual({});
       },
       { timeout: 3000 }
     );

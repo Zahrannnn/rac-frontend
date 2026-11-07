@@ -56,10 +56,6 @@ export const INTAKE_SECTIONS: readonly SectionSpec[] = [
   {
     key: "workforce",
     order: 1,
-    // Paper questionnaire §3: activity volume + applicable forces — every single-choice
-    // group here (radio cards, yes/no, matrix dots, refrigerant row columns) can be
-    // cleared by re-clicking the marked option (2026-11 surveyor correction UX).
-    deselectable: true,
     fields: [
       {
         key: "workforce", type: "matrix3x3", required: true,
@@ -81,12 +77,15 @@ export const INTAKE_SECTIONS: readonly SectionSpec[] = [
         key: "refrigerants", type: "matrixDynamic", required: true,
         options: ["R-134a", "R-1234yf", "other"],
       },
+      // The three annual gas tables (2026-11): optional AND the only fields whose
+      // marks can be cleared by re-clicking — quantities are estimates surveyors may
+      // not know; a wrong mark must be correctable, not permanent.
       {
-        key: "annualGasKg", type: "matrix3col", required: true,
+        key: "annualGasKg", type: "matrix3col", required: false, deselectable: true,
         options: ["R-134a", "R-1234yf", "other"],
       },
-      { key: "annualLeakageKg", type: "matrix3col", required: false, options: ["R-134a", "R-1234yf", "other"] },
-      { key: "expectedRecoveryKg", type: "matrix3col", required: false, options: ["R-134a", "R-1234yf", "other"] },
+      { key: "annualLeakageKg", type: "matrix3col", required: false, deselectable: true, options: ["R-134a", "R-1234yf", "other"] },
+      { key: "expectedRecoveryKg", type: "matrix3col", required: false, deselectable: true, options: ["R-134a", "R-1234yf", "other"] },
       {
         key: "leakCauses", type: "multi", required: false, helper: true,
         options: [
