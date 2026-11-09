@@ -50,6 +50,7 @@ export const trainings: Record<keyof typeof trainingsAr, string> = {
   "trainings.candidatesCap": "Showing the first {count} results. Type more to narrow the search.",
   "trainings.candidatesCount": "{count} results",
   "trainings.clearSearch": "Clear search",
+  "trainings.noWorkshop": "No workshop",
   "trainings.enrolled": "Enrolled",
   "trainings.adding": "Adding…",
   "trainings.attendeeAddedNamed": "{name} added",

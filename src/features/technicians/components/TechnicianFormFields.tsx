@@ -19,10 +19,15 @@ import {
   isCustomSpecialty,
   specialtyFromSelectValue,
   specialtySelectValue,
+  workshopFromSelectValue,
+  workshopSelectValue,
+  WORKSHOP_NONE_SENTINEL,
 } from "../utils/technician-form";
 import type { Technician } from "../types";
 
-/** Workshop picker — a read-only reference while the workshop is locked, otherwise a select. */
+/** Workshop picker — a read-only reference while the workshop is locked,
+ *  otherwise an optional select with a leading "بدون ورشة" empty option
+ *  (free technicians register without a workshop). */
 export function WorkshopField({
   technician,
   lockedWorkshopId,
@@ -45,10 +50,9 @@ export function WorkshopField({
   return (
     <FormField
       label={t("technicians.workshop")}
-      required={!workshopLocked}
       error={error}
       className="sm:col-span-2"
-      hint={workshopLocked ? t("technicians.workshopImmutable") : undefined}
+      hint={workshopLocked ? t("technicians.workshopImmutable") : t("wizard.optionalHint")}
     >
       {workshopLocked ? (
         <Input
@@ -57,11 +61,17 @@ export function WorkshopField({
           className="bg-muted"
         />
       ) : (
-        <Select value={value || undefined} onValueChange={onChange}>
+        <Select
+          value={workshopSelectValue(value)}
+          onValueChange={(value) => onChange(workshopFromSelectValue(value))}
+        >
           <SelectTrigger>
             <SelectValue placeholder={t("technicians.pickWorkshop")} />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value={WORKSHOP_NONE_SENTINEL}>
+              {t("technicians.noWorkshop")}
+            </SelectItem>
             {(workshops ?? []).map((workshop) => (
               <SelectItem key={workshop.id} value={workshop.id}>
                 {workshop.code} — {workshop.name}

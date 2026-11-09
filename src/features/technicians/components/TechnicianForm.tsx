@@ -182,7 +182,7 @@ export function TechnicianForm({
               }
             />
           ) : null}
-          <FormField label={t("profile.notes")} className="sm:col-span-2" hint={t("wizard.optionalHint")}>
+          <FormField label={t("technicians.notes")} className="sm:col-span-2" hint={t("wizard.optionalHint")}>
             <Input
               value={values.notes ?? ""}
               onChange={(event) => patch({ notes: event.target.value })}

@@ -15,12 +15,16 @@ vi.mock("@/features/auth", () => ({
 
 vi.mock("@/features/workshops/api/workshops-adapter", () => ({
   fetchWorkshops: vi.fn().mockResolvedValue({
-    items: [{ id: "w-1", code: "MAC-CAR-000001", name: "Nasr Workshop" }],
+    items: [
+      { id: "w-1", code: "MAC-CAR-000001", nameEn: "Nasr Workshop", nameAr: "ورشة النصر" },
+    ],
   }),
 }));
 
+const { createMutate } = vi.hoisted(() => ({ createMutate: vi.fn() }));
+
 vi.mock("../hooks/use-technicians", () => ({
-  useCreateTechnician: () => ({ mutate: vi.fn(), isPending: false }),
+  useCreateTechnician: () => ({ mutate: createMutate, isPending: false }),
   useUpdateTechnician: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
@@ -49,6 +53,8 @@ function renderDialog(props?: { lockedWorkshopId?: string; lockedWorkshopLabel?:
 describe("TechnicianDialog validation", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    // jsdom has no layout; the radix select scrolls the active option into view.
+    Element.prototype.scrollIntoView = vi.fn();
     vi.clearAllMocks();
   });
 
@@ -73,10 +79,7 @@ describe("TechnicianDialog validation", () => {
   });
 
   it("accepts a valid form (national ID 14 digits starting 2/3, valid mobile)", async () => {
-    const { fetchWorkshops } = await import("@/features/workshops/api/workshops-adapter");
     renderDialog();
-
-    await waitFor(() => expect(fetchWorkshops).toHaveBeenCalled());
 
     fireEvent.change(screen.getByRole("textbox", { name: /^الاسم الكامل$/ }), {
       target: { value: "احمد سمير" },
@@ -88,9 +91,48 @@ describe("TechnicianDialog validation", () => {
       target: { value: "01012345678" },
     });
 
-    // The radix Select keeps workshopId empty in jsdom → the workshop error must show
+    // Workshop is optional now: saving with none picked must not show the
+    // old "اختر الورشة" required error and goes out as workshopId: null.
     fireEvent.click(screen.getByRole("button", { name: "حفظ" }));
-    expect(await screen.findByText(/اختر الورشة/)).toBeInTheDocument();
+    await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1));
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ workshopId: null }),
+      expect.anything()
+    );
+    expect(screen.queryByText(/اختر الورشة/)).not.toBeInTheDocument();
+  });
+
+  it("offers a بدون ورشة empty option and sends the id when a workshop is picked", async () => {
+    renderDialog();
+
+    // The workshop select is the form's first combobox (specialty is second);
+    // FormField wires its id to the hidden radix bubble select, not the trigger.
+    const trigger = screen.getAllByRole("combobox")[0];
+    // Keyboard is the reliable radix path in jsdom (pointer events need capture).
+    fireEvent.keyDown(trigger, { key: "ArrowDown" });
+
+    // The leading empty option marks free technicians (registered without a workshop).
+    expect(await screen.findByRole("option", { name: "بدون ورشة" })).toBeInTheDocument();
+
+    const workshopOption = await screen.findByRole("option", { name: /ورشة النصر/ });
+    fireEvent.keyDown(workshopOption, { key: "Enter" });
+
+    fireEvent.change(screen.getByRole("textbox", { name: /^الاسم الكامل$/ }), {
+      target: { value: "احمد سمير" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /^الرقم القومي/ }), {
+      target: { value: "30001011234567" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /^الجوال/ }), {
+      target: { value: "01012345678" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "حفظ" }));
+
+    await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1));
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ workshopId: "w-1" }),
+      expect.anything()
+    );
   });
 
   it("locks workshop from workshop profile and skips the picker", async () => {

@@ -19,6 +19,21 @@ const technician: Technician = {
   createdAtUtc: "2026-01-01T00:00:00Z",
 };
 
+const freeTechnician: Technician = {
+  id: "t-free",
+  fullName: "Free Tech",
+  fullNameAr: "فني حر",
+  nationalId: null,
+  mobile: "01099999999",
+  workshopId: null,
+  workshopCode: null,
+  specialty: null,
+  yearsOfExperience: 2,
+  status: "Active",
+  notes: null,
+  createdAtUtc: "2026-01-01T00:00:00Z",
+};
+
 function renderTable(technicians: Technician[] = [technician]) {
   return render(
     <I18nProvider>
@@ -42,5 +57,14 @@ describe("TechniciansTable", () => {
 
     expect(screen.getByRole("table", { name: "الفنيون" })).toBeInTheDocument();
     expect(screen.getByText("لا يوجد فنيون")).toBeInTheDocument();
+  });
+
+  it("renders a free technician with the بدون ورشة chip instead of a workshop code", () => {
+    renderTable([technician, freeTechnician]);
+
+    const table = screen.getByRole("table", { name: "الفنيون" });
+    expect(within(table).getByText("فني حر")).toBeInTheDocument();
+    expect(within(table).getByText("بدون ورشة")).toBeInTheDocument();
+    expect(within(table).getByText("RAC-CAR-000125")).toBeInTheDocument();
   });
 });

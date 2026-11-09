@@ -1,5 +1,6 @@
 // Arabic dictionary — technicians namespace. Keys mirror the en counterpart one-to-one.
 export const technicians = {
+  "technicians.notes": "الدورات الحاصل عليها",
   // ===== Technicians registry (Week 3B) =====
   "technicians.title": "الفنيون",
   "technicians.subtitle": "سجل العمليات — الحالة وارتباط الورشة والخبرة بنظرة واحدة",
@@ -19,9 +20,9 @@ export const technicians = {
   "technicians.nationalIdImmutable": "الرقم القومي غير قابل للتعديل",
   "technicians.duplicateNationalId": "يوجد فني مسجَّل بنفس الرقم القومي",
   "technicians.workshop": "الورشة",
-  "technicians.workshopRequired": "اختر الورشة",
   "technicians.workshopImmutable": "ارتباط الورشة لا يمكن تغييره من هنا",
   "technicians.pickWorkshop": "اختر ورشة",
+  "technicians.noWorkshop": "بدون ورشة",
   "technicians.specialty": "التخصص",
   "technicians.years": "سنوات الخبرة",
   "technicians.yearsShort": "{count} سنة",

@@ -3,6 +3,7 @@ import type { technicians as techniciansAr } from "../ar/technicians";
 // English dictionary — technicians namespace. Compile-time locked to the ar key set:
 // a missing or extra key here is a type error.
 export const technicians: Record<keyof typeof techniciansAr, string> = {
+  "technicians.notes": "Courses obtained",
   // ===== Technicians registry (Week 3B) =====
   "technicians.title": "Technicians",
   "technicians.subtitle": "Ops roster — status, workshop link, and experience at a glance",
@@ -22,9 +23,9 @@ export const technicians: Record<keyof typeof techniciansAr, string> = {
   "technicians.nationalIdImmutable": "National ID cannot be changed",
   "technicians.duplicateNationalId": "A technician with this national ID already exists",
   "technicians.workshop": "Workshop",
-  "technicians.workshopRequired": "Select a workshop",
   "technicians.workshopImmutable": "Workshop link cannot be changed here",
   "technicians.pickWorkshop": "Select a workshop",
+  "technicians.noWorkshop": "No workshop",
   "technicians.specialty": "Specialty",
   "technicians.years": "Years of experience",
   "technicians.yearsShort": "{count} yrs",

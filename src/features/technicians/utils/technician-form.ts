@@ -31,6 +31,20 @@ export function specialtyFromSelectValue(value: string): string {
   return value;
 }
 
+/** Sentinel select value for "بدون ورشة" — Radix rejects empty-string item
+ *  values, so the empty workshop draft ("") is represented by this sentinel. */
+export const WORKSHOP_NONE_SENTINEL = "__none__";
+
+/** Value the workshop Select shows: the picked workshop, or the empty option. */
+export function workshopSelectValue(workshopId: string): string {
+  return workshopId || WORKSHOP_NONE_SENTINEL;
+}
+
+/** Resolve a Select pick into the stored workshop draft ("" = no workshop). */
+export function workshopFromSelectValue(value: string): string {
+  return value === WORKSHOP_NONE_SENTINEL ? "" : value;
+}
+
 /** Seed the form from an existing technician, or blank for create mode. */
 export function toFormValues(
   technician: Technician | null,
@@ -57,8 +71,6 @@ function technicianFieldMessage(field: string, t: TFunc): string {
       return t("wizard.mobileInvalid");
     case "yearsOfExperience":
       return t("technicians.yearsInvalid");
-    case "workshopId":
-      return t("technicians.workshopRequired");
     case "fullName":
       return t("technicians.fullNameRequired");
     default:
@@ -122,14 +134,15 @@ export function parseTechnicianSubmission(
 }
 
 /** POST /technicians body — blank optionals (incl. nationalId/mobile) are omitted
- *  (undefined drops at serialization), matching the nullable backend contract. */
+ *  (undefined drops at serialization), matching the nullable backend contract.
+ *  An empty workshop draft goes as null = the free-technician "بدون ورشة" state. */
 export function toTechnicianCreatePayload(data: TechnicianFormValues): CreateTechnicianPayload {
   return {
     fullName: data.fullName,
     fullNameAr: data.fullNameAr || undefined,
     nationalId: data.nationalId || undefined,
     mobile: data.mobile || undefined,
-    workshopId: data.workshopId,
+    workshopId: data.workshopId || null,
     specialty: data.specialty || undefined,
     // Create requires the number (parse rejects the "" draft in create mode).
     yearsOfExperience: typeof data.yearsOfExperience === "number" ? data.yearsOfExperience : 0,

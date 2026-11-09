@@ -33,9 +33,15 @@ function TechnicianMobileCard({
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <TechnicianStatusBadge status={technician.status} />
-        <span className="rounded-md bg-[var(--navy-shell)] px-2 py-0.5 font-mono text-[0.65rem] font-semibold text-white">
-          {technician.workshopCode}
-        </span>
+        {technician.workshopCode ? (
+          <span className="rounded-md bg-[var(--navy-shell)] px-2 py-0.5 font-mono text-[0.65rem] font-semibold text-white">
+            {technician.workshopCode}
+          </span>
+        ) : (
+          <span className="rounded-md border border-dashed border-[var(--navy-shell)]/30 px-2 py-0.5 text-[0.65rem] font-medium text-muted-foreground">
+            {t("technicians.noWorkshop")}
+          </span>
+        )}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <span className="tabular-nums" dir="ltr">
@@ -101,11 +107,16 @@ export function TechniciansTable({
       key: "workshop",
       header: t("technicians.workshop"),
       className: "w-[8rem]",
-      cell: (technician) => (
-        <span className="font-mono text-xs font-semibold text-primary">
-          {technician.workshopCode}
-        </span>
-      ),
+      cell: (technician) =>
+        technician.workshopCode ? (
+          <span className="font-mono text-xs font-semibold text-primary">
+            {technician.workshopCode}
+          </span>
+        ) : (
+          <span className="rounded-md border border-dashed border-[var(--navy-shell)]/30 px-2 py-0.5 text-[0.65rem] font-medium text-muted-foreground">
+            {t("technicians.noWorkshop")}
+          </span>
+        ),
     },
     {
       key: "years",

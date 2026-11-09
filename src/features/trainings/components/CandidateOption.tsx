@@ -63,13 +63,21 @@ export function CandidateOption({
           ) : null}
         </p>
         <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-          <bdi dir="ltr" className="font-mono font-semibold text-foreground/75">
-            {candidate.workshopCode}
-          </bdi>
-          <span className="min-w-0 truncate">
-            {candidate.workshopName}
-            {candidate.governorate ? ` · ${governorateLabel(candidate.governorate, locale)}` : ""}
-          </span>
+          {candidate.workshopCode ? (
+            <bdi dir="ltr" className="font-mono font-semibold text-foreground/75">
+              {candidate.workshopCode}
+            </bdi>
+          ) : null}
+          {candidate.workshopName ? (
+            <span className="min-w-0 truncate">
+              {candidate.workshopName}
+              {candidate.governorate
+                ? ` · ${governorateLabel(candidate.governorate, locale)}`
+                : ""}
+            </span>
+          ) : (
+            <span className="italic">{t("trainings.noWorkshop")}</span>
+          )}
           {candidate.mobile ? (
             <bdi dir="ltr" className="tabular-nums sm:ms-auto">
               {candidate.mobile}

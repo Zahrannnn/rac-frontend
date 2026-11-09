@@ -187,6 +187,31 @@ describe("AttendeePicker search", () => {
   });
 });
 
+describe("AttendeePicker free technicians", () => {
+  it("renders بدون ورشة for a candidate without workshop data", async () => {
+    fetchCandidatesMock.mockResolvedValue([
+      { ...candidate, workshopCode: null, workshopName: null },
+    ]);
+    renderSection();
+    const listbox = await searchFor("محمد");
+
+    const option = within(listbox).getByRole("option", { name: /محمد علي/ });
+    expect(option).toHaveTextContent("بدون ورشة");
+    expect(option).not.toHaveTextContent("MAC-CAR-000125");
+    expect(option).not.toHaveTextContent("ورشة النصر");
+  });
+
+  it("still renders the workshop name and code for a candidate with a workshop", async () => {
+    renderSection();
+    const listbox = await searchFor("محمد");
+
+    const option = within(listbox).getByRole("option", { name: /محمد علي/ });
+    expect(option).toHaveTextContent("ورشة النصر");
+    expect(option).toHaveTextContent("MAC-CAR-000125");
+    expect(option).not.toHaveTextContent("بدون ورشة");
+  });
+});
+
 describe("AttendeePicker adding", () => {
   it("adds the highlighted candidate on Enter with the optional scores, keeping the search", async () => {
     renderSection();

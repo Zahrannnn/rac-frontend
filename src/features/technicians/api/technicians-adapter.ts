@@ -28,7 +28,8 @@ export type CreateTechnicianPayload = {
   /** Optional — blank drafts are omitted (undefined drops at serialization). */
   nationalId?: string;
   mobile?: string;
-  workshopId: string;
+  /** Nullable — null registers a free technician (no workshop, "بدون ورشة"). */
+  workshopId: string | null;
   specialty?: string;
   yearsOfExperience: number;
   notes?: string;

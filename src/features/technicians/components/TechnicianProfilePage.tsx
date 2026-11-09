@@ -58,12 +58,18 @@ export function TechnicianProfilePage({ technicianId }: { technicianId: string }
       <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
         <div className="flex flex-wrap items-center gap-3">
           <TechnicianStatusBadge status={technician.status} />
-          <Link
-            href={`/workshops/${technician.workshopId}`}
-            className="rounded-md bg-[var(--navy-shell)] px-2.5 py-1.5 font-mono text-xs font-semibold text-white underline-offset-4 hover:opacity-90"
-          >
-            {technician.workshopCode}
-          </Link>
+          {technician.workshopId ? (
+            <Link
+              href={`/workshops/${technician.workshopId}`}
+              className="rounded-md bg-[var(--navy-shell)] px-2.5 py-1.5 font-mono text-xs font-semibold text-white underline-offset-4 hover:opacity-90"
+            >
+              {technician.workshopCode}
+            </Link>
+          ) : (
+            <span className="rounded-md border border-dashed border-[var(--navy-shell)]/30 px-2.5 py-1.5 text-xs font-medium text-muted-foreground">
+              {t("technicians.noWorkshop")}
+            </span>
+          )}
           <span className="ms-auto text-xs text-muted-foreground">
             {t("profile.addedOn", { date: formatDateUtc(technician.createdAtUtc) })}
           </span>
@@ -92,12 +98,18 @@ export function TechnicianProfilePage({ technicianId }: { technicianId: string }
             <dl className="mt-3 grid grid-cols-[minmax(7rem,9rem)_1fr] gap-y-2 text-sm">
               <dt className="text-muted-foreground">{t("technicians.workshop")}</dt>
               <dd>
-                <Link
-                  href={`/workshops/${technician.workshopId}`}
-                  className="font-mono text-xs font-semibold text-primary underline-offset-4 hover:underline"
-                >
-                  {technician.workshopCode}
-                </Link>
+                {technician.workshopId ? (
+                  <Link
+                    href={`/workshops/${technician.workshopId}`}
+                    className="font-mono text-xs font-semibold text-primary underline-offset-4 hover:underline"
+                  >
+                    {technician.workshopCode}
+                  </Link>
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    {t("technicians.noWorkshop")}
+                  </span>
+                )}
               </dd>
               {technician.specialty ? (
                 <>
@@ -116,7 +128,7 @@ export function TechnicianProfilePage({ technicianId }: { technicianId: string }
         {technician.notes ? (
           <div className="border-t pt-3">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-primary">
-              {t("profile.notes")}
+              {t("technicians.notes")}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">{technician.notes}</p>
           </div>

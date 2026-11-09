@@ -89,13 +89,14 @@ export type UpdateAttendeePayload = {
 };
 
 /** GET /trainings/technician-candidates — purpose-built participant picker
- * source (≤20 rows, min 2-char search). */
+ * source (≤20 rows, min 2-char search). Free technicians ("بدون ورشة") have
+ * no workshop, so workshopCode/workshopName arrive null. */
 export type TechnicianCandidate = {
   id: string;
   fullName: string;
   fullNameAr?: string | null;
   mobile?: string | null;
-  workshopCode: string;
-  workshopName: string;
+  workshopCode: string | null;
+  workshopName: string | null;
   governorate: string;
 };

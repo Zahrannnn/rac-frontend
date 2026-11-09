@@ -6,8 +6,9 @@ export type Technician = {
   fullNameAr: string | null;
   nationalId: string | null;
   mobile: string | null;
-  workshopId: string;
-  workshopCode: string;
+  /** Nullable — free technicians register without a workshop ("بدون ورشة"). */
+  workshopId: string | null;
+  workshopCode: string | null;
   specialty: string | null;
   yearsOfExperience: number;
   status: TechnicianStatus;

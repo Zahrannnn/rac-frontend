@@ -7,6 +7,9 @@ import {
   toFormValues,
   toTechnicianCreatePayload,
   toTechnicianUpdatePayload,
+  workshopFromSelectValue,
+  workshopSelectValue,
+  WORKSHOP_NONE_SENTINEL,
 } from "./technician-form";
 import {
   SPECIALIZATION_OPTIONS,
@@ -50,7 +53,7 @@ describe("parseTechnicianSubmission", () => {
 
   it("maps each invalid field to its Arabic message (first issue wins)", () => {
     const submission = parseTechnicianSubmission(
-      { ...validValues, fullName: "", nationalId: "123", mobile: "01312345678", workshopId: "" },
+      { ...validValues, fullName: "", nationalId: "123", mobile: "01312345678" },
       t,
       "create"
     );
@@ -58,8 +61,12 @@ describe("parseTechnicianSubmission", () => {
       fullName: ar["technicians.fullNameRequired"],
       nationalId: ar["technicians.nationalIdInvalid"],
       mobile: ar["wizard.mobileInvalid"],
-      workshopId: ar["technicians.workshopRequired"],
     });
+  });
+
+  it("accepts an empty workshop (free technician) — no required error", () => {
+    const submission = parseTechnicianSubmission({ ...validValues, workshopId: "" }, t, "create");
+    expect(submission).toEqual({ data: { ...validValues, workshopId: "" } });
   });
 
   it("edit mode tolerates a legacy nationalId and a cleared years draft", () => {
@@ -129,6 +136,11 @@ describe("toTechnicianCreatePayload", () => {
     expect(JSON.stringify(payload)).not.toContain("nationalId");
     expect(JSON.stringify(payload)).not.toContain("mobile");
   });
+
+  it("maps an empty workshop draft to a null workshopId (free technician)", () => {
+    const payload = toTechnicianCreatePayload({ ...validValues, workshopId: "" });
+    expect(payload.workshopId).toBeNull();
+  });
 });
 
 describe("toTechnicianUpdatePayload", () => {
@@ -170,6 +182,10 @@ describe("toFormValues", () => {
       notes: "",
     });
   });
+
+  it("seeds an empty workshop for create mode without a locked workshop", () => {
+    expect(toFormValues(null).workshopId).toBe("");
+  });
 });
 
 describe("specialty select helpers", () => {
@@ -189,5 +205,17 @@ describe("specialty select helpers", () => {
     expect(isCustomSpecialty(SPECIALIZATION_OPTIONS[0])).toBe(false);
     expect(isCustomSpecialty("")).toBe(false);
     expect(isCustomSpecialty(null)).toBe(false);
+  });
+});
+
+describe("workshop select helpers", () => {
+  it("maps an empty workshop draft onto the بدون ورشة sentinel and back", () => {
+    expect(workshopSelectValue("")).toBe(WORKSHOP_NONE_SENTINEL);
+    expect(workshopFromSelectValue(WORKSHOP_NONE_SENTINEL)).toBe("");
+  });
+
+  it("passes a picked workshop through unchanged", () => {
+    expect(workshopSelectValue("w-1")).toBe("w-1");
+    expect(workshopFromSelectValue("w-1")).toBe("w-1");
   });
 });

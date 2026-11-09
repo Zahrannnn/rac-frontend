@@ -47,6 +47,7 @@ export const trainings = {
   "trainings.candidatesCap": "تظهر أول {count} نتيجة. أضف حرفًا أو رقمًا لتضييق البحث.",
   "trainings.candidatesCount": "عدد النتائج: {count}",
   "trainings.clearSearch": "مسح البحث",
+  "trainings.noWorkshop": "بدون ورشة",
   "trainings.enrolled": "مسجّل",
   "trainings.adding": "جارٍ الإضافة…",
   "trainings.attendeeAddedNamed": "تمت إضافة {name}",
