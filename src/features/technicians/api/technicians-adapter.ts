@@ -43,6 +43,9 @@ export async function createTechnician(payload: CreateTechnicianPayload): Promis
 export type UpdateTechnicianPayload = {
   fullName?: string;
   fullNameAr?: string | null;
+  /** Nullable — null keeps the stored national ID (the editable form sends the
+   *  prefilled value; a blank draft leaves it unchanged). */
+  nationalId?: string | null;
   /** Nullable — a cleared draft clears the stored value. */
   mobile?: string | null;
   specialty?: string | null;

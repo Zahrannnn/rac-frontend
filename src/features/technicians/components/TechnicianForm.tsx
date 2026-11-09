@@ -63,7 +63,8 @@ export function TechnicianForm({
     }
 
     if (technician) {
-      // Edit: nationalId + workshopId are immutable per contract (PATCH fields only).
+      // Edit: the workshop link stays immutable per contract (PATCH fields only);
+      // the national id is editable now — a blank draft goes as null = keep.
       update.mutate(toTechnicianUpdatePayload(submission.data), {
         onSuccess: () => finishSave(t("profile.saved")),
         onError: reportMutationError,
@@ -114,16 +115,13 @@ export function TechnicianForm({
           <FormField
             label={t("technicians.nationalId")}
             error={errors.nationalId}
-            hint={
-              technician ? t("technicians.nationalIdImmutable") : t("technicians.nationalIdHint")
-            }
+            hint={t("technicians.nationalIdHint")}
           >
             <Input
               dir="ltr"
               inputMode="numeric"
               className="tabular-nums"
               value={values.nationalId}
-              disabled={Boolean(technician)}
               onChange={(event) =>
                 patch({ nationalId: event.target.value.replace(/\D/g, "").slice(0, 14) })
               }

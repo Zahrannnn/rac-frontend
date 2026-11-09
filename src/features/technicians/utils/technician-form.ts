@@ -82,11 +82,10 @@ export type TechnicianSubmission =
   | { data: TechnicianFormValues }
   | { errors: Record<string, string> };
 
-/** Edit mode validates only the PATCH-able fields — the immutable
- *  nationalId/workshopId pass through untouched (a legacy stored nationalId
- *  must not block saving, and neither is sent). */
+/** Edit mode validates only the PATCH-able fields — the immutable workshopId passes
+ *  through untouched, while nationalId is validated like any other editable field
+ *  (14-digit when present; a blank draft goes as null = keep the stored value). */
 const editableTechnicianSchema = technicianSchema.omit({
-  nationalId: true,
   workshopId: true,
 });
 
@@ -150,12 +149,13 @@ export function toTechnicianCreatePayload(data: TechnicianFormValues): CreateTec
   };
 }
 
-/** PATCH /technicians/{id} body — nationalId/workshopId are immutable per contract;
- *  a cleared mobile goes as null (the backend column is nullable). */
+/** PATCH /technicians/{id} body — workshopId is immutable per contract; a cleared
+ *  nationalId/mobile goes as null (the backend keeps the stored value — null = keep). */
 export function toTechnicianUpdatePayload(data: TechnicianFormValues): UpdateTechnicianPayload {
   return {
     fullName: data.fullName,
     fullNameAr: data.fullNameAr || null,
+    nationalId: data.nationalId || null,
     mobile: data.mobile || null,
     specialty: data.specialty || null,
     // Cleared draft → key omitted → the stored value is left unchanged (PATCH semantics).

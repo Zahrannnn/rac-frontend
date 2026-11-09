@@ -21,17 +21,27 @@ vi.mock("@/features/workshops/api/workshops-adapter", () => ({
   }),
 }));
 
-const { createMutate } = vi.hoisted(() => ({ createMutate: vi.fn() }));
+const { createMutate, updateMutate } = vi.hoisted(() => ({
+  createMutate: vi.fn(),
+  updateMutate: vi.fn(),
+}));
 
 vi.mock("../hooks/use-technicians", () => ({
   useCreateTechnician: () => ({ mutate: createMutate, isPending: false }),
-  useUpdateTechnician: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpdateTechnician: () => ({ mutate: updateMutate, isPending: false }),
 }));
 
 import { TechnicianDialog } from "./TechnicianDialog";
 import { I18nProvider } from "@/shared/i18n";
+import type { Technician } from "../types";
 
-function renderDialog(props?: { lockedWorkshopId?: string; lockedWorkshopLabel?: string }) {
+function renderDialog(
+  props?: {
+    lockedWorkshopId?: string;
+    lockedWorkshopLabel?: string;
+    technician?: Technician | null;
+  }
+) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -41,7 +51,7 @@ function renderDialog(props?: { lockedWorkshopId?: string; lockedWorkshopLabel?:
         <TechnicianDialog
           open
           onOpenChange={vi.fn()}
-          technician={null}
+          technician={props?.technician ?? null}
           lockedWorkshopId={props?.lockedWorkshopId}
           lockedWorkshopLabel={props?.lockedWorkshopLabel}
         />
@@ -145,5 +155,64 @@ describe("TechnicianDialog validation", () => {
     expect(screen.getByDisplayValue("MAC-CAR-000001 — Nasr Workshop")).toBeInTheDocument();
     expect(screen.queryByText(/اختر ورشة/)).not.toBeInTheDocument();
     expect(fetchWorkshops).not.toHaveBeenCalled();
+  });
+});
+
+describe("TechnicianDialog edit mode", () => {
+  const existing: Technician = {
+    id: "t-1",
+    fullName: "احمد سمير",
+    fullNameAr: null,
+    nationalId: "29801011234567",
+    mobile: "01012345678",
+    workshopId: null,
+    workshopCode: null,
+    specialty: "مؤهل عالي",
+    yearsOfExperience: 5,
+    status: "Active",
+    notes: null,
+    createdAtUtc: "2026-01-01T00:00:00Z",
+  };
+
+  beforeEach(() => {
+    window.localStorage.clear();
+    Element.prototype.scrollIntoView = vi.fn();
+    vi.clearAllMocks();
+  });
+
+  it("edits the national id — prefilled, no longer disabled, sent in the PATCH payload", async () => {
+    renderDialog({ technician: existing });
+
+    const nationalIdInput = screen.getByRole("textbox", { name: /^الرقم القومي/ });
+    expect(nationalIdInput).toHaveValue("29801011234567");
+    expect(nationalIdInput).not.toBeDisabled();
+
+    fireEvent.change(nationalIdInput, { target: { value: "30001011234567" } });
+    fireEvent.click(screen.getByRole("button", { name: "حفظ" }));
+
+    await waitFor(() => expect(updateMutate).toHaveBeenCalledTimes(1));
+    expect(updateMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ nationalId: "30001011234567" }),
+      expect.anything()
+    );
+    // The workshop link stays immutable — never part of the update payload.
+    expect(updateMutate).toHaveBeenCalledWith(
+      expect.not.objectContaining({ workshopId: expect.anything() }),
+      expect.anything()
+    );
+  });
+
+  it("rejects a malformed edited national id with the Arabic message", async () => {
+    renderDialog({ technician: existing });
+
+    fireEvent.change(screen.getByRole("textbox", { name: /^الرقم القومي/ }), {
+      target: { value: "123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "حفظ" }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/الرقم القومي يجب أن يكون ١٤ رقمًا/)).toBeInTheDocument()
+    );
+    expect(updateMutate).not.toHaveBeenCalled();
   });
 });

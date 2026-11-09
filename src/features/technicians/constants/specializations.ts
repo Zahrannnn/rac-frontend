@@ -1,13 +1,10 @@
-/** Common RAC specializations offered in the technician dropdown; "Other" reveals a free-text field. */
+/** Qualification options (المؤهل) offered in the technician dropdown; "Other" reveals a
+ *  free-text field. Stored values are the option text; legacy stored role names
+ *  (فني تبريد وتكييف…) still display as free text — they are simply no longer offered. */
 export const SPECIALIZATION_OPTIONS: readonly string[] = [
-  "فني تبريد وتكييف",
-  "فني صيانة وتصليح",
-  "تقني تبريد صناعي",
-  "فني ثلاجات منزلية",
-  "فني وحدات تكييف مركزية",
-  "فني تبريد السيارات",
-  "مشرف صيانة",
-  "فني كهرباء وتبريد",
+  "مؤهل عالي",
+  "مؤهل متوسط",
+  "بدون",
 ];
 
 /** Sentinel select value for "Other" — resolved to a free-text specialty by the form. */

@@ -69,14 +69,35 @@ describe("parseTechnicianSubmission", () => {
     expect(submission).toEqual({ data: { ...validValues, workshopId: "" } });
   });
 
-  it("edit mode tolerates a legacy nationalId and a cleared years draft", () => {
-    const submission = parseTechnicianSubmission(
+  it("edit mode validates the national id (14-digit when present) and tolerates a cleared years draft", () => {
+    const malformed = parseTechnicianSubmission(
       { ...validValues, nationalId: "legacy-import", yearsOfExperience: "" },
       t,
       "edit"
     );
+    expect("errors" in malformed && malformed.errors).toEqual({
+      nationalId: ar["technicians.nationalIdInvalid"],
+    });
+
+    // A valid edit passes through with the cleared years draft intact.
+    const submission = parseTechnicianSubmission(
+      { ...validValues, nationalId: "29801011234567", yearsOfExperience: "" },
+      t,
+      "edit"
+    );
     expect(submission).toEqual({
-      data: { ...validValues, nationalId: "legacy-import", yearsOfExperience: "" },
+      data: { ...validValues, nationalId: "29801011234567", yearsOfExperience: "" },
+    });
+  });
+
+  it("edit mode accepts a blank nationalId draft (null = keep the stored value)", () => {
+    const submission = parseTechnicianSubmission(
+      { ...validValues, nationalId: "", yearsOfExperience: "" },
+      t,
+      "edit"
+    );
+    expect(submission).toEqual({
+      data: { ...validValues, nationalId: "", yearsOfExperience: "" },
     });
   });
 
@@ -144,18 +165,24 @@ describe("toTechnicianCreatePayload", () => {
 });
 
 describe("toTechnicianUpdatePayload", () => {
-  it("sends blanks as null and omits the immutable nationalId/workshopId", () => {
+  it("sends the editable national id, blanks as null, and omits the immutable workshopId", () => {
     const payload = toTechnicianUpdatePayload(validValues);
     expect(payload).toEqual({
       fullName: "احمد سمير",
       fullNameAr: null,
+      nationalId: "30001011234567",
       mobile: "01012345678",
       specialty: null,
       yearsOfExperience: 5,
       notes: null,
     });
-    expect(payload).not.toHaveProperty("nationalId");
     expect(payload).not.toHaveProperty("workshopId");
+  });
+
+  it("sends a cleared nationalId draft as null (= keep the stored value)", () => {
+    const payload = toTechnicianUpdatePayload({ ...validValues, nationalId: "" });
+    expect(payload.nationalId).toBeNull();
+    expect(JSON.stringify(payload)).not.toContain('"nationalId":""');
   });
 
   it("omits a cleared years draft so the stored value is left unchanged", () => {
@@ -185,6 +212,24 @@ describe("toFormValues", () => {
 
   it("seeds an empty workshop for create mode without a locked workshop", () => {
     expect(toFormValues(null).workshopId).toBe("");
+  });
+});
+
+describe("qualification dropdown options", () => {
+  it("offers exactly the three qualification options", () => {
+    expect([...SPECIALIZATION_OPTIONS]).toEqual(["مؤهل عالي", "مؤهل متوسط", "بدون"]);
+  });
+
+  it("stores the option text, and the Other sentinel resolves to the free-text default", () => {
+    expect(specialtyFromSelectValue(SPECIALIZATION_OPTIONS[0])).toBe("مؤهل عالي");
+    expect(specialtyFromSelectValue(SPECIALIZATION_OPTIONS[1])).toBe("مؤهل متوسط");
+    expect(specialtyFromSelectValue(SPECIALIZATION_OPTIONS[2])).toBe("بدون");
+    expect(specialtyFromSelectValue(SPECIALTY_OTHER_SENTINEL)).toBe(SPECIALTY_OTHER_DEFAULT);
+  });
+
+  it("legacy stored role names fall to the Other sentinel as free text", () => {
+    expect(specialtySelectValue("فني تبريد وتكييف")).toBe(SPECIALTY_OTHER_SENTINEL);
+    expect(isCustomSpecialty("فني تبريد وتكييف")).toBe(true);
   });
 });
 
