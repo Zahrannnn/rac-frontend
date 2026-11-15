@@ -17,8 +17,11 @@ import {
 import { useWorkshopOptions } from "../hooks/use-workshop-options";
 import {
   isCustomSpecialty,
+  registryFromSelectValue,
+  registrySelectValue,
   specialtyFromSelectValue,
   specialtySelectValue,
+  UNSET_SELECT_SENTINEL,
   workshopFromSelectValue,
   workshopSelectValue,
   WORKSHOP_NONE_SENTINEL,
@@ -49,7 +52,7 @@ export function WorkshopField({
 
   return (
     <FormField
-      label={t("technicians.workshop")}
+      label={t("technicians.employerWorkshop")}
       error={error}
       className="sm:col-span-2"
       hint={workshopLocked ? t("technicians.workshopImmutable") : t("wizard.optionalHint")}
@@ -147,6 +150,45 @@ export function TechnicianStatusField({
         <SelectContent>
           <SelectItem value="Active">{t("technicians.statusActive")}</SelectItem>
           <SelectItem value="Inactive">{t("technicians.statusInactive")}</SelectItem>
+        </SelectContent>
+      </Select>
+    </FormField>
+  );
+}
+
+/** Registry attribute select (REGISTRY-GAS-SPEC §2): an optional picker whose unset
+ *  draft stays "" — create omits it, edit keeps the stored value (null = keep). */
+export function RegistrySelectField({
+  label,
+  value,
+  error,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  error?: string;
+  options: { value: string; label: string }[];
+  onChange: (key: string) => void;
+}) {
+  const t = useT();
+
+  return (
+    <FormField label={label} error={error} hint={t("wizard.optionalHint")}>
+      <Select
+        value={registrySelectValue(value)}
+        onValueChange={(picked) => onChange(registryFromSelectValue(picked))}
+      >
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={UNSET_SELECT_SENTINEL}>{t("technicians.unsetOption")}</SelectItem>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </FormField>

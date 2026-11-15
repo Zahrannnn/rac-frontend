@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+﻿import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { I18nProvider } from "@/shared/i18n";
 import { PhotoUploader } from "./PhotoUploader";
@@ -18,7 +18,7 @@ vi.mock("../hooks/use-survey", () => ({
 }));
 
 vi.mock("../api/surveys-adapter", () => ({
-  photoUrl: () => "",
+  fetchPhotoBlob: () => Promise.resolve(new Blob([new Uint8Array(8)], { type: "image/webp" })),
 }));
 
 vi.mock("sonner", () => ({ toast: toastMock }));

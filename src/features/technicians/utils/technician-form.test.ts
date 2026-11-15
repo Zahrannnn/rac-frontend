@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import {
   isCustomSpecialty,
   parseTechnicianSubmission,
@@ -17,6 +17,8 @@ import {
   SPECIALTY_OTHER_SENTINEL,
 } from "../constants/specializations";
 import { ar } from "@/shared/i18n";
+import type { Technician } from "../types";
+import type { TechnicianFormValues } from "../validations/technician-schema";
 
 /** Real dictionary lookup — exercises the actual Arabic messages. */
 const t = ((key: string, params?: Record<string, string | number>) => {
@@ -30,15 +32,19 @@ const t = ((key: string, params?: Record<string, string | number>) => {
   // minimal cast so the tests compile against the useT-derived TFunc type
 }) as unknown as Parameters<typeof parseTechnicianSubmission>[1];
 
-const validValues = {
+const validValues: TechnicianFormValues = {
   fullName: "احمد سمير",
   fullNameAr: "",
-  nationalId: "30001011234567",
+  nationalId: "30101010100114",
   mobile: "01012345678",
   workshopId: "w-1",
   specialty: "",
   yearsOfExperience: 5,
   notes: "",
+  employmentType: "",
+  employmentNature: "",
+  hasModernRefrigerantExperience: "",
+  address: "",
 };
 
 describe("parseTechnicianSubmission", () => {
@@ -81,12 +87,12 @@ describe("parseTechnicianSubmission", () => {
 
     // A valid edit passes through with the cleared years draft intact.
     const submission = parseTechnicianSubmission(
-      { ...validValues, nationalId: "29801011234567", yearsOfExperience: "" },
+      { ...validValues, nationalId: "30101010100114", yearsOfExperience: "" },
       t,
       "edit"
     );
     expect(submission).toEqual({
-      data: { ...validValues, nationalId: "29801011234567", yearsOfExperience: "" },
+      data: { ...validValues, nationalId: "30101010100114", yearsOfExperience: "" },
     });
   });
 
@@ -141,7 +147,7 @@ describe("toTechnicianCreatePayload", () => {
     expect(toTechnicianCreatePayload(validValues)).toEqual({
       fullName: "احمد سمير",
       fullNameAr: undefined,
-      nationalId: "30001011234567",
+      nationalId: "30101010100114",
       mobile: "01012345678",
       workshopId: "w-1",
       specialty: undefined,
@@ -165,18 +171,73 @@ describe("toTechnicianCreatePayload", () => {
 });
 
 describe("toTechnicianUpdatePayload", () => {
-  it("sends the editable national id, blanks as null, and omits the immutable workshopId", () => {
-    const payload = toTechnicianUpdatePayload(validValues);
-    expect(payload).toEqual({
-      fullName: "احمد سمير",
-      fullNameAr: null,
-      nationalId: "30001011234567",
-      mobile: "01012345678",
-      specialty: null,
-      yearsOfExperience: 5,
-      notes: null,
-    });
+  /** A stored record whose registry fields are all populated (the edit-form prefill). */
+  const original = {
+    id: "t-1",
+    gender: "male",
+    age: 41,
+    employmentType: "engineer",
+    employmentNature: "permanent",
+    hasModernRefrigerantExperience: false,
+    address: "شبرا",
+  } as unknown as Technician;
+
+  it("sends role drafts as values and omits the immutable workshopId", () => {
+    const values = {
+      ...validValues,
+      employmentType: "observer" as const,
+      address: "الجيزة",
+    };
+    const payload = toTechnicianUpdatePayload(values, original);
+    expect(payload.employmentType).toBe("observer");
+    expect(payload.address).toBe("الجيزة");
     expect(payload).not.toHaveProperty("workshopId");
+  });
+
+  it("sends picked §11 drafts as values and the flag as its wire boolean", () => {
+    const payload = toTechnicianUpdatePayload(
+      { ...validValues, employmentNature: "selfEmployed", hasModernRefrigerantExperience: "yes" },
+      original
+    );
+    expect(payload.employmentNature).toBe("selfEmployed");
+    expect(payload.hasModernRefrigerantExperience).toBe(true);
+    // An unpicked flag draft never travels — null = keep on the backend (no clear path).
+    const untouched = toTechnicianUpdatePayload(validValues, original);
+    expect(untouched.hasModernRefrigerantExperience).toBeUndefined();
+    expect(JSON.stringify(untouched)).not.toContain("hasModernRefrigerantExperience");
+  });
+
+  it("sends a cleared registry draft as \"\" when a value was stored (= clear)", () => {
+    const payload = toTechnicianUpdatePayload(validValues, original);
+    expect(payload.employmentType).toBe("");
+    expect(payload.address).toBe("");
+  });
+
+  it("omits a blank registry draft when nothing was stored (= keep, no clear marker)", () => {
+    const payload = toTechnicianUpdatePayload(validValues);
+    expect(payload.employmentType).toBeUndefined();
+    expect(payload.address).toBeUndefined();
+    expect(JSON.stringify(payload)).not.toContain('"employmentType"');
+    expect(JSON.stringify(payload)).not.toContain('"address"');
+  });
+
+  it("never sends gender or age — they derive from the national ID (§10B)", () => {
+    const payload = toTechnicianUpdatePayload(validValues, original);
+    expect(payload).not.toHaveProperty("gender");
+    expect(payload).not.toHaveProperty("age");
+    expect(JSON.stringify(payload)).not.toContain("gender");
+    expect(JSON.stringify(payload)).not.toContain('"age"');
+  });
+
+  it("sends the editable national id, blanks as null", () => {
+    const payload = toTechnicianUpdatePayload(validValues);
+    expect(payload.fullName).toBe("احمد سمير");
+    expect(payload.fullNameAr).toBeNull();
+    expect(payload.nationalId).toBe("30101010100114");
+    expect(payload.mobile).toBe("01012345678");
+    expect(payload.specialty).toBeNull();
+    expect(payload.yearsOfExperience).toBe(5);
+    expect(payload.notes).toBeNull();
   });
 
   it("sends a cleared nationalId draft as null (= keep the stored value)", () => {
@@ -207,11 +268,28 @@ describe("toFormValues", () => {
       specialty: "",
       yearsOfExperience: 0,
       notes: "",
+      employmentType: "",
+      employmentNature: "",
+      hasModernRefrigerantExperience: "",
+      address: "",
     });
   });
 
   it("seeds an empty workshop for create mode without a locked workshop", () => {
     expect(toFormValues(null).workshopId).toBe("");
+  });
+
+  it("maps the stored §11 flag onto the yes/no draft", () => {
+    const stored = { id: "t-9" } as unknown as Technician;
+    expect(
+      toFormValues({ ...stored, hasModernRefrigerantExperience: true }).hasModernRefrigerantExperience
+    ).toBe("yes");
+    expect(
+      toFormValues({ ...stored, hasModernRefrigerantExperience: false }).hasModernRefrigerantExperience
+    ).toBe("no");
+    expect(toFormValues({ ...stored, hasModernRefrigerantExperience: null }).hasModernRefrigerantExperience)
+      .toBe("");
+    expect(toFormValues(null).hasModernRefrigerantExperience).toBe("");
   });
 });
 
@@ -250,6 +328,41 @@ describe("specialty select helpers", () => {
     expect(isCustomSpecialty(SPECIALIZATION_OPTIONS[0])).toBe(false);
     expect(isCustomSpecialty("")).toBe(false);
     expect(isCustomSpecialty(null)).toBe(false);
+  });
+});
+
+describe("registry attribute fields (REGISTRY-GAS-SPEC §1/§10A)", () => {
+  it("create payload carries role values and omits unset drafts", () => {
+    const payload = toTechnicianCreatePayload({
+      ...validValues,
+      employmentType: "engineer" as const,
+      address: "",
+    });
+    expect(payload.employmentType).toBe("engineer");
+    expect(payload.address).toBeUndefined();
+    expect(JSON.stringify(payload)).not.toContain('"address"');
+    // Gender and age never travel (§10B — derived from the national ID).
+    expect(payload).not.toHaveProperty("gender");
+    expect(payload).not.toHaveProperty("age");
+  });
+
+  it("update payload: set drafts win, blank drafts over nothing stored stay omitted", () => {
+    const payload = toTechnicianUpdatePayload({
+      ...validValues,
+      employmentType: "engineer" as const,
+      address: "أسيوط",
+    });
+    expect(payload.employmentType).toBe("engineer");
+    expect(payload.address).toBe("أسيوط");
+
+    const cleared = toTechnicianUpdatePayload({
+      ...validValues,
+      employmentType: "",
+      address: "",
+    });
+    expect(cleared.employmentType).toBeUndefined();
+    expect(cleared.address).toBeUndefined();
+    expect(JSON.stringify(cleared)).not.toContain('"employmentType"');
   });
 });
 

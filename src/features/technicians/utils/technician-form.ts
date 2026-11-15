@@ -1,4 +1,4 @@
-import type { useT } from "@/shared/i18n";
+﻿import type { TranslationKey, useT } from "@/shared/i18n";
 import {
   SPECIALIZATION_OPTIONS,
   SPECIALTY_OTHER_DEFAULT,
@@ -45,6 +45,56 @@ export function workshopFromSelectValue(value: string): string {
   return value === WORKSHOP_NONE_SENTINEL ? "" : value;
 }
 
+/** Sentinel for the unset draft of the registry attribute selects (gender /
+ *  employment type — Radix rejects empty-string item values). */
+export const UNSET_SELECT_SENTINEL = "__unset__";
+
+/** Value a registry attribute Select shows: the picked key, or the unset option. */
+export function registrySelectValue(key: string | undefined): string {
+  return key || UNSET_SELECT_SENTINEL;
+}
+
+/** Resolve a registry attribute Select pick into the stored draft ("" = unset). */
+export function registryFromSelectValue(value: string): string {
+  return value === UNSET_SELECT_SENTINEL ? "" : value;
+}
+
+/** Registry attribute key → translation key (REGISTRY-GAS-SPEC §2: the stored
+ *  camelCase keys localize — the profile page renders labels, not raw keys). */
+export const GENDER_LABELS: Record<string, TranslationKey> = {
+  male: "technicians.genderMale",
+  female: "technicians.genderFemale",
+};
+
+export const EMPLOYMENT_LABELS: Record<string, TranslationKey> = {
+  engineer: "technicians.roleEngineer",
+  observer: "technicians.roleObserver",
+  technician: "technicians.roleTechnician",
+  assistant: "technicians.roleAssistant",
+};
+
+/** نوع العمالة labels (REGISTRY-GAS-SPEC §11) — the camelCase nature keys localize
+ *  (حر = مستقل is one option). */
+export const EMPLOYMENT_NATURE_LABELS: Record<string, TranslationKey> = {
+  permanent: "technicians.naturePermanent",
+  temporary: "technicians.natureTemporary",
+  selfEmployed: "technicians.natureSelfEmployed",
+  other: "technicians.natureOther",
+};
+
+/** Localized label of a stored registry attribute key; null when unset; an
+ *  unknown key falls back to itself (never silently blank). */
+export function registryAttributeLabel(
+  key: string | null | undefined,
+  labels: Record<string, TranslationKey>,
+  t: TFunc
+): string | null {
+  if (!key) {
+    return null;
+  }
+  return labels[key] ? t(labels[key]) : key;
+}
+
 /** Seed the form from an existing technician, or blank for create mode. */
 export function toFormValues(
   technician: Technician | null,
@@ -59,6 +109,15 @@ export function toFormValues(
     specialty: technician?.specialty ?? "",
     yearsOfExperience: technician?.yearsOfExperience ?? 0,
     notes: technician?.notes ?? "",
+    employmentType: technician?.employmentType ?? "",
+    employmentNature: technician?.employmentNature ?? "",
+    hasModernRefrigerantExperience:
+      technician?.hasModernRefrigerantExperience === true
+        ? "yes"
+        : technician?.hasModernRefrigerantExperience === false
+          ? "no"
+          : "",
+    address: technician?.address ?? "",
   };
 }
 
@@ -73,6 +132,14 @@ function technicianFieldMessage(field: string, t: TFunc): string {
       return t("technicians.yearsInvalid");
     case "fullName":
       return t("technicians.fullNameRequired");
+    case "employmentType":
+      return t("technicians.employmentTypeInvalid");
+    case "employmentNature":
+      return t("technicians.employmentNatureInvalid");
+    case "employer":
+      return t("technicians.employerTooLong");
+    case "address":
+      return t("technicians.addressTooLong");
     default:
       return t("common.error");
   }
@@ -134,7 +201,9 @@ export function parseTechnicianSubmission(
 
 /** POST /technicians body — blank optionals (incl. nationalId/mobile) are omitted
  *  (undefined drops at serialization), matching the nullable backend contract.
- *  An empty workshop draft goes as null = the free-technician "بدون ورشة" state. */
+ *  An empty workshop draft goes as null = the free-technician "بدون ورشة" state.
+ *  The registry attribute fields follow the same rule: unset drafts omitted.
+ *  Gender and age never travel — they derive from the national ID (§10B). */
 export function toTechnicianCreatePayload(data: TechnicianFormValues): CreateTechnicianPayload {
   return {
     fullName: data.fullName,
@@ -146,12 +215,36 @@ export function toTechnicianCreatePayload(data: TechnicianFormValues): CreateTec
     // Create requires the number (parse rejects the "" draft in create mode).
     yearsOfExperience: typeof data.yearsOfExperience === "number" ? data.yearsOfExperience : 0,
     notes: data.notes || undefined,
+    employmentType: data.employmentType || undefined,
+    employmentNature: data.employmentNature || undefined,
+    hasModernRefrigerantExperience: modernExperienceToWire(data.hasModernRefrigerantExperience),
+    address: data.address || undefined,
   };
 }
 
+/** §11 yes/no draft → wire value: "" (unpicked) drops at serialization, "yes"/"no"
+ *  travel as true/false. */
+function modernExperienceToWire(draft: "" | "yes" | "no"): boolean | undefined {
+  return draft === "" ? undefined : draft === "yes";
+}
+
 /** PATCH /technicians/{id} body — workshopId is immutable per contract; a cleared
- *  nationalId/mobile goes as null (the backend keeps the stored value — null = keep). */
-export function toTechnicianUpdatePayload(data: TechnicianFormValues): UpdateTechnicianPayload {
+ *  nationalId/mobile goes as null (the backend keeps the stored value — null = keep).
+ *  Registry attribute strings follow REGISTRY-GAS-SPEC §1/§2 three-way semantics:
+ *  a draft value sets, a blank draft over a stored value clears ("" on the wire),
+ *  and a blank draft with nothing stored is omitted (= keep). Gender and age never
+ *  travel — they derive from the national ID (§10B). */
+export function toTechnicianUpdatePayload(
+  data: TechnicianFormValues,
+  original?: Technician | null
+): UpdateTechnicianPayload {
+  // Three-way registry-string semantics, mirroring the RAC2 form: the stored value
+  // is what makes a blank draft an explicit clear rather than a no-op.
+  const registryField = (
+    draft: string | undefined | null,
+    originalValue: string | null | undefined
+  ) => (draft ? draft : originalValue ? "" : undefined);
+
   return {
     fullName: data.fullName,
     fullNameAr: data.fullNameAr || null,
@@ -163,5 +256,12 @@ export function toTechnicianUpdatePayload(data: TechnicianFormValues): UpdateTec
       ? { yearsOfExperience: data.yearsOfExperience }
       : {}),
     notes: data.notes || null,
+    employmentType: registryField(data.employmentType, original?.employmentType),
+    employmentNature: registryField(data.employmentNature, original?.employmentNature),
+    // §11 flag: only a picked draft travels (omitted = keep; no clear path).
+    ...(data.hasModernRefrigerantExperience
+      ? { hasModernRefrigerantExperience: data.hasModernRefrigerantExperience === "yes" }
+      : {}),
+    address: registryField(data.address, original?.address),
   };
 }

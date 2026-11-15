@@ -1,4 +1,4 @@
-export type TechnicianStatus = "Active" | "Inactive";
+﻿export type TechnicianStatus = "Active" | "Inactive";
 
 export type Technician = {
   id: string;
@@ -13,6 +13,16 @@ export type Technician = {
   yearsOfExperience: number;
   status: TechnicianStatus;
   notes: string | null;
+  /** Registry attribute fields (REGISTRY-GAS-SPEC §1 + §10B) — gender/age derive
+   *  from the national ID server-side; employmentType is a camelCase role key. */
+  gender: string | null;
+  age: number | null;
+  employmentType: "engineer" | "observer" | "technician" | "assistant" | null;
+  /** نوع العمالة + خبرات الغازات الحديثة (REGISTRY-GAS-SPEC §11). */
+  employmentNature: "permanent" | "temporary" | "selfEmployed" | "other" | null;
+  hasModernRefrigerantExperience: boolean | null;
+  employer: string | null;
+  address: string | null;
   createdAtUtc: string;
 };
 

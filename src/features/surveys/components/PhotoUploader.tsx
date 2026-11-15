@@ -2,12 +2,14 @@
 
 import { useRef } from "react";
 import { toast } from "sonner";
-import { Camera, Trash2 } from "lucide-react";
+import { Camera, ImageOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/shared/i18n";
 import { prepareImageForUpload } from "@/shared/utils/image-compression";
 import { usePhotoMutations, useSurveyPhotos } from "../hooks/use-survey";
-import { photoUrl } from "../api/surveys-adapter";
+import { usePhotoSrc } from "../hooks/use-photo-src";
+import type { SurveyPhoto } from "../types";
 
 /**
  * Section-scoped photo uploader: camera capture on mobile, thumbnails with
@@ -104,15 +106,7 @@ export function PhotoUploader({
         <ul className="flex flex-wrap gap-2">
           {sectionPhotos.map((photo) => (
             <li key={photo.id} className="group relative">
-              {/* eslint-disable-next-line @next/next/no-img-element -- auth-required
-                  endpoint (Bearer header) that next/image loaders cannot attach */}
-              <img
-                src={photoUrl(surveyId, photo.id)}
-                alt={photo.fileName}
-                loading="lazy"
-                decoding="async"
-                className="size-20 rounded-md border object-cover"
-              />
+              <PhotoThumb surveyId={surveyId} photo={photo} />
               <button
                 type="button"
                 aria-label={`${t("survey.photoDelete")} ${photo.fileName}`}
@@ -130,5 +124,38 @@ export function PhotoUploader({
         </ul>
       ) : null}
     </div>
+  );
+}
+
+/** §11 hotfix: the photo GET requires the Bearer header — a plain <img src> can never
+ *  attach it (every preview 401'd). The thumbnail loads through the authenticated API
+ *  client and renders from a short-lived object URL instead. */
+function PhotoThumb({ surveyId, photo }: { surveyId: string; photo: SurveyPhoto }) {
+  const { src, isError } = usePhotoSrc(surveyId, photo.id);
+
+  if (isError) {
+    return (
+      <div
+        aria-label={photo.fileName}
+        className="grid size-20 place-items-center rounded-md border bg-muted/40 text-muted-foreground"
+      >
+        <ImageOff className="h-5 w-5" aria-hidden />
+      </div>
+    );
+  }
+
+  if (!src) {
+    return <Skeleton className="size-20 rounded-md" aria-label={photo.fileName} />;
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- blob from the authenticated client; next/image adds nothing for it
+    <img
+      src={src}
+      alt={photo.fileName}
+      loading="lazy"
+      decoding="async"
+      className="size-20 rounded-md border object-cover"
+    />
   );
 }

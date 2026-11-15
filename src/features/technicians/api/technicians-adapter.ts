@@ -1,4 +1,4 @@
-import { racApi } from "@/shared/api/rac-api";
+﻿import { racApi } from "@/shared/api/rac-api";
 import type { PagedResult } from "@/shared/api/paged-result";
 import type { Technician, TechnicianListFilters, TechnicianStatus } from "../types";
 
@@ -33,6 +33,14 @@ export type CreateTechnicianPayload = {
   specialty?: string;
   yearsOfExperience: number;
   notes?: string;
+  /** Registry attribute fields (REGISTRY-GAS-SPEC §1 + §11) — all optional; unset
+   *  drafts are omitted (undefined drops at serialization). Gender and age never
+   *  travel: they derive from the national ID (§10B). */
+  employmentType?: string;
+  employmentNature?: string;
+  hasModernRefrigerantExperience?: boolean;
+  employer?: string;
+  address?: string;
 };
 
 export async function createTechnician(payload: CreateTechnicianPayload): Promise<Technician> {
@@ -52,6 +60,15 @@ export type UpdateTechnicianPayload = {
   yearsOfExperience?: number;
   status?: TechnicianStatus;
   notes?: string | null;
+  /** Registry attribute fields (REGISTRY-GAS-SPEC §1 + §11) — three-way semantics:
+   *  a value sets, "" clears the stored value, an omitted key (= null on the
+   *  wire) keeps it. The §11 flag has no clear path: omitted = keep, true/false = set.
+   *  Gender and age never travel: they derive from the national ID (§10B). */
+  employmentType?: string | null;
+  employmentNature?: string | null;
+  hasModernRefrigerantExperience?: boolean;
+  employer?: string | null;
+  address?: string | null;
 };
 
 export async function updateTechnician(

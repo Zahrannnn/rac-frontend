@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+﻿import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -88,14 +88,14 @@ describe("TechnicianDialog validation", () => {
     expect(screen.getByText(/أدخل رقم جوال مصري صحيح/)).toBeInTheDocument();
   });
 
-  it("accepts a valid form (national ID 14 digits starting 2/3, valid mobile)", async () => {
+  it("accepts a valid form (full-formula national ID, valid mobile)", async () => {
     renderDialog();
 
     fireEvent.change(screen.getByRole("textbox", { name: /^الاسم الكامل$/ }), {
       target: { value: "احمد سمير" },
     });
     fireEvent.change(screen.getByRole("textbox", { name: /^الرقم القومي/ }), {
-      target: { value: "30001011234567" },
+      target: { value: "30101010100114" },
     });
     fireEvent.change(screen.getByRole("textbox", { name: /^الجوال/ }), {
       target: { value: "01012345678" },
@@ -115,9 +115,10 @@ describe("TechnicianDialog validation", () => {
   it("offers a بدون ورشة empty option and sends the id when a workshop is picked", async () => {
     renderDialog();
 
-    // The workshop select is the form's first combobox (specialty is second);
-    // FormField wires its id to the hidden radix bubble select, not the trigger.
-    const trigger = screen.getAllByRole("combobox")[0];
+    // The workshop select is the form's FOURTH combobox — gender/age derive from
+    // the national ID (disabled inputs); the §11 nature select, employment type and
+    // the modern-experience select come first, specialty is last.
+    const trigger = screen.getAllByRole("combobox")[3];
     // Keyboard is the reliable radix path in jsdom (pointer events need capture).
     fireEvent.keyDown(trigger, { key: "ArrowDown" });
 
@@ -131,7 +132,7 @@ describe("TechnicianDialog validation", () => {
       target: { value: "احمد سمير" },
     });
     fireEvent.change(screen.getByRole("textbox", { name: /^الرقم القومي/ }), {
-      target: { value: "30001011234567" },
+      target: { value: "30101010100114" },
     });
     fireEvent.change(screen.getByRole("textbox", { name: /^الجوال/ }), {
       target: { value: "01012345678" },
@@ -158,12 +159,97 @@ describe("TechnicianDialog validation", () => {
   });
 });
 
+describe("TechnicianDialog registry attribute fields (REGISTRY-GAS-SPEC §2 + §10B)", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    Element.prototype.scrollIntoView = vi.fn();
+    vi.clearAllMocks();
+  });
+
+  it("derives gender and age from the national ID into disabled inputs", async () => {
+    renderDialog();
+
+    // Typing the valid male 2001-born ID derives ذكر + 25 — both disabled (never
+    // manually entered).
+    fireEvent.change(screen.getByRole("textbox", { name: /^الرقم القومي/ }), {
+      target: { value: "30101010100114" },
+    });
+    expect(screen.getByDisplayValue("ذكر")).toBeDisabled();
+    expect(screen.getByDisplayValue("25")).toBeDisabled();
+  });
+
+  it("renders the role select + address and submits them on create", async () => {
+    renderDialog();
+
+    // Employment-type select (second combobox — the §11 nature select is first): pick مهندس.
+    fireEvent.keyDown(screen.getAllByRole("combobox")[1], { key: "ArrowDown" });
+    fireEvent.keyDown(await screen.findByRole("option", { name: "مهندس" }), { key: "Enter" });
+
+    // §11 correction: no separate جهة العمل field — the workshop select IS the employer.
+    fireEvent.change(screen.getByRole("textbox", { name: "العنوان" }), {
+      target: { value: "القاهرة" },
+    });
+
+    fireEvent.change(screen.getByRole("textbox", { name: /^الاسم الكامل$/ }), {
+      target: { value: "سارة محمود" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /^الرقم القومي/ }), {
+      target: { value: "30101010100114" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "حفظ" }));
+
+    await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1));
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        employmentType: "engineer",
+        address: "القاهرة",
+      }),
+      expect.anything()
+    );
+    // Gender and age never travel — they derive from the national ID (§10B); employer
+    // never travels either (§11 — the workshop select is the employer).
+    const payload = createMutate.mock.calls[0][0];
+    expect(payload).not.toHaveProperty("gender");
+    expect(payload).not.toHaveProperty("age");
+    expect(payload).not.toHaveProperty("employer");
+  });
+
+  it("renders the §11 nature + modern-experience selects and submits them on create", async () => {
+    renderDialog();
+
+    // Nature select (FIRST combobox — checklist order 8 before الوظيفة): pick دائم.
+    fireEvent.keyDown(screen.getAllByRole("combobox")[0], { key: "ArrowDown" });
+    fireEvent.keyDown(await screen.findByRole("option", { name: "دائم" }), { key: "Enter" });
+
+    // Modern-refrigerants select (third combobox): pick يوجد.
+    fireEvent.keyDown(screen.getAllByRole("combobox")[2], { key: "ArrowDown" });
+    fireEvent.keyDown(await screen.findByRole("option", { name: "يوجد" }), { key: "Enter" });
+
+    fireEvent.change(screen.getByRole("textbox", { name: /^الاسم الكامل$/ }), {
+      target: { value: "سارة محمود" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /^الرقم القومي/ }), {
+      target: { value: "30101010100114" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "حفظ" }));
+
+    await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1));
+    expect(createMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        employmentNature: "permanent",
+        hasModernRefrigerantExperience: true,
+      }),
+      expect.anything()
+    );
+  });
+});
+
 describe("TechnicianDialog edit mode", () => {
   const existing: Technician = {
     id: "t-1",
     fullName: "احمد سمير",
     fullNameAr: null,
-    nationalId: "29801011234567",
+    nationalId: "30101010100114",
     mobile: "01012345678",
     workshopId: null,
     workshopCode: null,
@@ -171,6 +257,13 @@ describe("TechnicianDialog edit mode", () => {
     yearsOfExperience: 5,
     status: "Active",
     notes: null,
+    gender: "male",
+    age: 41,
+    employmentType: "engineer",
+    employmentNature: null,
+    hasModernRefrigerantExperience: null,
+    employer: "ورشة النيل",
+    address: "القاهرة",
     createdAtUtc: "2026-01-01T00:00:00Z",
   };
 
@@ -184,15 +277,15 @@ describe("TechnicianDialog edit mode", () => {
     renderDialog({ technician: existing });
 
     const nationalIdInput = screen.getByRole("textbox", { name: /^الرقم القومي/ });
-    expect(nationalIdInput).toHaveValue("29801011234567");
+    expect(nationalIdInput).toHaveValue("30101010100114");
     expect(nationalIdInput).not.toBeDisabled();
 
-    fireEvent.change(nationalIdInput, { target: { value: "30001011234567" } });
+    fireEvent.change(nationalIdInput, { target: { value: "30101010100114" } });
     fireEvent.click(screen.getByRole("button", { name: "حفظ" }));
 
     await waitFor(() => expect(updateMutate).toHaveBeenCalledTimes(1));
     expect(updateMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ nationalId: "30001011234567" }),
+      expect.objectContaining({ nationalId: "30101010100114" }),
       expect.anything()
     );
     // The workshop link stays immutable — never part of the update payload.

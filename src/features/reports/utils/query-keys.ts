@@ -9,6 +9,7 @@ import type { ReportRunFilters } from "../types";
  */
 export const reportKeys = {
   catalog: () => ["reports", "catalog"] as const,
+  gasConsumption: () => ["reports", "gasConsumption"] as const,
   runs: {
     /** Prefix invalidating every runs key regardless of filters. */
     all: () => ["reports", "runs"] as const,

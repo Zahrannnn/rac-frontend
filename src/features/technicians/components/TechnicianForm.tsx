@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { toast } from "sonner";
@@ -17,7 +17,14 @@ import {
   toTechnicianUpdatePayload,
 } from "../utils/technician-form";
 import type { Technician, TechnicianStatus } from "../types";
+import { parseEgyptianNationalId } from "@/shared/utils/egyptian-national-id";
+import { EMPLOYMENT_LABELS, EMPLOYMENT_NATURE_LABELS } from "../utils/technician-form";
 import {
+  EMPLOYMENT_NATURE_KEYS,
+  EMPLOYMENT_TYPE_KEYS,
+} from "../validations/technician-schema";
+import {
+  RegistrySelectField,
   SpecialtyField,
   TechnicianStatusField,
   WorkshopField,
@@ -65,7 +72,8 @@ export function TechnicianForm({
     if (technician) {
       // Edit: the workshop link stays immutable per contract (PATCH fields only);
       // the national id is editable now — a blank draft goes as null = keep.
-      update.mutate(toTechnicianUpdatePayload(submission.data), {
+      // The original record drives the registry fields' clear-vs-keep decision.
+      update.mutate(toTechnicianUpdatePayload(submission.data, technician), {
         onSuccess: () => finishSave(t("profile.saved")),
         onError: reportMutationError,
       });
@@ -143,6 +151,63 @@ export function TechnicianForm({
               }
             />
           </FormField>
+          {/* Registry attribute fields (REGISTRY-GAS-SPEC §2 + §10B + §11) — placed after
+              the nationalId/mobile block. Gender and age DERIVE from the national ID and
+              render disabled; the workshop select IS جهة العمل (§11 correction — no
+              separate employer field); address free; the nature select (نوع العمالة)
+              precedes the role select (الوظيفة). */}
+          <DerivedGenderField nationalId={values.nationalId} />
+          <DerivedAgeField nationalId={values.nationalId} />
+          <FormField
+            label={t("technicians.address")}
+            error={errors.address}
+            hint={t("wizard.optionalHint")}
+          >
+            <Input
+              value={values.address ?? ""}
+              onChange={(event) => patch({ address: event.target.value })}
+            />
+          </FormField>
+          {/* نوع العمالة (§11) precedes الوظيفة (checklist order 8 → 11); the
+              modern-refrigerants يوجد/لا يوجد select follows the role select. */}
+          <RegistrySelectField
+            label={t("technicians.employmentNature")}
+            value={values.employmentNature}
+            error={errors.employmentNature}
+            options={EMPLOYMENT_NATURE_KEYS.map((key) => ({
+              value: key,
+              label: t(EMPLOYMENT_NATURE_LABELS[key]),
+            }))}
+            onChange={(key) =>
+              patch({ employmentNature: key as TechnicianFormValues["employmentNature"] })
+            }
+          />
+          <RegistrySelectField
+            label={t("technicians.employmentType")}
+            value={values.employmentType}
+            error={errors.employmentType}
+            options={EMPLOYMENT_TYPE_KEYS.map((key) => ({
+              value: key,
+              label: t(EMPLOYMENT_LABELS[key]),
+            }))}
+            onChange={(key) =>
+              patch({ employmentType: key as TechnicianFormValues["employmentType"] })
+            }
+          />
+          <RegistrySelectField
+            label={t("technicians.modernExperience")}
+            value={values.hasModernRefrigerantExperience}
+            options={[
+              { value: "yes", label: t("technicians.modernExperienceYes") },
+              { value: "no", label: t("technicians.modernExperienceNo") },
+            ]}
+            onChange={(key) =>
+              patch({
+                hasModernRefrigerantExperience:
+                  key as TechnicianFormValues["hasModernRefrigerantExperience"],
+              })
+            }
+          />
           <WorkshopField
             technician={technician}
             lockedWorkshopId={lockedWorkshopId}
@@ -202,5 +267,43 @@ export function TechnicianForm({
         </Button>
       </DialogFooter>
     </>
+  );
+}
+
+/** Gender display (REGISTRY-GAS-SPEC §10B) — DERIVED from the national ID's 13th
+ *  digit; the input is disabled and never submits. Empty when the ID is absent/invalid. */
+function DerivedGenderField({ nationalId }: { nationalId: string }) {
+  const t = useT();
+  const identity = parseEgyptianNationalId(nationalId);
+  const label = identity
+    ? identity.gender === "male"
+      ? t("technicians.genderMale")
+      : t("technicians.genderFemale")
+    : "";
+
+  return (
+    <FormField label={t("technicians.gender")} hint={t("technicians.natidDerivedHint")}>
+      <Input readOnly disabled value={label} placeholder={t("technicians.genderSelect")} />
+    </FormField>
+  );
+}
+
+/** Age display (REGISTRY-GAS-SPEC §10B) — DERIVED from the national ID's birth date;
+ *  the input is disabled and never submits. Empty when the ID is absent/invalid. */
+function DerivedAgeField({ nationalId }: { nationalId: string }) {
+  const t = useT();
+  const identity = parseEgyptianNationalId(nationalId);
+
+  return (
+    <FormField label={t("technicians.age")} hint={t("technicians.natidDerivedHint")}>
+      <Input
+        readOnly
+        disabled
+        dir="ltr"
+        className="tabular-nums"
+        value={identity ? String(identity.age) : ""}
+        placeholder="—"
+      />
+    </FormField>
   );
 }

@@ -1,7 +1,8 @@
-import { racApi } from "@/shared/api/rac-api";
+﻿import { racApi } from "@/shared/api/rac-api";
 import { downloadBlob } from "@/shared/api/file-transfer";
 import type { PagedResult } from "@/shared/api/paged-result";
 import type {
+  GasConsumptionRow,
   ReportDefinition,
   ReportFilters,
   ReportRun,
@@ -12,6 +13,12 @@ import { REPORTS_PAGE_SIZE } from "../types";
 
 export async function fetchCatalog(): Promise<ReportDefinition[]> {
   const { data } = await racApi.get<ReportDefinition[]>("/reports/catalog");
+  return data;
+}
+
+/** Workshops with any gas quantity > 0 (annualized ×12 by the backend — §5). */
+export async function fetchGasConsumption(): Promise<GasConsumptionRow[]> {
+  const { data } = await racApi.get<GasConsumptionRow[]>("/reports/gas-consumption");
   return data;
 }
 
@@ -32,7 +39,15 @@ export function generateReport(
 ): Promise<{ blob: Blob; fileName: string }> {
   const params = new URLSearchParams();
   for (const [name, value] of Object.entries(filters)) {
-    if (value) params.set(name, value);
+    // §10C per-gas bands travel as REPEATED gasBand=gas:band entries; the object value
+    // must not hit the generic string branch.
+    if (name === "gasBand" && value && typeof value === "object") {
+      for (const [gas, band] of Object.entries(value as Record<string, string>)) {
+        if (gas && band) params.append("gasBand", `${gas}:${band}`);
+      }
+      continue;
+    }
+    if (name !== "gasBand" && typeof value === "string" && value) params.set(name, value);
   }
   const query = params.toString();
   return downloadBlob(

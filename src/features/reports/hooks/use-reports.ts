@@ -1,7 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchCatalog, fetchRuns, fetchTrainers, generateReport } from "../api/reports-adapter";
+import {
+  fetchCatalog,
+  fetchGasConsumption,
+  fetchRuns,
+  fetchTrainers,
+  generateReport,
+} from "../api/reports-adapter";
 import type { ReportFilters, ReportRunFilters } from "../types";
 import { reportKeys } from "../utils/query-keys";
 import { trainingKeys } from "@/features/trainings";
@@ -10,6 +16,14 @@ export function useReportCatalog() {
   return useQuery({
     queryKey: reportKeys.catalog(),
     queryFn: fetchCatalog,
+  });
+}
+
+/** The annual gas consumption map feed (GET /reports/gas-consumption). */
+export function useGasConsumption() {
+  return useQuery({
+    queryKey: reportKeys.gasConsumption(),
+    queryFn: fetchGasConsumption,
   });
 }
 

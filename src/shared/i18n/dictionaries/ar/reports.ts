@@ -1,4 +1,4 @@
-// Arabic dictionary — reports namespace. Keys mirror the en counterpart one-to-one.
+﻿// Arabic dictionary — reports namespace. Keys mirror the en counterpart one-to-one.
 export const reports = {
   // ===== Reports module (Week 4) =====
   "reports.title": "التقارير",
@@ -98,4 +98,22 @@ export const reports = {
   "reports.generatePickerLabel": "اختر تقريرًا من الكتالوج لتوليده",
   "reports.trainingCatalog": "الدورات التدريبية",
   "reports.trainingsHint": "أحدث الدورات المسجلة في النظام",
+
+  // ===== Gas filters + annual consumption map (REGISTRY-GAS-SPEC §4/§6) =====
+  "reports.catalogTab": "التقارير",
+  "reports.mapTab": "خريطة استهلاك الغاز السنوي",
+  "reports.filterGasBandTitle": "تصفية حسب استهلاك الغاز",
+  "reports.gasBand.small_lt680": "صغيرة (أقل من 680 كجم)",
+  "reports.gasBand.medium_680_1360": "متوسطة (680 - 1360 كجم)",
+  "reports.gasBand.large_gt1360": "كبيرة (أكثر من 1360 كجم)",
+  "reports.mapSizeLabel": "حجم الورشة حسب الغاز المستهلك",
+  "reports.mapTotalLabel": "الإجمالي السنوي",
+  "reports.gasOther": "أخرى",
+  "reports.mapSideListTitle": "الورش حسب الاستهلاك السنوي",
+  "reports.mapNoCoordinates": "بدون إحداثيات",
+  "reports.mapEmpty": "لا توجد ورش ذات استهلاك غاز مسجَّل.",
+  "reports.mapError": "تعذر تحميل بيانات استهلاك الغاز.",
+  "reports.mapUnit": "كجم/سنة",
+  "reports.mapLegend": "الاستهلاك السنوي (كجم)",
+  "reports.mapPerGas": "الغازات",
 } as const;

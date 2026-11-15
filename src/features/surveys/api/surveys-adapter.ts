@@ -74,7 +74,12 @@ export async function deletePhoto(surveyId: string, photoId: string): Promise<vo
   await racApi.delete(`/surveys/${surveyId}/photos/${photoId}`);
 }
 
-export function photoUrl(surveyId: string, photoId: string): string {
-  const base = racApi.defaults.baseURL ?? "";
-  return `${base}/surveys/${surveyId}/photos/${photoId}`;
+/** Authenticated photo fetch — the GET endpoint requires the Bearer header, which a
+ *  plain <img src> can never attach (every preview 401'd). Callers load this blob and
+ *  render it through a short-lived object URL instead. */
+export async function fetchPhotoBlob(surveyId: string, photoId: string): Promise<Blob> {
+  const response = await racApi.get<Blob>(`/surveys/${surveyId}/photos/${photoId}`, {
+    responseType: "blob",
+  });
+  return response.data;
 }

@@ -1,4 +1,4 @@
-import type { technicians as techniciansAr } from "../ar/technicians";
+﻿import type { technicians as techniciansAr } from "../ar/technicians";
 
 // English dictionary — technicians namespace. Compile-time locked to the ar key set:
 // a missing or extra key here is a type error.
@@ -44,4 +44,38 @@ export const technicians: Record<keyof typeof techniciansAr, string> = {
   "technicians.specialtySelect": "Pick a qualification",
   "technicians.specialtyOther": "Other qualification",
   "technicians.specialtyCustom": "Describe the qualification",
+
+  // ===== Registry attribute fields (REGISTRY-GAS-SPEC §2) =====
+  "technicians.unsetOption": "Not set",
+  "technicians.gender": "Gender",
+  "technicians.genderSelect": "Select gender",
+  "technicians.genderMale": "Male",
+  "technicians.genderFemale": "Female",
+  "technicians.genderInvalid": "Gender must be male or female.",
+  "technicians.age": "Age",
+  "technicians.ageInvalid": "Age must be between 10 and 90.",
+  "technicians.employmentType": "Job Function",
+  "technicians.employmentTypeSelect": "Select employment type",
+  "technicians.roleEngineer": "Engineer",
+  "technicians.roleObserver": "Observer",
+  "technicians.roleTechnician": "Technician",
+  "technicians.roleAssistant": "Assistant",
+  "technicians.employmentNature": "Employment Nature",
+  "technicians.natureSelect": "Pick an employment nature",
+  "technicians.naturePermanent": "Permanent",
+  "technicians.natureTemporary": "Temporary",
+  "technicians.natureSelfEmployed": "Freelance / self-employed",
+  "technicians.natureOther": "Other",
+  "technicians.employmentNatureInvalid": "Employment Nature must be permanent, temporary, freelance/self-employed or other.",
+  "technicians.modernExperience": "Prior experience with modern refrigerants",
+  "technicians.modernExperienceSelect": "Pick one",
+  "technicians.modernExperienceYes": "Yes",
+  "technicians.modernExperienceNo": "No",
+  "technicians.employmentTypeInvalid": "Type of Employment must be engineer, observer, technician or assistant.",
+  "technicians.natidDerivedHint": "Gender and age are derived automatically from the national ID.",
+  "technicians.employer": "Employer (workshop)",
+  "technicians.employerWorkshop": "Employer (workshop)",
+  "technicians.employerTooLong": "Employer must be at most 256 characters.",
+  "technicians.address": "Address",
+  "technicians.addressTooLong": "Address must be at most 256 characters.",
 };

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -10,6 +10,11 @@ import { useT } from "@/shared/i18n";
 import { formatDateUtc } from "@/shared/utils/datetime";
 import { useAuth, can } from "@/features/auth";
 import { useTechnician } from "../hooks/use-technicians";
+import {
+  EMPLOYMENT_LABELS,
+  GENDER_LABELS,
+  registryAttributeLabel,
+} from "../utils/technician-form";
 import { TechnicianDialog } from "./TechnicianDialog";
 import { TechnicianStatusBadge } from "./TechnicianStatusBadge";
 
@@ -89,6 +94,23 @@ export function TechnicianProfilePage({ technicianId }: { technicianId: string }
               <dd className="tabular-nums text-[var(--navy)]" dir="ltr">
                 {technician.mobile ?? "—"}
               </dd>
+            </dl>
+            {/* Registry attribute fields (REGISTRY-GAS-SPEC §2) — empty renders "—". */}
+            <dl className="mt-3 grid grid-cols-[minmax(7rem,9rem)_1fr] gap-y-2 text-sm">
+              <dt className="text-muted-foreground">{t("technicians.gender")}</dt>
+              <dd>{registryAttributeLabel(technician.gender, GENDER_LABELS, t) ?? "—"}</dd>
+              <dt className="text-muted-foreground">{t("technicians.age")}</dt>
+              <dd className="tabular-nums text-[var(--navy)]">
+                {technician.age ?? "—"}
+              </dd>
+              <dt className="text-muted-foreground">{t("technicians.employmentType")}</dt>
+              <dd>{registryAttributeLabel(technician.employmentType, EMPLOYMENT_LABELS, t) ?? "—"}</dd>
+              {/* §11 correction: جهة العمل IS the workshop — the profile shows the
+                  attached workshop's code; free technicians render "—". */}
+              <dt className="text-muted-foreground">{t("technicians.employer")}</dt>
+              <dd>{technician.workshopCode ?? "—"}</dd>
+              <dt className="text-muted-foreground">{t("technicians.address")}</dt>
+              <dd>{technician.address ?? "—"}</dd>
             </dl>
           </div>
           <div>

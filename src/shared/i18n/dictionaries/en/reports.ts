@@ -1,4 +1,4 @@
-import type { reports as reportsAr } from "../ar/reports";
+﻿import type { reports as reportsAr } from "../ar/reports";
 
 // English dictionary — reports namespace. Compile-time locked to the ar key set:
 // a missing or extra key here is a type error.
@@ -102,4 +102,22 @@ export const reports: Record<keyof typeof reportsAr, string> = {
   "reports.generatePickerLabel": "Pick a report from the catalog to generate",
   "reports.trainingCatalog": "Training sessions",
   "reports.trainingsHint": "The latest trainings recorded in the system",
+
+  // ===== Gas filters + annual consumption map (REGISTRY-GAS-SPEC §4/§6) =====
+  "reports.catalogTab": "Reports",
+  "reports.mapTab": "Annual gas consumption map",
+  "reports.filterGasBandTitle": "Filter by gas consumption",
+  "reports.gasBand.small_lt680": "Small (less than 680 kg)",
+  "reports.gasBand.medium_680_1360": "Medium (680 - 1360 kg)",
+  "reports.gasBand.large_gt1360": "Large (more than 1360 kg)",
+  "reports.mapSizeLabel": "Workshop size by gas consumption",
+  "reports.mapTotalLabel": "Annual total",
+  "reports.gasOther": "Other",
+  "reports.mapSideListTitle": "Workshops by annual consumption",
+  "reports.mapNoCoordinates": "No coordinates",
+  "reports.mapEmpty": "No workshops with recorded gas consumption.",
+  "reports.mapError": "Failed to load gas consumption data.",
+  "reports.mapUnit": "kg/year",
+  "reports.mapLegend": "Annual consumption (kg)",
+  "reports.mapPerGas": "Gases",
 };

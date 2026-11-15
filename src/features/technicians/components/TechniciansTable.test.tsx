@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+﻿import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { I18nProvider } from "@/shared/i18n";
 import type { Technician } from "../types";
@@ -16,6 +16,13 @@ const technician: Technician = {
   yearsOfExperience: 7,
   status: "Active",
   notes: null,
+  gender: null,
+  age: null,
+  employmentType: null,
+  employmentNature: null,
+  hasModernRefrigerantExperience: null,
+  employer: null,
+  address: null,
   createdAtUtc: "2026-01-01T00:00:00Z",
 };
 
@@ -31,6 +38,13 @@ const freeTechnician: Technician = {
   yearsOfExperience: 2,
   status: "Active",
   notes: null,
+  gender: null,
+  age: null,
+  employmentType: null,
+  employmentNature: null,
+  hasModernRefrigerantExperience: null,
+  employer: null,
+  address: null,
   createdAtUtc: "2026-01-01T00:00:00Z",
 };
 
