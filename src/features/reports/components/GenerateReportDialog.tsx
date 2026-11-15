@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useId, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -63,11 +63,31 @@ function GenerateReportForm({
     }));
   };
 
+  // §10C per-gas size bands — a "" band clears that gas's pick; the object rides as
+  // repeated gasBand=gas:band query entries (the adapter builds them).
+  const patchGasBand = (gas: string, band: string) => {
+    setFilters((prev) => {
+      const gasBand = { ...prev.gasBand };
+      if (band) {
+        gasBand[gas] = band;
+      } else {
+        delete gasBand[gas];
+      }
+      return { ...prev, gasBand };
+    });
+  };
+
   const run = () => {
     const cleaned: ReportFilters = {};
     for (const key of supported) {
       const value = filters[key as keyof ReportFilters];
-      if (value) cleaned[key as keyof ReportFilters] = value;
+      if (key === "gasBand") {
+        if (value && Object.keys(value).length > 0) {
+          cleaned.gasBand = value as Record<string, string>;
+        }
+        continue;
+      }
+      if (value) (cleaned as Record<string, unknown>)[key] = value;
     }
 
     generate.mutate(
@@ -117,6 +137,7 @@ function GenerateReportForm({
               supported={supported}
               filters={filters}
               onFilterChange={patchFilter}
+              onGasBandChange={patchGasBand}
             />
           ) : (
             <p className="rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground">
