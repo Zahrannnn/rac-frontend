@@ -25,8 +25,9 @@ export async function fetchTechnician(id: string): Promise<Technician> {
 export type CreateTechnicianPayload = {
   fullName: string;
   fullNameAr?: string;
-  /** Optional — blank drafts are omitted (undefined drops at serialization). */
-  nationalId?: string;
+  /** Manual identity (2026-11-17 NatID removal) — blank drafts omitted. */
+  gender?: string;
+  age?: number;
   mobile?: string;
   /** Nullable — null registers a free technician (no workshop, "بدون ورشة"). */
   workshopId: string | null;
@@ -34,8 +35,7 @@ export type CreateTechnicianPayload = {
   yearsOfExperience: number;
   notes?: string;
   /** Registry attribute fields (REGISTRY-GAS-SPEC §1 + §11) — all optional; unset
-   *  drafts are omitted (undefined drops at serialization). Gender and age never
-   *  travel: they derive from the national ID (§10B). */
+   *  drafts are omitted (undefined drops at serialization). */
   employmentType?: string;
   employmentNature?: string;
   hasModernRefrigerantExperience?: boolean;
@@ -51,9 +51,10 @@ export async function createTechnician(payload: CreateTechnicianPayload): Promis
 export type UpdateTechnicianPayload = {
   fullName?: string;
   fullNameAr?: string | null;
-  /** Nullable — null keeps the stored national ID (the editable form sends the
-   *  prefilled value; a blank draft leaves it unchanged). */
-  nationalId?: string | null;
+  /** Manual identity (2026-11-17): gender "" = clear / value = set; age null = keep /
+   *  value = set (no clear path). */
+  gender?: string;
+  age?: number;
   /** Nullable — a cleared draft clears the stored value. */
   mobile?: string | null;
   specialty?: string | null;
@@ -62,8 +63,7 @@ export type UpdateTechnicianPayload = {
   notes?: string | null;
   /** Registry attribute fields (REGISTRY-GAS-SPEC §1 + §11) — three-way semantics:
    *  a value sets, "" clears the stored value, an omitted key (= null on the
-   *  wire) keeps it. The §11 flag has no clear path: omitted = keep, true/false = set.
-   *  Gender and age never travel: they derive from the national ID (§10B). */
+   *  wire) keeps it. The §11 flag has no clear path: omitted = keep, true/false = set. */
   employmentType?: string | null;
   employmentNature?: string | null;
   hasModernRefrigerantExperience?: boolean;
