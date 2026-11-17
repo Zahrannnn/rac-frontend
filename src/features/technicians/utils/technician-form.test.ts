@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   isCustomSpecialty,
   parseTechnicianSubmission,
@@ -17,8 +17,6 @@ import {
   SPECIALTY_OTHER_SENTINEL,
 } from "../constants/specializations";
 import { ar } from "@/shared/i18n";
-import type { Technician } from "../types";
-import type { TechnicianFormValues } from "../validations/technician-schema";
 
 /** Real dictionary lookup — exercises the actual Arabic messages. */
 const t = ((key: string, params?: Record<string, string | number>) => {
@@ -32,20 +30,43 @@ const t = ((key: string, params?: Record<string, string | number>) => {
   // minimal cast so the tests compile against the useT-derived TFunc type
 }) as unknown as Parameters<typeof parseTechnicianSubmission>[1];
 
-const validValues: TechnicianFormValues = {
+const validValues = {
   fullName: "احمد سمير",
   fullNameAr: "",
-  nationalId: "30101010100114",
+  gender: "",
+  age: "" as const,
   mobile: "01012345678",
   workshopId: "w-1",
   specialty: "",
   yearsOfExperience: 5,
-  notes: "",
-  employmentType: "",
+  employmentType: "engineer",
   employmentNature: "",
   hasModernRefrigerantExperience: "",
-  address: "",
-};
+  address: "القاهرة",
+  notes: "",
+} satisfies import("../validations/technician-schema").TechnicianFormValues;
+
+/** Full Technician stub — registry keep/clear/set tests seed it per case. */
+const technicianStub = {
+  id: "t-1",
+  fullName: "احمد سمير",
+  fullNameAr: null,
+  mobile: null,
+  workshopId: null,
+  workshopCode: null,
+  specialty: null,
+  yearsOfExperience: 5,
+  status: "Active",
+  notes: null,
+  gender: null,
+  age: null,
+  employmentType: null,
+  employmentNature: null,
+  hasModernRefrigerantExperience: null,
+  employer: null,
+  address: null,
+  createdAtUtc: "2026-01-01T00:00:00Z",
+} satisfies import("../types").Technician;
 
 describe("parseTechnicianSubmission", () => {
   it("returns trimmed data for a valid submission", () => {
@@ -59,14 +80,12 @@ describe("parseTechnicianSubmission", () => {
 
   it("maps each invalid field to its Arabic message (first issue wins)", () => {
     const submission = parseTechnicianSubmission(
-      { ...validValues, fullName: "", nationalId: "123", mobile: "01312345678" },
+      { ...validValues, fullName: "", mobile: "01012345678" },
       t,
       "create"
     );
     expect("errors" in submission && submission.errors).toEqual({
       fullName: ar["technicians.fullNameRequired"],
-      nationalId: ar["technicians.nationalIdInvalid"],
-      mobile: ar["wizard.mobileInvalid"],
     });
   });
 
@@ -75,35 +94,14 @@ describe("parseTechnicianSubmission", () => {
     expect(submission).toEqual({ data: { ...validValues, workshopId: "" } });
   });
 
-  it("edit mode validates the national id (14-digit when present) and tolerates a cleared years draft", () => {
-    const malformed = parseTechnicianSubmission(
-      { ...validValues, nationalId: "legacy-import", yearsOfExperience: "" },
+  it("edit mode tolerates a cleared years draft and the blank identity drafts", () => {
+    const valid = parseTechnicianSubmission(
+      { ...validValues, yearsOfExperience: "" },
       t,
       "edit"
     );
-    expect("errors" in malformed && malformed.errors).toEqual({
-      nationalId: ar["technicians.nationalIdInvalid"],
-    });
-
-    // A valid edit passes through with the cleared years draft intact.
-    const submission = parseTechnicianSubmission(
-      { ...validValues, nationalId: "30101010100114", yearsOfExperience: "" },
-      t,
-      "edit"
-    );
-    expect(submission).toEqual({
-      data: { ...validValues, nationalId: "30101010100114", yearsOfExperience: "" },
-    });
-  });
-
-  it("edit mode accepts a blank nationalId draft (null = keep the stored value)", () => {
-    const submission = parseTechnicianSubmission(
-      { ...validValues, nationalId: "", yearsOfExperience: "" },
-      t,
-      "edit"
-    );
-    expect(submission).toEqual({
-      data: { ...validValues, nationalId: "", yearsOfExperience: "" },
+    expect(valid).toEqual({
+      data: { ...validValues, yearsOfExperience: "" },
     });
   });
 
@@ -118,25 +116,49 @@ describe("parseTechnicianSubmission", () => {
     );
   });
 
-  it("accepts blank nationalId and mobile (both optional) in create mode", () => {
-    const submission = parseTechnicianSubmission(
-      { ...validValues, nationalId: "", mobile: "" },
+  it("2026-11-17 manual identity: blank gender/age stay legal; bad keys/bounds block saving", () => {
+    // Both blanks legal (both optional).
+    const blank = parseTechnicianSubmission(
+      { ...validValues, gender: "", age: "" },
       t,
       "create"
     );
-    expect(submission).toEqual({
-      data: { ...validValues, nationalId: "", mobile: "" },
-    });
+    expect(blank).toEqual({ data: { ...validValues } });
+
+    // An unknown gender key → the Arabic gender message.
+    const badGender = parseTechnicianSubmission(
+      { ...validValues, gender: "other" as never },
+      t,
+      "create"
+    );
+    expect("errors" in badGender && badGender.errors.gender).toBe(
+      ar["technicians.genderInvalid"]
+    );
+
+    // Age outside 10–90 → the Arabic age message.
+    const badAge = parseTechnicianSubmission(
+      { ...validValues, age: 91 },
+      t,
+      "create"
+    );
+    expect("errors" in badAge && badAge.errors.age).toBe(ar["technicians.ageInvalid"]);
+
+    // A valid manual identity passes through.
+    const good = parseTechnicianSubmission(
+      { ...validValues, gender: "female", age: 28 },
+      t,
+      "create"
+    );
+    expect(good).toEqual({ data: { ...validValues, gender: "female", age: 28 } });
   });
 
-  it("still rejects a malformed non-blank nationalId or mobile", () => {
+  it("still rejects a malformed mobile", () => {
     const submission = parseTechnicianSubmission(
-      { ...validValues, nationalId: "123", mobile: "01312345678" },
+      { ...validValues, mobile: "01312345678" },
       t,
       "create"
     );
     expect("errors" in submission && submission.errors).toEqual({
-      nationalId: ar["technicians.nationalIdInvalid"],
       mobile: ar["wizard.mobileInvalid"],
     });
   });
@@ -147,103 +169,88 @@ describe("toTechnicianCreatePayload", () => {
     expect(toTechnicianCreatePayload(validValues)).toEqual({
       fullName: "احمد سمير",
       fullNameAr: undefined,
-      nationalId: "30101010100114",
+      gender: undefined,
+      age: undefined,
       mobile: "01012345678",
       workshopId: "w-1",
       specialty: undefined,
       yearsOfExperience: 5,
+      employmentType: "engineer",
+      employmentNature: undefined,
+      hasModernRefrigerantExperience: undefined,
+      address: "القاهرة",
       notes: undefined,
     });
   });
 
-  it("sends blank nationalId/mobile as undefined (dropped at serialization)", () => {
-    const payload = toTechnicianCreatePayload({ ...validValues, nationalId: "", mobile: "" });
-    expect(payload.nationalId).toBeUndefined();
-    expect(payload.mobile).toBeUndefined();
-    expect(JSON.stringify(payload)).not.toContain("nationalId");
-    expect(JSON.stringify(payload)).not.toContain("mobile");
+  it("sends the manual identity drafts onto the wire (2026-11-17)", () => {
+    const payload = toTechnicianCreatePayload({
+      ...validValues,
+      gender: "female",
+      age: 28,
+    });
+    expect(payload.gender).toBe("female");
+    expect(payload.age).toBe(28);
+    // A blank age draft drops at serialization.
+    expect(JSON.stringify(toTechnicianCreatePayload(validValues))).not.toContain('"age"');
   });
 
   it("maps an empty workshop draft to a null workshopId (free technician)", () => {
     const payload = toTechnicianCreatePayload({ ...validValues, workshopId: "" });
     expect(payload.workshopId).toBeNull();
   });
+
+  it("omits blank registry drafts from the POST body (REGISTRY-GAS-SPEC §2)", () => {
+    const payload = toTechnicianCreatePayload({
+      ...validValues,
+      employmentType: "",
+      employmentNature: "",
+      hasModernRefrigerantExperience: "",
+      address: "",
+    });
+    expect(payload.employmentType).toBeUndefined();
+    expect(payload.employmentNature).toBeUndefined();
+    expect(payload.hasModernRefrigerantExperience).toBeUndefined();
+    expect(payload.address).toBeUndefined();
+    expect(JSON.stringify(payload)).not.toContain("employmentType");
+  });
+
+  it("maps the §11 yes/no drafts onto the wire booleans (REGISTRY-GAS-SPEC §11)", () => {
+    expect(
+      toTechnicianCreatePayload({
+        ...validValues,
+        hasModernRefrigerantExperience: "yes",
+      }).hasModernRefrigerantExperience
+    ).toBe(true);
+    expect(
+      toTechnicianCreatePayload({
+        ...validValues,
+        hasModernRefrigerantExperience: "no",
+      }).hasModernRefrigerantExperience
+    ).toBe(false);
+    // An unpicked draft drops at serialization.
+    expect(JSON.stringify(toTechnicianCreatePayload(validValues))).not.toContain(
+      "hasModernRefrigerantExperience"
+    );
+  });
 });
 
 describe("toTechnicianUpdatePayload", () => {
-  /** A stored record whose registry fields are all populated (the edit-form prefill). */
-  const original = {
-    id: "t-1",
-    gender: "male",
-    age: 41,
-    employmentType: "engineer",
-    employmentNature: "permanent",
-    hasModernRefrigerantExperience: false,
-    address: "شبرا",
-  } as unknown as Technician;
-
-  it("sends role drafts as values and omits the immutable workshopId", () => {
-    const values = {
-      ...validValues,
-      employmentType: "observer" as const,
-      address: "الجيزة",
-    };
-    const payload = toTechnicianUpdatePayload(values, original);
-    expect(payload.employmentType).toBe("observer");
-    expect(payload.address).toBe("الجيزة");
+  it("keeps workshopId off the PATCH body and carries the core fields", () => {
+    const payload = toTechnicianUpdatePayload(validValues);
+    expect(payload).toEqual({
+      fullName: "احمد سمير",
+      fullNameAr: null,
+      mobile: "01012345678",
+      specialty: null,
+      yearsOfExperience: 5,
+      employmentType: "engineer",
+      employmentNature: undefined,
+      hasModernRefrigerantExperience: undefined,
+      address: "القاهرة",
+      notes: null,
+    });
     expect(payload).not.toHaveProperty("workshopId");
-  });
-
-  it("sends picked §11 drafts as values and the flag as its wire boolean", () => {
-    const payload = toTechnicianUpdatePayload(
-      { ...validValues, employmentNature: "selfEmployed", hasModernRefrigerantExperience: "yes" },
-      original
-    );
-    expect(payload.employmentNature).toBe("selfEmployed");
-    expect(payload.hasModernRefrigerantExperience).toBe(true);
-    // An unpicked flag draft never travels — null = keep on the backend (no clear path).
-    const untouched = toTechnicianUpdatePayload(validValues, original);
-    expect(untouched.hasModernRefrigerantExperience).toBeUndefined();
-    expect(JSON.stringify(untouched)).not.toContain("hasModernRefrigerantExperience");
-  });
-
-  it("sends a cleared registry draft as \"\" when a value was stored (= clear)", () => {
-    const payload = toTechnicianUpdatePayload(validValues, original);
-    expect(payload.employmentType).toBe("");
-    expect(payload.address).toBe("");
-  });
-
-  it("omits a blank registry draft when nothing was stored (= keep, no clear marker)", () => {
-    const payload = toTechnicianUpdatePayload(validValues);
-    expect(payload.employmentType).toBeUndefined();
-    expect(payload.address).toBeUndefined();
-    expect(JSON.stringify(payload)).not.toContain('"employmentType"');
-    expect(JSON.stringify(payload)).not.toContain('"address"');
-  });
-
-  it("never sends gender or age — they derive from the national ID (§10B)", () => {
-    const payload = toTechnicianUpdatePayload(validValues, original);
-    expect(payload).not.toHaveProperty("gender");
-    expect(payload).not.toHaveProperty("age");
-    expect(JSON.stringify(payload)).not.toContain("gender");
-    expect(JSON.stringify(payload)).not.toContain('"age"');
-  });
-
-  it("sends the editable national id, blanks as null", () => {
-    const payload = toTechnicianUpdatePayload(validValues);
-    expect(payload.fullName).toBe("احمد سمير");
-    expect(payload.fullNameAr).toBeNull();
-    expect(payload.nationalId).toBe("30101010100114");
-    expect(payload.mobile).toBe("01012345678");
-    expect(payload.specialty).toBeNull();
-    expect(payload.yearsOfExperience).toBe(5);
-    expect(payload.notes).toBeNull();
-  });
-
-  it("sends a cleared nationalId draft as null (= keep the stored value)", () => {
-    const payload = toTechnicianUpdatePayload({ ...validValues, nationalId: "" });
-    expect(payload.nationalId).toBeNull();
-    expect(JSON.stringify(payload)).not.toContain('"nationalId":""');
   });
 
   it("omits a cleared years draft so the stored value is left unchanged", () => {
@@ -255,6 +262,106 @@ describe("toTechnicianUpdatePayload", () => {
     const payload = toTechnicianUpdatePayload({ ...validValues, mobile: "" });
     expect(payload.mobile).toBeNull();
   });
+
+  // Registry fields (REGISTRY-GAS-SPEC §2): untouched unset → omitted (= keep on the
+  // wire); explicitly cleared → "" (clear); value → set.
+  it("omits untouched unset registry drafts so the stored values are kept", () => {
+    const payload = toTechnicianUpdatePayload({
+      ...validValues,
+      employmentType: "",
+      employmentNature: "",
+      hasModernRefrigerantExperience: "",
+      address: "",
+    });
+    // The keys ride as undefined — undefined drops at JSON serialization (keep).
+    expect(payload.employmentType).toBeUndefined();
+    expect(payload.employmentNature).toBeUndefined();
+    expect(payload.hasModernRefrigerantExperience).toBeUndefined();
+    expect(payload.address).toBeUndefined();
+    expect(JSON.stringify(payload)).not.toContain("employmentType");
+  });
+
+  it("sends explicitly cleared registry drafts as \"\" (clear)", () => {
+    const original = {
+      employmentType: "engineer",
+      employmentNature: "selfEmployed",
+      address: "القاهرة",
+    } as const;
+    const payload = toTechnicianUpdatePayload(
+      {
+        ...validValues,
+        employmentType: "",
+        employmentNature: "",
+        address: "",
+      },
+      { ...technicianStub, ...original }
+    );
+    expect(payload.employmentType).toBe("");
+    expect(payload.employmentNature).toBe("");
+    expect(payload.address).toBe("");
+  });
+
+  it("sends changed registry drafts as values and unchanged ones with their stored values", () => {
+    const original = {
+      employmentType: "engineer",
+      address: "القاهرة",
+    } as const;
+    const payload = toTechnicianUpdatePayload(
+      {
+        ...validValues,
+        employmentType: "observer",
+        address: "القاهرة",
+      },
+      { ...technicianStub, ...original }
+    );
+    expect(payload.employmentType).toBe("observer");
+    // Untouched set fields travel as their stored values (value = set, a no-op).
+    expect(payload.address).toBe("القاهرة");
+  });
+
+  it('2026-11-17 manual identity: gender follows ""-clears and age travels only when set', () => {
+    // Set: a picked gender draft travels; a set age travels as its number.
+    const set = toTechnicianUpdatePayload(
+      { ...validValues, gender: "female", age: 41 },
+      technicianStub
+    );
+    expect(set.gender).toBe("female");
+    expect(set.age).toBe(41);
+
+    // Keep: blank drafts over a STORED gender still clear it (the "" convention) —
+    // a blank age draft omits the key (no clear path).
+    const clear = toTechnicianUpdatePayload(validValues, {
+      ...technicianStub,
+      gender: "male",
+      age: 30,
+    });
+    expect(clear.gender).toBe("");
+    expect(clear.age).toBeUndefined();
+    expect(JSON.stringify(clear)).not.toContain('"age"');
+
+    // Blank drafts over NOTHING stored omit both keys.
+    const keep = toTechnicianUpdatePayload(validValues, technicianStub);
+    expect(keep.gender).toBeUndefined();
+    expect(keep.age).toBeUndefined();
+  });
+
+  it("§11 nature follows set/clear/keep and the flag only travels when picked", () => {
+    // Set: a new nature draft travels; a picked yes/no draft travels as the boolean.
+    const set = toTechnicianUpdatePayload(
+      { ...validValues, employmentNature: "selfEmployed", hasModernRefrigerantExperience: "yes" },
+      technicianStub
+    );
+    expect(set.employmentNature).toBe("selfEmployed");
+    expect(set.hasModernRefrigerantExperience).toBe(true);
+
+    // Keep/omit: blank drafts over NOTHING stored omit both keys (the §2 three-way
+    // contract); the flag itself has no clear path — unpicked never travels.
+    const keep = toTechnicianUpdatePayload(validValues, technicianStub);
+    expect(keep.employmentNature).toBeUndefined();
+    expect(keep.hasModernRefrigerantExperience).toBeUndefined();
+    expect(JSON.stringify(keep)).not.toContain("employmentNature");
+    expect(JSON.stringify(keep)).not.toContain("hasModernRefrigerantExperience");
+  });
 });
 
 describe("toFormValues", () => {
@@ -262,16 +369,17 @@ describe("toFormValues", () => {
     expect(toFormValues(null, "w-9")).toEqual({
       fullName: "",
       fullNameAr: "",
-      nationalId: "",
+      gender: "",
+      age: "",
       mobile: "",
       workshopId: "w-9",
       specialty: "",
       yearsOfExperience: 0,
-      notes: "",
       employmentType: "",
       employmentNature: "",
       hasModernRefrigerantExperience: "",
       address: "",
+      notes: "",
     });
   });
 
@@ -279,39 +387,31 @@ describe("toFormValues", () => {
     expect(toFormValues(null).workshopId).toBe("");
   });
 
-  it("maps the stored §11 flag onto the yes/no draft", () => {
-    const stored = { id: "t-9" } as unknown as Technician;
-    expect(
-      toFormValues({ ...stored, hasModernRefrigerantExperience: true }).hasModernRefrigerantExperience
-    ).toBe("yes");
-    expect(
-      toFormValues({ ...stored, hasModernRefrigerantExperience: false }).hasModernRefrigerantExperience
-    ).toBe("no");
-    expect(toFormValues({ ...stored, hasModernRefrigerantExperience: null }).hasModernRefrigerantExperience)
-      .toBe("");
-    expect(toFormValues(null).hasModernRefrigerantExperience).toBe("");
-  });
-});
-
-describe("qualification dropdown options", () => {
-  it("offers exactly the three qualification options", () => {
-    expect([...SPECIALIZATION_OPTIONS]).toEqual(["مؤهل عالي", "مؤهل متوسط", "بدون"]);
-  });
-
-  it("stores the option text, and the Other sentinel resolves to the free-text default", () => {
-    expect(specialtyFromSelectValue(SPECIALIZATION_OPTIONS[0])).toBe("مؤهل عالي");
-    expect(specialtyFromSelectValue(SPECIALIZATION_OPTIONS[1])).toBe("مؤهل متوسط");
-    expect(specialtyFromSelectValue(SPECIALIZATION_OPTIONS[2])).toBe("بدون");
-    expect(specialtyFromSelectValue(SPECIALTY_OTHER_SENTINEL)).toBe(SPECIALTY_OTHER_DEFAULT);
-  });
-
-  it("legacy stored role names fall to the Other sentinel as free text", () => {
-    expect(specialtySelectValue("فني تبريد وتكييف")).toBe(SPECIALTY_OTHER_SENTINEL);
-    expect(isCustomSpecialty("فني تبريد وتكييف")).toBe(true);
+  it("seeds the manual identity + registry fields from an existing technician", () => {
+    const values = toFormValues({
+      ...technicianStub,
+      gender: "female",
+      age: 37,
+      employmentType: "observer",
+      employmentNature: "temporary",
+      hasModernRefrigerantExperience: true,
+    });
+    expect(values.gender).toBe("female");
+    expect(values.age).toBe(37);
+    expect(values.employmentType).toBe("observer");
+    expect(values.employmentNature).toBe("temporary");
+    expect(values.hasModernRefrigerantExperience).toBe("yes");
+    expect(toFormValues({ ...technicianStub, hasModernRefrigerantExperience: false })
+      .hasModernRefrigerantExperience).toBe("no");
+    expect(toFormValues(technicianStub).hasModernRefrigerantExperience).toBe("");
   });
 });
 
 describe("specialty select helpers", () => {
+  it("offers exactly the three qualification options per the spec", () => {
+    expect([...SPECIALIZATION_OPTIONS]).toEqual(["مؤهل عالي", "مؤهل متوسط", "بدون"]);
+  });
+
   it("maps listed, custom, and blank specialties onto select values", () => {
     expect(specialtySelectValue(SPECIALIZATION_OPTIONS[0])).toBe(SPECIALIZATION_OPTIONS[0]);
     expect(specialtySelectValue("فني مكيفات يخ")).toBe(SPECIALTY_OTHER_SENTINEL);
@@ -329,40 +429,10 @@ describe("specialty select helpers", () => {
     expect(isCustomSpecialty("")).toBe(false);
     expect(isCustomSpecialty(null)).toBe(false);
   });
-});
 
-describe("registry attribute fields (REGISTRY-GAS-SPEC §1/§10A)", () => {
-  it("create payload carries role values and omits unset drafts", () => {
-    const payload = toTechnicianCreatePayload({
-      ...validValues,
-      employmentType: "engineer" as const,
-      address: "",
-    });
-    expect(payload.employmentType).toBe("engineer");
-    expect(payload.address).toBeUndefined();
-    expect(JSON.stringify(payload)).not.toContain('"address"');
-    // Gender and age never travel (§10B — derived from the national ID).
-    expect(payload).not.toHaveProperty("gender");
-    expect(payload).not.toHaveProperty("age");
-  });
-
-  it("update payload: set drafts win, blank drafts over nothing stored stay omitted", () => {
-    const payload = toTechnicianUpdatePayload({
-      ...validValues,
-      employmentType: "engineer" as const,
-      address: "أسيوط",
-    });
-    expect(payload.employmentType).toBe("engineer");
-    expect(payload.address).toBe("أسيوط");
-
-    const cleared = toTechnicianUpdatePayload({
-      ...validValues,
-      employmentType: "",
-      address: "",
-    });
-    expect(cleared.employmentType).toBeUndefined();
-    expect(cleared.address).toBeUndefined();
-    expect(JSON.stringify(cleared)).not.toContain('"employmentType"');
+  it("still renders legacy stored role names as free text (no longer offered options)", () => {
+    expect(isCustomSpecialty("فني تبريد وتكييف")).toBe(true);
+    expect(specialtySelectValue("فني تبريد وتكييف")).toBe(SPECIALTY_OTHER_SENTINEL);
   });
 });
 
