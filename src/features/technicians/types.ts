@@ -4,7 +4,6 @@ export type Technician = {
   id: string;
   fullName: string;
   fullNameAr: string | null;
-  nationalId: string | null;
   mobile: string | null;
   /** Nullable — free technicians register without a workshop ("بدون ورشة"). */
   workshopId: string | null;
@@ -13,9 +12,10 @@ export type Technician = {
   yearsOfExperience: number;
   status: TechnicianStatus;
   notes: string | null;
-  /** Registry attribute fields (REGISTRY-GAS-SPEC §1 + §10B) — gender/age derive
-   *  from the national ID server-side; employmentType is a camelCase role key. */
-  gender: string | null;
+  /** Registry attribute fields (REGISTRY-GAS-SPEC §1 + the 2026-11-17 NatID
+   *  removal) — gender/age are manual data-entry now; employmentType is a
+   *  camelCase role key. */
+  gender: "male" | "female" | null;
   age: number | null;
   employmentType: "engineer" | "observer" | "technician" | "assistant" | null;
   /** نوع العمالة + خبرات الغازات الحديثة (REGISTRY-GAS-SPEC §11). */

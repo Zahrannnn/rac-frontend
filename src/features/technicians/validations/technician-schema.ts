@@ -1,10 +1,8 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 import { isEgyptianMobile } from "@/shared/validation/mobile";
-import { isValidEgyptianNationalId } from "@/shared/utils/egyptian-national-id";
 
 /** Registry attribute keys (REGISTRY-GAS-SPEC §1 + §10A) — the camelCase role keys the
- *  backend stores; labels render per locale in the forms. Gender and age are NOT form
- *  fields — they derive from the national ID (§10B). */
+ *  backend stores; labels render per locale in the forms. */
 export const EMPLOYMENT_TYPE_KEYS = ["engineer", "observer", "technician", "assistant"] as const;
 
 /** نوع العمالة keys (REGISTRY-GAS-SPEC §11) — the camelCase nature keys the backend
@@ -22,20 +20,22 @@ export const EMPLOYMENT_NATURE_KEYS = [
  *  unpicked; the payload maps yes/no → true/false and "" → omitted (keep). */
 export const MODERN_EXPERIENCE_DRAFTS = ["yes", "no"] as const;
 
-/** Mirrors the backend CreateTechnicianRequestValidator (optional national ID carrying
- *  the FULL Egyptian formula — real birth date, official governorate code, check digit —
- *  optional Egyptian mobile, 0–60 years of experience). Format rules apply only when
- *  non-empty; blank values are sent as omitted (create) / null (edit) per the nullable
- *  contract. workshopId admits "" — the "بدون ورشة" draft for free technicians; the
- *  payload maps it to null. yearsOfExperience also admits "" — the cleared input draft;
- *  mode-aware submission parsing decides whether that is valid (edit: leave unchanged).
+/** Mirrors the backend CreateTechnicianRequestValidator (optional Egyptian mobile,
+ *  0–60 years of experience). Format rules apply only when non-empty; blank values are
+ *  sent as omitted (create) / null (edit) per the nullable contract. workshopId admits
+ *  "" — the "بدون ورشة" draft for free technicians; the payload maps it to null.
+ *  yearsOfExperience also admits "" — the cleared input draft; mode-aware submission
+ *  parsing decides whether that is valid (edit: leave unchanged).
  *  Registry attribute fields (REGISTRY-GAS-SPEC §1 + §10A): employmentType accepts only
  *  its camelCase role keys ("" = the unset select draft), employer/address free text
- *  capped at 256. Gender and age derive from the national ID (§10B) — never entered. */
+ *  capped at 256. 2026-11-17 NatID removal: gender/age are manual data-entry — gender
+ *  as the male/female key ("" = the unset select draft), age 10–90 (blank drafts stay
+ *  legal, both optional). */
 export const technicianSchema = z.object({
   fullName: z.string().trim().min(1).max(128),
   fullNameAr: z.string().trim().max(128).optional().or(z.literal("")),
-  nationalId: z.string().trim().refine((value) => value === "" || isValidEgyptianNationalId(value)),
+  gender: z.enum(["male", "female"]).or(z.literal("")),
+  age: z.number().int().min(10).max(90).or(z.literal("")),
   mobile: z.string().trim().refine((value) => value === "" || isEgyptianMobile(value)),
   workshopId: z.string(),
   specialty: z.string().trim().max(128).optional().or(z.literal("")),
