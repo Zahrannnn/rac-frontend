@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+﻿import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -24,7 +24,6 @@ vi.mock("@/features/technicians", async () => {
             id: "t-1",
             fullName: "Ahmed Samir",
             fullNameAr: "أحمد سمير",
-            nationalId: "30001011234567",
             mobile: "01012345678",
             workshopId: "w-1",
             workshopCode: "MAC-CAR-000001",

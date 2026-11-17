@@ -8,7 +8,6 @@ const technician: Technician = {
   id: "t1",
   fullName: "Ahmed Ali",
   fullNameAr: "أحمد علي",
-  nationalId: null,
   mobile: "01012345678",
   workshopId: "w1",
   workshopCode: "RAC-CAR-000125",
@@ -30,7 +29,6 @@ const freeTechnician: Technician = {
   id: "t-free",
   fullName: "Free Tech",
   fullNameAr: "فني حر",
-  nationalId: null,
   mobile: "01099999999",
   workshopId: null,
   workshopCode: null,
@@ -57,13 +55,15 @@ function renderTable(technicians: Technician[] = [technician]) {
 }
 
 describe("TechniciansTable", () => {
-  it("renders through the shared DataTable with the missing-national-id fallback", () => {
+  it("renders through the shared DataTable with no national-ID column (2026-11-17)", () => {
     renderTable();
 
     const table = screen.getByRole("table", { name: "الفنيون" });
     expect(within(table).getByText("أحمد علي")).toBeInTheDocument();
     expect(within(table).getByText("RAC-CAR-000125")).toBeInTheDocument();
-    expect(within(table).getByText("—")).toBeInTheDocument();
+    expect(within(table).getByText("01012345678")).toBeInTheDocument();
+    // The National ID column is GONE (2026-11-17 NatID removal).
+    expect(within(table).queryByText("الرقم القومي")).not.toBeInTheDocument();
   });
 
   it("shows the technicians empty state when there are no rows", () => {
