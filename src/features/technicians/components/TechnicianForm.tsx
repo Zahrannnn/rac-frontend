@@ -17,8 +17,11 @@ import {
   toTechnicianUpdatePayload,
 } from "../utils/technician-form";
 import type { Technician, TechnicianStatus } from "../types";
-import { parseEgyptianNationalId } from "@/shared/utils/egyptian-national-id";
-import { EMPLOYMENT_LABELS, EMPLOYMENT_NATURE_LABELS } from "../utils/technician-form";
+import {
+  EMPLOYMENT_LABELS,
+  EMPLOYMENT_NATURE_LABELS,
+  GENDER_LABELS,
+} from "../utils/technician-form";
 import {
   EMPLOYMENT_NATURE_KEYS,
   EMPLOYMENT_TYPE_KEYS,
@@ -70,9 +73,9 @@ export function TechnicianForm({
     }
 
     if (technician) {
-      // Edit: the workshop link stays immutable per contract (PATCH fields only);
-      // the national id is editable now — a blank draft goes as null = keep.
-      // The original record drives the registry fields' clear-vs-keep decision.
+      // Edit: the workshop link stays immutable per contract (PATCH fields only).
+      // The original record drives the registry fields' clear-vs-keep decision
+      // (incl. the manual gender — "" clears — and age, omitted = keep).
       update.mutate(toTechnicianUpdatePayload(submission.data, technician), {
         onSuccess: () => finishSave(t("profile.saved")),
         onError: reportMutationError,
@@ -94,9 +97,7 @@ export function TechnicianForm({
     // 409/404 get specific, actionable messages; 403 stays silent because the
     // UI already hides forbidden actions.
     const status = (error as { status?: number }).status;
-    if (status === 409) {
-      toast.warning(t("technicians.duplicateNationalId"));
-    } else if (status === 404) {
+    if (status === 404) {
       toast.error(t("error.notFoundToast"));
     } else if (status !== 403) {
       toast.error(`${t("common.error")} — ${t("common.retry")}`);
@@ -120,18 +121,27 @@ export function TechnicianForm({
               onChange={(event) => patch({ fullNameAr: event.target.value })}
             />
           </FormField>
-          <FormField
-            label={t("technicians.nationalId")}
-            error={errors.nationalId}
-            hint={t("technicians.nationalIdHint")}
-          >
+          {/* 2026-11-17 NatID removal: gender and age are manual data-entry. */}
+          <RegistrySelectField
+            label={t("technicians.gender")}
+            value={values.gender}
+            error={errors.gender}
+            options={(["male", "female"] as const).map((key) => ({
+              value: key,
+              label: t(GENDER_LABELS[key]),
+            }))}
+            onChange={(key) => patch({ gender: key as TechnicianFormValues["gender"] })}
+          />
+          <FormField label={t("technicians.age")} error={errors.age} hint={t("wizard.optionalHint")}>
             <Input
+              type="number"
+              min={10}
+              max={90}
               dir="ltr"
-              inputMode="numeric"
               className="tabular-nums"
-              value={values.nationalId}
+              value={values.age}
               onChange={(event) =>
-                patch({ nationalId: event.target.value.replace(/\D/g, "").slice(0, 14) })
+                patch({ age: event.target.value === "" ? "" : Number(event.target.value) })
               }
             />
           </FormField>
@@ -151,13 +161,10 @@ export function TechnicianForm({
               }
             />
           </FormField>
-          {/* Registry attribute fields (REGISTRY-GAS-SPEC §2 + §10B + §11) — placed after
-              the nationalId/mobile block. Gender and age DERIVE from the national ID and
-              render disabled; the workshop select IS جهة العمل (§11 correction — no
+          {/* Registry attribute fields (REGISTRY-GAS-SPEC §2 + §11) — placed after the
+              identity block. The workshop select IS جهة العمل (§11 correction — no
               separate employer field); address free; the nature select (نوع العمالة)
               precedes the role select (الوظيفة). */}
-          <DerivedGenderField nationalId={values.nationalId} />
-          <DerivedAgeField nationalId={values.nationalId} />
           <FormField
             label={t("technicians.address")}
             error={errors.address}
@@ -270,40 +277,3 @@ export function TechnicianForm({
   );
 }
 
-/** Gender display (REGISTRY-GAS-SPEC §10B) — DERIVED from the national ID's 13th
- *  digit; the input is disabled and never submits. Empty when the ID is absent/invalid. */
-function DerivedGenderField({ nationalId }: { nationalId: string }) {
-  const t = useT();
-  const identity = parseEgyptianNationalId(nationalId);
-  const label = identity
-    ? identity.gender === "male"
-      ? t("technicians.genderMale")
-      : t("technicians.genderFemale")
-    : "";
-
-  return (
-    <FormField label={t("technicians.gender")} hint={t("technicians.natidDerivedHint")}>
-      <Input readOnly disabled value={label} placeholder={t("technicians.genderSelect")} />
-    </FormField>
-  );
-}
-
-/** Age display (REGISTRY-GAS-SPEC §10B) — DERIVED from the national ID's birth date;
- *  the input is disabled and never submits. Empty when the ID is absent/invalid. */
-function DerivedAgeField({ nationalId }: { nationalId: string }) {
-  const t = useT();
-  const identity = parseEgyptianNationalId(nationalId);
-
-  return (
-    <FormField label={t("technicians.age")} hint={t("technicians.natidDerivedHint")}>
-      <Input
-        readOnly
-        disabled
-        dir="ltr"
-        className="tabular-nums"
-        value={identity ? String(identity.age) : ""}
-        placeholder="—"
-      />
-    </FormField>
-  );
-}
