@@ -86,10 +86,6 @@ export function TechnicianProfilePage({ technicianId }: { technicianId: string }
               {t("technicians.identitySection")}
             </h2>
             <dl className="mt-3 grid grid-cols-[minmax(7rem,9rem)_1fr] gap-y-2 text-sm">
-              <dt className="text-muted-foreground">{t("technicians.nationalId")}</dt>
-              <dd className="font-mono tabular-nums text-[var(--navy)]" dir="ltr">
-                {technician.nationalId ?? "—"}
-              </dd>
               <dt className="text-muted-foreground">{t("profile.contactMobile")}</dt>
               <dd className="tabular-nums text-[var(--navy)]" dir="ltr">
                 {technician.mobile ?? "—"}

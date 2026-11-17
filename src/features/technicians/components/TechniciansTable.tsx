@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ChevronRight } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/shared/components/data-table/data-table";
@@ -81,16 +81,6 @@ export function TechniciansTable({
             <span className="block text-xs text-muted-foreground">{technician.specialty}</span>
           ) : null}
         </>
-      ),
-    },
-    {
-      key: "nationalId",
-      header: t("technicians.nationalId"),
-      className: "w-[9rem]",
-      cell: (technician) => (
-        <span className="block font-mono text-xs tabular-nums" dir="ltr">
-          {technician.nationalId ?? "—"}
-        </span>
       ),
     },
     {
