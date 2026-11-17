@@ -103,7 +103,8 @@ export function toFormValues(
   return {
     fullName: technician?.fullName ?? "",
     fullNameAr: technician?.fullNameAr ?? "",
-    nationalId: technician?.nationalId ?? "",
+    gender: technician?.gender ?? "",
+    age: technician?.age ?? "",
     mobile: technician?.mobile ?? "",
     workshopId: technician?.workshopId ?? lockedWorkshopId ?? "",
     specialty: technician?.specialty ?? "",
@@ -124,8 +125,10 @@ export function toFormValues(
 /** Arabic per-field message for a failed form validation (pure — `t` injected). */
 function technicianFieldMessage(field: string, t: TFunc): string {
   switch (field) {
-    case "nationalId":
-      return t("technicians.nationalIdInvalid");
+    case "gender":
+      return t("technicians.genderInvalid");
+    case "age":
+      return t("technicians.ageInvalid");
     case "mobile":
       return t("wizard.mobileInvalid");
     case "yearsOfExperience":
@@ -150,8 +153,7 @@ export type TechnicianSubmission =
   | { errors: Record<string, string> };
 
 /** Edit mode validates only the PATCH-able fields — the immutable workshopId passes
- *  through untouched, while nationalId is validated like any other editable field
- *  (14-digit when present; a blank draft goes as null = keep the stored value). */
+ *  through untouched; the manual gender/age drafts validate like any other field. */
 const editableTechnicianSchema = technicianSchema.omit({
   workshopId: true,
 });
@@ -199,16 +201,17 @@ export function parseTechnicianSubmission(
   return { data: parsed.data };
 }
 
-/** POST /technicians body — blank optionals (incl. nationalId/mobile) are omitted
+/** POST /technicians body — blank optionals (incl. gender/age/mobile) are omitted
  *  (undefined drops at serialization), matching the nullable backend contract.
  *  An empty workshop draft goes as null = the free-technician "بدون ورشة" state.
- *  The registry attribute fields follow the same rule: unset drafts omitted.
- *  Gender and age never travel — they derive from the national ID (§10B). */
+ *  The registry attribute fields follow the same rule: unset drafts omitted. */
 export function toTechnicianCreatePayload(data: TechnicianFormValues): CreateTechnicianPayload {
   return {
     fullName: data.fullName,
     fullNameAr: data.fullNameAr || undefined,
-    nationalId: data.nationalId || undefined,
+    // Manual identity (2026-11-17 NatID removal) — blank drafts omitted.
+    gender: data.gender || undefined,
+    age: typeof data.age === "number" ? data.age : undefined,
     mobile: data.mobile || undefined,
     workshopId: data.workshopId || null,
     specialty: data.specialty || undefined,
@@ -229,11 +232,12 @@ function modernExperienceToWire(draft: "" | "yes" | "no"): boolean | undefined {
 }
 
 /** PATCH /technicians/{id} body — workshopId is immutable per contract; a cleared
- *  nationalId/mobile goes as null (the backend keeps the stored value — null = keep).
+ *  mobile goes as null (the backend clears the stored value).
  *  Registry attribute strings follow REGISTRY-GAS-SPEC §1/§2 three-way semantics:
  *  a draft value sets, a blank draft over a stored value clears ("" on the wire),
- *  and a blank draft with nothing stored is omitted (= keep). Gender and age never
- *  travel — they derive from the national ID (§10B). */
+ *  and a blank draft with nothing stored is omitted (= keep). Manual identity
+ *  (2026-11-17): gender follows the same three-way string semantics; age null =
+ *  keep / value = set (no clear path). */
 export function toTechnicianUpdatePayload(
   data: TechnicianFormValues,
   original?: Technician | null
@@ -248,7 +252,10 @@ export function toTechnicianUpdatePayload(
   return {
     fullName: data.fullName,
     fullNameAr: data.fullNameAr || null,
-    nationalId: data.nationalId || null,
+    // Manual identity (2026-11-17): gender rides the registryField three-way
+    // semantics ("" over a stored value = clear); a blank age draft omits the key.
+    gender: registryField(data.gender, original?.gender),
+    ...(typeof data.age === "number" ? { age: data.age } : {}),
     mobile: data.mobile || null,
     specialty: data.specialty || null,
     // Cleared draft → key omitted → the stored value is left unchanged (PATCH semantics).
