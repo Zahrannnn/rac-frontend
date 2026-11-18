@@ -38,9 +38,6 @@ describe("ReportFilterFields — per-gas size bands (REGISTRY-GAS-SPEC §10C)", 
     Element.prototype.scrollIntoView = vi.fn();
   });
 
-  // COMING SOON (2026-11-17 user request): the §10C filter is hidden from the UI —
-  // these UI tests are commented out with the block; uncomment with it.
-  /*
   it("renders the per-gas band block for workshop_registry", () => {
     renderFields(REPORT_SUPPORTED_FILTERS["workshop_registry"]!);
 
@@ -50,16 +47,12 @@ describe("ReportFilterFields — per-gas size bands (REGISTRY-GAS-SPEC §10C)", 
     expect(screen.getByText("R-1234yf")).toBeInTheDocument();
     expect(screen.getByText("أخرى")).toBeInTheDocument();
   });
-  */
 
   it("omits the band block for reports that do not support it", () => {
     renderFields(REPORT_SUPPORTED_FILTERS["technician_registry"]!);
     expect(screen.queryByText("تصفية حسب استهلاك الغاز")).not.toBeInTheDocument();
   });
 
-  // COMING SOON (2026-11-17 user request): the §10C filter is hidden from the UI —
-  // these UI tests are commented out with the block; uncomment with it.
-  /*
   it("offers the three verbatim survey size bands per gas", async () => {
     renderFields(["gasBand"]);
 
@@ -70,11 +63,7 @@ describe("ReportFilterFields — per-gas size bands (REGISTRY-GAS-SPEC §10C)", 
     expect(screen.getByRole("option", { name: /680 - 1360/ })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /أكثر من 1360/ })).toBeInTheDocument();
   });
-  */
 
-  // COMING SOON (2026-11-17 user request): the §10C filter is hidden from the UI —
-  // these UI tests are commented out with the block; uncomment with it.
-  /*
   it("passes a picked band through to onGasBandChange", async () => {
     const { onGasBandChange } = renderFields(["gasBand"]);
 
@@ -86,11 +75,7 @@ describe("ReportFilterFields — per-gas size bands (REGISTRY-GAS-SPEC §10C)", 
 
     expect(onGasBandChange).toHaveBeenCalledWith("r134a", "small_lt680");
   });
-  */
 
-  // COMING SOON (2026-11-17 user request): the §10C filter is hidden from the UI —
-  // these UI tests are commented out with the block; uncomment with it.
-  /*
   it("clears a gas pick back to \"\" via the all option", async () => {
     const { onGasBandChange } = renderFields(["gasBand"], {
       gasBand: { r134a: "small_lt680" },
@@ -104,7 +89,6 @@ describe("ReportFilterFields — per-gas size bands (REGISTRY-GAS-SPEC §10C)", 
 
     expect(onGasBandChange).toHaveBeenCalledWith("r134a", "");
   });
-  */
 });
 
 describe("REPORT_SUPPORTED_FILTERS pins (§7 item 12)", () => {

@@ -13,23 +13,20 @@ import {
 import { GOVERNORATES } from "@/shared/constants/egypt";
 import { useT } from "@/shared/i18n";
 import { useTrainers } from "../hooks/use-reports";
+import { gasDesignation } from "../utils/gas-consumption";
 import type { ReportFilters } from "../types";
-// COMING SOON (2026-11-17 user request): the §10C per-gas band filter is hidden
-// from the UI — gasDesignation and the block below stay in the code, commented.
-// import { gasDesignation } from "../utils/gas-consumption";
 
 const WORKSHOP_STATUSES = ["Draft", "Submitted", "Complete", "Incomplete"] as const;
-// COMING SOON (2026-11-17 user request): commented out with the hidden block.
-// /** MAC gas vocabulary — all three gases carry quantities, so all are filterable (§10C). */
-// const FILTERABLE_GASES = ["r134a", "r1234yf", "other"] as const;
-// /** Band option labels live in the reports dictionary (the survey's حجم الورشة حسب
-//  *  الغاز المستهلك options, verbatim). */
-// const GAS_BAND_LABELS = {
-//   small_lt680: "reports.gasBand.small_lt680",
-//   medium_680_1360: "reports.gasBand.medium_680_1360",
-//   large_gt1360: "reports.gasBand.large_gt1360",
-// } as const;
-// const GAS_BAND_KEYS = ["small_lt680", "medium_680_1360", "large_gt1360"] as const;
+/** MAC gas vocabulary — all three gases carry quantities, so all are filterable (§10C). */
+const FILTERABLE_GASES = ["r134a", "r1234yf", "other"] as const;
+/** Band option labels live in the reports dictionary (the survey's حجم الورشة حسب
+ *  الغاز المستهلك options, verbatim). */
+const GAS_BAND_LABELS = {
+  small_lt680: "reports.gasBand.small_lt680",
+  medium_680_1360: "reports.gasBand.medium_680_1360",
+  large_gt1360: "reports.gasBand.large_gt1360",
+} as const;
+const GAS_BAND_KEYS = ["small_lt680", "medium_680_1360", "large_gt1360"] as const;
 const WORKSHOP_TYPES = [
   "Independent",
   "AuthorizedServiceCenter",
@@ -82,8 +79,7 @@ export function ReportFilterFields({
   supported,
   filters,
   onFilterChange,
-  // onGasBandChange — commented out with the hidden §10C block below; callers
-  // still pass it and the prop type keeps the wiring intact.
+  onGasBandChange,
 }: {
   supported: readonly string[];
   filters: ReportFilters;
@@ -139,9 +135,7 @@ export function ReportFilterFields({
 
         {/* §10C per-gas size-band filter (workshop_registry only): one row per gas —
             a dropdown of the survey's workshop-size options (verbatim labels); "all" =
-            no filter for that gas.
-            COMING SOON (2026-11-17 user request): hidden from the UI for now — the
-            backend §10C filter stays wired; delete this comment wrapper to restore.
+            no filter for that gas. */}
         {supported.includes("gasBand") ? (
           <div className="flex min-w-0 flex-col gap-2 rounded-md border bg-card p-3 md:col-span-2">
             <Label className="text-sm font-medium">
@@ -178,7 +172,7 @@ export function ReportFilterFields({
               ))}
             </div>
           </div>
-        ) : null} */}
+        ) : null}
 
         {supported.includes("dateFrom") || supported.includes("dateTo") ? (
           <div className="flex min-w-0 flex-col gap-1.5 md:col-span-2">
