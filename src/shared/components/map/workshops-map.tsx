@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -35,6 +35,14 @@ function FitMarkers({ markers }: { markers: WorkshopsMapMarker[] }) {
   const map = useMap();
 
   useEffect(() => {
+    // A zero/unmeasured size (viewport still resizing after a fullscreen exit)
+    // makes flyToBounds/flyTo compute a NaN center — Leaflet then throws
+    // "Invalid LatLng object: (NaN, NaN)". Skip the flight instead; the default
+    // Egypt view stays and a later marker change re-fits.
+    const size = map.getSize();
+    if (!map.getContainer()?.isConnected || !Number.isFinite(size?.x) || size.x === 0) {
+      return;
+    }
     if (markers.length === 0) {
       map.flyTo(EGYPT_CENTER, EGYPT_ZOOM);
       return;

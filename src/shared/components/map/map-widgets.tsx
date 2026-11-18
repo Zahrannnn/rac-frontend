@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import L from "leaflet";
 import { Crosshair, Loader2, Maximize2, Minimize2, MousePointerClick } from "lucide-react";
@@ -88,13 +88,28 @@ export function MapToolbar() {
   const meLayersRef = useRef<L.Layer[]>([]);
 
   useEffect(() => {
+    let sizeTimer: number | undefined;
     const onFullscreenChange = () => {
       setIsFullscreen(document.fullscreenElement != null);
       // Leaflet measured the old viewport — recompute after the element is resized.
-      window.setTimeout(() => map.invalidateSize(), 60);
+      // The timer is cancelled on unmount and skipped for a detached container:
+      // re-measuring a removed map yields NaN and Leaflet throws
+      // "Invalid LatLng object: (NaN, NaN)" — the uncaught error that broke
+      // navigating away right after leaving the map's full view.
+      window.clearTimeout(sizeTimer);
+      sizeTimer = window.setTimeout(() => {
+        const container = map.getContainer();
+        if (!container?.isConnected) return;
+        // Kill any in-flight flyTo/flyToBounds animation before re-measuring.
+        map.stop();
+        map.invalidateSize();
+      }, 60);
     };
     document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      window.clearTimeout(sizeTimer);
+    };
   }, [map]);
 
   useEffect(() => {

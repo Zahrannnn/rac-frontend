@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // Leaflet CSS must load with the map bundle; importing from the package keeps
 // the version in lockstep (verified not to clash with the Tailwind build).
@@ -66,6 +66,12 @@ function Recenter({ lat, lon }: { lat: number; lon: number }) {
   useEffect(() => {
     // Smooth pan when the pin moves (GPS capture, manual entry, drag) without
     // resetting a zoom level the user chose.
+    // Same NaN guard as WorkshopsMap — a detached/unmeasured container would
+    // make the flight throw "Invalid LatLng object: (NaN, NaN)".
+    const size = map.getSize();
+    if (!map.getContainer()?.isConnected || !Number.isFinite(size?.x) || size.x === 0) {
+      return;
+    }
     map.flyTo([lat, lon]);
   }, [lat, lon, map]);
   return null;
