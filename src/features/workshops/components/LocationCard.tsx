@@ -1,11 +1,13 @@
-"use client";
+﻿"use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Copy, ExternalLink, MapPin } from "lucide-react";
 import { LocationMapLazy } from "@/shared/components/map";
 import { useT } from "@/shared/i18n";
+import { parseMapsUrl } from "@/shared/utils/parse-maps-url";
 import { formatCoords, googleMapsUrl } from "../utils/geo";
 import { parseOptionalNumber } from "../utils/number-input";
 import { useLocationDraft } from "../hooks/use-location-draft";
@@ -46,6 +48,18 @@ export function LocationCard({
     save,
     resetDraft,
   } = useLocationDraft(workshopId, latitude, longitude);
+  const [mapsLink, setMapsLink] = useState("");
+  const [mapsLinkInvalid, setMapsLinkInvalid] = useState(false);
+
+  function applyMapsLink() {
+    const coords = parseMapsUrl(mapsLink);
+    if (!coords) {
+      setMapsLinkInvalid(true);
+      return;
+    }
+    setMapsLinkInvalid(false);
+    updateDraft({ latitude: coords.latitude, longitude: coords.longitude });
+  }
 
   return (
     <section className="rounded-lg border bg-card p-4 text-start">
@@ -91,6 +105,27 @@ export function LocationCard({
               <span className="text-sm font-medium text-[var(--success)]">
                 {t("wizard.gpsCaptured")}
               </span>
+            ) : null}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Input
+              className="w-full sm:max-w-xs"
+              dir="ltr"
+              placeholder={t("wizard.gpsLinkPlaceholder")}
+              aria-label={t("wizard.gpsLinkLabel")}
+              value={mapsLink}
+              onChange={(event) => {
+                setMapsLink(event.target.value);
+                setMapsLinkInvalid(false);
+              }}
+            />
+            <Button type="button" variant="secondary" onClick={applyMapsLink}>
+              {t("wizard.gpsFromLink")}
+            </Button>
+            {mapsLinkInvalid ? (
+              <p className="text-sm text-destructive" role="alert">
+                {t("wizard.gpsLinkInvalid")}
+              </p>
             ) : null}
           </div>
           {pairError ? (

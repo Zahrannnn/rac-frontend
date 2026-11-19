@@ -1,4 +1,4 @@
-import type { surveys as surveysAr } from "../ar/surveys";
+﻿import type { surveys as surveysAr } from "../ar/surveys";
 
 // English dictionary — surveys namespace. Compile-time locked to the ar key set:
 // a missing or extra key here is a type error.
@@ -96,6 +96,10 @@ export const surveys: Record<keyof typeof surveysAr, string> = {
   "survey.alreadySubmitted": "This survey was already submitted",
   "survey.terminalConflict": "Survey is complete — it can no longer be edited",
   "survey.gpsTitle": "GPS location (visit evidence)",
+  "wizard.gpsLinkLabel": "Paste a Google Maps location link",
+  "wizard.gpsLinkPlaceholder": "https://maps.app.goo.gl/… or 30.0444,31.2357",
+  "wizard.gpsFromLink": "Set from link",
+  "wizard.gpsLinkInvalid": "Could not read coordinates from the link",
   "survey.gpsMissing": "Survey location not recorded yet",
   "survey.docsPhotos": "Documentation photos",
   "survey.photoAdd": "Add photo",

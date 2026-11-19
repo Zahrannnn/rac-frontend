@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { useState } from "react";
 import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { FormField } from "@/shared/components/form/form-field";
 import { LocationMapLazy } from "@/shared/components/map";
 import type { GeolocationStatus } from "@/shared/hooks/use-geolocation";
 import { useT } from "@/shared/i18n";
+import { parseMapsUrl } from "@/shared/utils/parse-maps-url";
 import { parseOptionalNumber } from "../utils/number-input";
 
 type CoordinatePatch = { latitude?: number | null; longitude?: number | null };
@@ -34,8 +36,11 @@ type GpsCaptureFieldsProps = {
 /**
  * GPS capture block shared by the registration wizard's location step and the
  * edit form: lat/lon inputs, capture button, captured confirmation, and the
- * editable OSM map (or the no-coordinates hint). Purely controlled — the
- * caller owns the form state and the save flow.
+ * editable OSM map (or the no-coordinates hint). A pasted Google Maps link
+ * (or bare "lat,lng") fills the pair through onPatch — the same path a manual
+ * edit takes, so form state, validation and the map pin stay in sync; a link
+ * the parser cannot read shows an inline error and patches nothing. Purely
+ * controlled — the caller owns the form state and the save flow.
  */
 export function GpsCaptureFields({
   latitude,
@@ -52,6 +57,18 @@ export function GpsCaptureFields({
   className = "",
 }: GpsCaptureFieldsProps) {
   const t = useT();
+  const [mapsLink, setMapsLink] = useState("");
+  const [mapsLinkInvalid, setMapsLinkInvalid] = useState(false);
+
+  function applyMapsLink() {
+    const coords = parseMapsUrl(mapsLink);
+    if (!coords) {
+      setMapsLinkInvalid(true);
+      return;
+    }
+    setMapsLinkInvalid(false);
+    onPatch({ latitude: coords.latitude, longitude: coords.longitude });
+  }
 
   return (
     <div
@@ -86,6 +103,27 @@ export function GpsCaptureFields({
           <span className="text-sm font-medium text-[var(--success)]">
             {t("wizard.gpsCaptured")}
           </span>
+        ) : null}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Input
+          className="w-full sm:max-w-xs"
+          dir="ltr"
+          placeholder={t("wizard.gpsLinkPlaceholder")}
+          aria-label={t("wizard.gpsLinkLabel")}
+          value={mapsLink}
+          onChange={(event) => {
+            setMapsLink(event.target.value);
+            setMapsLinkInvalid(false);
+          }}
+        />
+        <Button type="button" variant="secondary" onClick={applyMapsLink}>
+          {t("wizard.gpsFromLink")}
+        </Button>
+        {mapsLinkInvalid ? (
+          <p className="text-sm text-destructive" role="alert">
+            {t("wizard.gpsLinkInvalid")}
+          </p>
         ) : null}
       </div>
       {pairAlert ? (

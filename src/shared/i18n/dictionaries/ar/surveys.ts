@@ -1,4 +1,4 @@
-// Arabic dictionary — surveys namespace. Keys mirror the en counterpart one-to-one.
+﻿// Arabic dictionary — surveys namespace. Keys mirror the en counterpart one-to-one.
 export const surveys = {
   // Survey summary
   "survey.cardTitle": "الاستبيان",
@@ -93,6 +93,10 @@ export const surveys = {
   "survey.alreadySubmitted": "تم إرسال هذا الاستبيان بالفعل",
   "survey.terminalConflict": "الاستبيان مكتمل — لا يمكن تعديله",
   "survey.gpsTitle": "الموقع الجغرافي (إثبات الزيارة)",
+  "wizard.gpsLinkLabel": "لصق رابط الموقع من خرائط جوجل",
+  "wizard.gpsLinkPlaceholder": "https://maps.app.goo.gl/… أو 30.0444,31.2357",
+  "wizard.gpsFromLink": "تحديد من الرابط",
+  "wizard.gpsLinkInvalid": "تعذّرت قراءة الإحداثيات من الرابط",
   "survey.gpsMissing": "لم يُسجَّل موقع الاستبيان بعد",
   "survey.docsPhotos": "صور التوثيق",
   "survey.photoAdd": "إضافة صورة",
